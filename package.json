@@ -1,0 +1,19 @@
+{
+  "name": "ki-cl-back",
+  "version": "1.0.0",
+  "description": "Ki.CL Backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kenilam/Ki.CL-back.git"
+  },
+  "author": "Keni Lam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kenilam/Ki.CL-back/issues"
+  },
+  "homepage": "https://github.com/kenilam/Ki.CL-back#readme"
+}
