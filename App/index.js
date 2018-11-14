@@ -11,6 +11,8 @@ class App {
   constructor (collections) {
     this.collections = collections;
 
+    this.profile = this.profile.bind(this);
+
     this.database = new Database();
   }
 
