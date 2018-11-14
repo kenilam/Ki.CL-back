@@ -11,8 +11,6 @@ class App {
   constructor (collections) {
     this.collections = collections;
 
-    this.profile = this.profile.bind(this);
-
     this.database = new Database();
   }
 
@@ -23,9 +21,15 @@ class App {
 
     app.use(bodyParser.json());
 
+    app.get('/', this.root);
+
     app.get('/profile', this.profile);
 
     return server;
+  }
+
+  root (req, res) {
+    res.status(200).send('woohoo!');
   }
 
   async profile (req, res) {
