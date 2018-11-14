@@ -1,49 +1,24 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import mongodb from 'mongodb';
+import App from '^/App';
 
-import Services from '^/Services';
+class Backend {
+  constructor () {
+    this.create = this.create.bind(this);
 
-const { objectID } = mongodb;
-
-const app = express();
-
-const PORT = 3100;
-
-const handleError = (res, reason, message, code) => {
-  console.log(`ERROR: ${reason}`);
-  res.status(code || 500).json({'error': message});
-}
-
-let database;
-let services;
-
-app.use(bodyParser.json());
-
-mongodb.MongoClient.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ki-cl', async (error, client) => {
-  if (error) {
-    console.log(error);
-    process.exit(1);
+    this.create();
   }
 
-  database = client.db();
-  services = new Services(database);
-  
-  console.log("Database connection ready");
+  handleError (res, reason, message, code) {
+    console.log(`ERROR: ${reason}`);
+    res.status(code || 500).json({'error': message});
+  }
 
-  const server = await app.listen(process.env.PORT || PORT);
+  async create () {
+    this.app = new App();
 
-  console.log(`App now running on port ${server.address().port}`);
-});
+    const app = await this.app.create();
 
-app.get('/api/key', async (req, res) => {
-  const api_key = await services.api_key();
+    console.log(`Backend is now running on port ${app.address().port}`);
+  }
+}
 
-  res.status(200).json(api_key);
-});
-
-app.get('/api/profile', (req, res) => {
-  services.profile().then(key => {
-    res.status(200).json(key);
-  });
-});
+export default new Backend();
