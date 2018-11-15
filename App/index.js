@@ -3,31 +3,34 @@ import bodyParser from 'body-parser';
 
 import Database from './Database';
 
-const app = express();
-
-const PORT = 3100;
+const instance = express();
 
 class App {
-  constructor (collections) {
-    this.collections = collections;
+  static get PORT () {
+    return 3100;
+  }
 
+  constructor () {
+    this.create = this.create.bind(this);
     this.profile = this.profile.bind(this);
 
     this.database = new Database();
+    
+    this.routes();
   }
 
   async create () {
-    const server = await app.listen(process.env.PORT || PORT);
-
     this.collections = await this.database.connect();
-
-    app.use(bodyParser.json());
-
-    app.get('/', this.root);
-
-    app.get('/profile', this.profile);
+    
+    const server = await instance.listen(process.env.PORT || App.PORT);
 
     return server;
+  }
+
+  routes () {
+    instance.use(bodyParser.json());
+    instance.get('/', this.root);
+    instance.get('/profile', this.profile);
   }
 
   root (req, res) {

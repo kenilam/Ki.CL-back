@@ -15,9 +15,9 @@ class Backend {
   async create () {
     this.app = new App();
 
-    const app = await this.app.create();
+    const backend = await this.app.create();
 
-    console.log(`Backend is now running on port ${app.address().port}`);
+    console.log(`Backend is now running on port ${backend.address().port}`);
   }
 }
 
