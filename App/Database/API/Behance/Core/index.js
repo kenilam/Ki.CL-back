@@ -48,7 +48,27 @@ class Core {
 
     const { user } = await fetch(URI).then(res => res.json());
 
-    return user;
+    const avator = user.images[Math.max(...Object.keys(user.images))];
+
+    const experience = await this.experience(username);
+
+    delete user.images;
+    delete user.id;
+    delete user.username;
+    delete user.has_social_links;
+    delete user.stats;
+    delete user.links;
+    delete user.twitters;
+
+    return { ...user, avator, experience };
+  }
+
+  async experience (username) {
+    const URI = await this.URI(`users/${username}/work_experience`);
+
+    const { work_experience } = await fetch(URI).then(res => res.json());
+
+    return work_experience;
   }
 }
 

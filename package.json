@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon start --exec npm",
+    "dev": "NODE_ENV=development nodemon start --exec npm",
     "start": "babel-node index.js"
   },
   "repository": {

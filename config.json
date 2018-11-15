@@ -1,0 +1,10 @@
+{
+    "allowedHosts" : {
+        "development" : ["ki-cl.com", "ki-cl.herokuapp.com", "localhost"],
+        "production" : ["ki-cl.com", "ki-cl.herokuapp.com"]
+    },
+
+    "localhost" : {
+        "port" : 3100
+    }
+}
