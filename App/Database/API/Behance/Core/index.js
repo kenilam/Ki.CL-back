@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import request from 'request';
 
 class Core {
   static get COLLECTION () {
@@ -61,6 +62,12 @@ class Core {
     delete user.twitters;
 
     return { ...user, avator, experience };
+  }
+
+  async avator (username) {
+    const { avator } = await this.user(username);
+
+    return request(avator);
   }
 
   async experience (username) {

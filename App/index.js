@@ -23,7 +23,7 @@ class App extends Utilities {
     next();
   }
 
-  static requestedUsername (req) {
+  static existigUsernameFromRequest (req) {
     const { params } = req;
     const { username } = params || {};
 
@@ -37,6 +37,7 @@ class App extends Utilities {
   constructor () {
     super();
 
+    this.avator = this.avator.bind(this);
     this.create = this.create.bind(this);
     this.experience = this.experience.bind(this);
     this.profile = this.profile.bind(this);
@@ -64,11 +65,26 @@ class App extends Utilities {
     instance.get('/api/profile', this.profile);
     instance.get('/api/user', this.empty);
     instance.get('/api/user/:username', this.user);
+    instance.get('/api/user/:username/avator', this.avator);
     instance.get('/api/user/:username/experience', this.experience);
   }
 
   empty (req, res) {
     res.status(200).send('Nothing to See here!');
+  }
+
+  async avator (req, res) {
+    const username = App.existigUsernameFromRequest(req);
+
+    if (!username) {
+      return;
+    }
+
+    const { behance } = this.collections.api;
+
+    const avator = await behance.avator(username);
+
+    avator.pipe(res);
   }
 
   async profile (req, res) {
@@ -84,7 +100,7 @@ class App extends Utilities {
   }
 
   async experience (req, res) {
-    const username = App.requestedUsername(req);
+    const username = App.existigUsernameFromRequest(req);
     
     if (!username) {
       return;
@@ -98,7 +114,7 @@ class App extends Utilities {
   }
 
   async user (req, res) {
-    const username = App.requestedUsername(req);
+    const username = App.existigUsernameFromRequest(req);
 
     if (!username) {
       return;
