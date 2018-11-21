@@ -17,7 +17,14 @@ class Backend {
 
     const backend = await this.app.create();
 
-    console.log(`Backend is now running on port ${backend.address().port}`);
+    if (App.env === 'production') {
+      return;
+    }
+
+    const { port } = backend.address();
+    // const url = `${backend.domain || 'http://localhost'}:${port}`;
+
+    console.log(`Backend is now running on port ${port}`);
   }
 }
 

@@ -1,5 +1,4 @@
 import fetch from 'node-fetch';
-import request from 'request';
 
 class Core {
   static get COLLECTION () {
@@ -22,6 +21,20 @@ class Core {
     }
   }
 
+  async fetch (URI) {
+    try {
+      const data = await fetch(URI).then(res => res.json());
+
+      if (data.http_code) {
+        console.error(data);
+      }
+
+      return data;
+    } catch (error) {
+      console.log(error.stack);
+    }
+  }
+
   async URI (path) {
     const api_key = await this.api_key();
 
@@ -37,45 +50,9 @@ class Core {
   }
 
   async username () {
-    const api_key = await this.api_key();
-
     const username = await this.document({ '_id': 'username' });
 
     return username;
-  }
-
-  async user (username) {
-    const URI = await this.URI(`users/${username}`);
-
-    const { user } = await fetch(URI).then(res => res.json());
-
-    const avator = user.images[Math.max(...Object.keys(user.images))];
-
-    const experience = await this.experience(username);
-
-    delete user.images;
-    delete user.id;
-    delete user.username;
-    delete user.has_social_links;
-    delete user.stats;
-    delete user.links;
-    delete user.twitters;
-
-    return { ...user, avator, experience };
-  }
-
-  async avator (username) {
-    const { avator } = await this.user(username);
-
-    return request(avator);
-  }
-
-  async experience (username) {
-    const URI = await this.URI(`users/${username}/work_experience`);
-
-    const { work_experience } = await fetch(URI).then(res => res.json());
-
-    return work_experience;
   }
 }
 

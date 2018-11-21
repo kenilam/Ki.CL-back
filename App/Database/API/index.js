@@ -1,8 +1,5 @@
 import Behance from './Behance';
 
-export { Behance };
-
-
 class API {
   constructor (database) {
     return {
