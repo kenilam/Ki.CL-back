@@ -14,7 +14,7 @@ const hosts = allowedHosts[env];
 
 const port = process.env.PORT || localhost.port;
 
-const domain = env === 'production' ? remotehost : `http://localhost:${port}`;
+const domain = env === 'production' ? remotehost.domain : `http://localhost:${port}`;
 
 const oneDay = 24 * 60 * 60 * 1000;
 
