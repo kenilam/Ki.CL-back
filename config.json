@@ -6,5 +6,9 @@
 
     "localhost" : {
         "port" : 3100
+    },
+
+    "remotehost" : {
+        "domain" : "https://ki-cl.herokuapp.com"
     }
 }
