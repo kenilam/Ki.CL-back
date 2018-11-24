@@ -10,7 +10,7 @@ const comments = async projectId => {
       comments.map(async comment => {
         const user = await modify(comment.user);
 
-        return { result : comment, user };
+        return { ...comment, user };
       })
     );
 

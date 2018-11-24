@@ -9,7 +9,11 @@ const projects = async () => {
     let { projects, http_code } = await Core.fetch(`users/${username}/projects`);
 
     projects = projects && await Promise.all(
-      projects.map(async ({ id }) => await project(id))
+      projects.map(async ({ id }) => {
+        const { result } = await project(id);
+
+        return result;
+      })
     );
 
     return { result : projects, http_code };
