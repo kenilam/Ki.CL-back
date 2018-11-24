@@ -1,24 +1,29 @@
 import node_fetch from 'node-fetch';
 
+import { isOutdated } from '^/App/Database/Utilities';
+
+import deleteDocument from './deleteDocument';
 import getDocument from './getDocument';
 import postDocument from './postDocument';
 import URI from './URI';
 
+const createNewDocument = async (_id) => {
+  const url = await URI(_id);
+
+  const value = await node_fetch(url).then(res => res.json());
+
+  return await postDocument(_id, value);
+}
+
 const fetch = async _id => {
   try {
-    let { value } = await getDocument({ _id });
+    let data = await getDocument({ _id });
 
-    if (!value) {
-      const url = await URI(_id);
-
-      value = await node_fetch(url).then(res => res.json());
-
-      const data = await postDocument(_id, value);
-
-      value = data.value;
+    if (!data || isOutdated(data.created_on)) {
+      data = await createNewDocument(_id);
     }
-
-    return value;
+    
+    return data.value;
   } catch (error) {
     console.log(error.stack);
   }

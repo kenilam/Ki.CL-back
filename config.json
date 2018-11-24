@@ -1,14 +1,14 @@
 {
-    "allowedHosts" : {
-        "development" : ["ki-cl.com", "ki-cl.herokuapp.com", "localhost"],
-        "production" : ["ki-cl.com", "ki-cl.herokuapp.com"]
-    },
+  "allowedHosts" : {
+    "development" : ["ki-cl.com", "ki-cl.herokuapp.com", "localhost"],
+    "production" : ["ki-cl.com", "ki-cl.herokuapp.com"]
+  },
 
-    "localhost" : {
-        "port" : 3100
-    },
+  "localhost" : {
+    "port" : 3100
+  },
 
-    "remotehost" : {
-        "domain" : "https://ki-cl.herokuapp.com"
-    }
+  "remotehost" : {
+    "domain" : "https://ki-cl.herokuapp.com"
+  }
 }

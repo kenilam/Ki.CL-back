@@ -2,10 +2,6 @@ import Database from '^/App/Database';
 
 import { COLLECTION } from '^/App/API/Behance/Utilities';
 
-const getDocument = async query => {
-  const doc = await Database.getDocument(COLLECTION, query);
-
-  return doc;
-};
+const getDocument = async query => await Database.getDocument(COLLECTION, query);
 
 export default getDocument;

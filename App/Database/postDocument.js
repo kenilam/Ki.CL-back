@@ -1,4 +1,4 @@
-import { timestamp } from '^/App/Utilities';
+import { timestamp } from './Utilities';
 import instance from './instance';
 
 const postDocument = async (COLLECTION, _id, value) => {
