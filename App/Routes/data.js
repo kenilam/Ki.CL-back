@@ -2,9 +2,6 @@ import { emptyRoute } from '^/App/Utilities';
 import { Behance } from '^/App/API';
 import { instance } from '^/App/Server';
 
-import * as avatorConfig from '^/App/API/Behance/avator';
-import * as projectConfig from '^/App/API/Behance/project';
-
 const { projects, project, user } = Behance;
 
 const data = () => {

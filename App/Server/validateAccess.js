@@ -1,19 +1,18 @@
 import { hosts } from '^/App/Utilities';
 
 const validateAccess = (req, res, next) => {
-    const { headers, method } = req;
-    const { host } = headers;
+  const { headers, method } = req;
+  const { host } = headers;
 
-    if (
-        !hosts.some(name => host.startsWith(name)) ||
-        method !== 'GET'
-    ) {
-        res.status(401).send('Access not allow');
+  if ( !hosts.some(name => host.startsWith(name)) ) {
+    res.setHeader('Access-Control-Allow-Origin', host);
+  }
 
-        return;
-    }
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
 
-    next();
+  next();
 }
 
 export default validateAccess;
