@@ -4,17 +4,17 @@ import { modify } from './user';
 
 const comments = async projectId => {
   try {
-    let { comments } = await Core.fetch(`projects/${projectId}/comments`);
+    let { comments, http_code } = await Core.fetch(`projects/${projectId}/comments`);
 
-    comments = await Promise.all(
+    comments = comments && await Promise.all(
       comments.map(async comment => {
         const user = await modify(comment.user);
 
-        return { ...comment, user };
+        return { result : comment, user };
       })
     );
 
-    return comments;
+    return { result : comments, http_code };
   } catch (error) {
     console.log(error.stack);
   }

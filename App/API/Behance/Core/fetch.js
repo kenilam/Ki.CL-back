@@ -22,6 +22,10 @@ const fetch = async _id => {
     if (!data || isOutdated(data.created_on)) {
       data = await createNewDocument(_id);
     }
+
+    if (data.valid === 0) {
+      return false;
+    }
     
     return data.value;
   } catch (error) {

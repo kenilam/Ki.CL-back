@@ -13,12 +13,15 @@ const path = projectId => {
 }
 
 const cover = async ({ projectId }) => {
-  const { covers } = await project(projectId, true);
-  const { original } = covers;
-
-  const stream = await image(original);
-
-  return stream;
+  try {
+    const { result } = await project(projectId, true);
+    const { covers } = result;
+    const { original } = covers;
+    
+    return await image(original);
+  } catch (error) {
+    console.log(error.stack);
+  }
 }
 
 export { route, path };

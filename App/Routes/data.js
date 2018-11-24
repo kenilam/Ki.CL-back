@@ -13,21 +13,21 @@ const data = () => {
   instance.get('/api', emptyRoute);
 
   instance.get('/api/about', async (req, res) => {
-    const result = await user();
+    const { result, http_code } = await user();
 
-    res.status(200).send(result);
+    res.status(http_code).send(result);
   });
 
   instance.get('/api/works', async (req, res) => {
-    const result = await projects();
+    const { result, http_code } = await projects();
 
-    res.status(200).send(result);
+    res.status(http_code).send(result);
   });
 
   instance.get('/api/works/:projectId', async (req, res) => {
-    const result = await project(req.params.projectId);
+    const { result, http_code } = await project(req.params.projectId);
 
-    res.status(200).send(result);
+    res.status(http_code).send(result);
   });
 };
 

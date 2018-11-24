@@ -16,7 +16,8 @@ const path = (projectId, srcId) => {
 }
 
 const src = async ({ projectId, srcId }) => {
-  const { modules } = await project(projectId, true);
+  const { result } = await project(projectId, true);
+  const { modules } = result;
   const { sizes, src } = modules[srcId] || {};
 
   const { original } = sizes || {};

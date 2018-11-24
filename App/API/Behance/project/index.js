@@ -14,11 +14,11 @@ const routes = {
 
 const project = async (projectId, keepOrigin) => {
   try {
-    let { project } = await Core.fetch(`projects/${projectId}`);
+    let { project, http_code } = await Core.fetch(`projects/${projectId}`);
 
-    project = modify(project, keepOrigin);
+    project = project && await modify(project, keepOrigin);
 
-    return project;
+    return { result : project, http_code };
   } catch (error) {
     console.log(error.stack);
   }

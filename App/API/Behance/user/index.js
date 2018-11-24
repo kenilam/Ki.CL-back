@@ -6,11 +6,11 @@ const user = async (username, keepOrigin) => {
   username = username || await Core.username();
   
   try {
-    let { user } = await Core.fetch(`users/${username}`);
+    let { user, http_code } = await Core.fetch(`users/${username}`);
 
-    user = await modify(user, keepOrigin);
+    user = user && await modify(user, keepOrigin);
 
-    return user;
+    return { result : user, http_code };
   } catch (error) {
     console.log(error.stack);
   }
