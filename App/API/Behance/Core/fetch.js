@@ -12,6 +12,8 @@ const createNewDocument = async (_id) => {
 
   const value = await node_fetch(url).then(res => res.json());
 
+  await deleteDocument({ _id });
+  
   return await postDocument(_id, value);
 }
 
