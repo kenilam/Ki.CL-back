@@ -1,36 +1,29 @@
 {
-    "presets" : [
-        [
-            "env", {
-                "targets": {
-                    "browsers": ["last 2 versions", "safari >= 11"]
-                }
-            }
-        ],
-        "react"
-    ],
-    "plugins": [
-        [
-            "babel-plugin-root-import", [
-            {
-                "rootPathSuffix": ".",
-                "rootPathPrefix": "^"
-            }
-        ]
-        ],
-        ["module-resolver", {
-            "root": ["./project/src", "./project/assets", "./project/content"]
-        }],
-        [
-            "transform-class-properties", { "spec": true }
-        ],
-        ["transform-runtime", {
-            "polyfill": false,
-            "regenerator": true
-        }],
-
-        "add-module-exports",
-        "transform-export-extensions",
-        "transform-object-rest-spread"
+  "presets" : [
+    [
+      "@babel/preset-env"
     ]
+  ],
+  "plugins": [
+    [
+      "babel-plugin-root-import", {
+        "paths": [
+          {
+            "rootPathSuffix": ".",
+            "rootPathPrefix": "^"
+          }
+        ]
+      }
+    ],
+    [
+      "transform-class-properties", { "spec": true }
+    ],
+    ["@babel/transform-runtime"],
+
+    "@babel/plugin-syntax-export-extensions",
+    "@babel/plugin-proposal-export-default-from",
+    "@babel/plugin-proposal-object-rest-spread",
+    "add-module-exports",
+    "transform-export-extensions"
+  ]
 }

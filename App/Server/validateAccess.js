@@ -4,6 +4,8 @@ const validateAccess = (req, res, next) => {
   const { headers, method } = req;
   const { origin } = headers;
 
+  console.log(origin);
+
   if ( origin === undefined || hosts.some(name => origin.startsWith(name)) ) {
     res.header('Access-Control-Allow-Origin', origin);
   }
