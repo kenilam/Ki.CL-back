@@ -13,7 +13,7 @@ const start = () => {
     console.log(`Backend is now running on port ${port}`);
 }
 
-instance.use(bodyParser.json());
 instance.use(validateAccess);
+instance.use(bodyParser.json());
 
 export default { instance, start };
