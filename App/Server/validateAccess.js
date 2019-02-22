@@ -4,8 +4,10 @@ const validateAccess = (req, res, next) => {
   const { headers, method } = req;
   const { origin } = headers;
 
+  console.log(headers);
+
   if ( origin === undefined || hosts.some(name => origin.startsWith(name)) ) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Origin', origin);
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -14,7 +16,7 @@ const validateAccess = (req, res, next) => {
 
   // intercept OPTIONS method
   if (req.method === 'OPTIONS') {
-    res.send(200);
+    res.sendStatus(200);
     return;
   }
 
