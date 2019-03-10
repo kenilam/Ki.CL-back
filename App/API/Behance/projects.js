@@ -12,7 +12,7 @@ const projects = async () => {
       projects.map(async ({ id }) => {
         const { result } = await project(id);
 
-        return result;
+        return { id: result.id, name: result.name };
       })
     );
 
