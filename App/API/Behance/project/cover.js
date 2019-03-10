@@ -15,10 +15,11 @@ const path = projectId => {
 const cover = async ({ projectId }) => {
   try {
     const { result } = await project(projectId, true);
-    const { covers } = result;
+    const { covers, modules } = result;
+    const module = modules.filter(module => module.type === 'image' )[0];
     const { original } = covers;
     
-    return await image(original);
+    return await image(module ? module.src : original);
   } catch (error) {
     console.log(error.stack);
   }
