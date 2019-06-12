@@ -1,8 +1,9 @@
 import { emptyRoute } from '^/App/Utilities';
-import { Behance } from '^/App/API';
+import { Behance, Napster } from '^/App/API';
 import { instance } from '^/App/Server';
 
 const { projects, project, user } = Behance;
+const { search } = Napster;
 
 const data = () => {
   instance.get('/', emptyRoute);
@@ -22,8 +23,25 @@ const data = () => {
   });
 
   instance.get('/api/works/:projectId', async (req, res) => {
-    const { result, http_code } = await project(req.params.projectId);
+    const { projectId } = req.params;
+    const { result, http_code } = await project(projectId);
 
+    res.status(http_code).send(result);
+  });
+  
+  instance.get('/api/musics', emptyRoute);
+  
+  instance.get('/api/musics/:query', async (req, res) => {
+    const { query } = req.params;
+    const { result, http_code } = await search(query);
+  
+    res.status(http_code).send(result);
+  });
+  
+  instance.get('/api/musics/:query/:id', async (req, res) => {
+    const { query, playlist } = req.params;
+    const { result, http_code } = await search(query, playlist);
+    
     res.status(http_code).send(result);
   });
 };
