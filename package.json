@@ -35,6 +35,7 @@
     "babel-plugin-transform-export-extensions": "^6.22.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "http-headers": "^3.0.2",
     "mongodb": "^3.1.13",
     "node-fetch": "^2.3.0",
     "node-pinterest": "0.0.4",
