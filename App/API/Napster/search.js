@@ -1,36 +1,37 @@
 import Core from '^/App/API/Napster/Core';
 
-const search = async query => {
+import getTracks from './tracks';
+
+const search = async (query, id) => {
   try {
     let {
       search: { data: { playlists } }
     } = await Core.fetch(`search?query=${query}&type=playlist&per_type_limit=5&offset=5`);
     
-    const lists = await Promise.all(
+    const playlistWithTrackLists = await Promise.all(
       playlists.map(
         async ({ id }) => await Core.fetch(`playlists/${id}/tracks?limit=5&offset=5`)
       )
     );
     
-    const musics = await Promise.all(
-      lists.map(
-        async ({ tracks }) => await Promise.all(
-          tracks.map(
-            async ({ id }) => await Core.fetch(`tracks/${id}`)
-          )
-        )
+    const tracks = await Promise.all(
+      playlistWithTrackLists.map(
+        async ({ tracks }) => await getTracks(tracks)
       )
     );
   
-    const result = [].concat(
-      ...musics.map(
-        tracks => [].concat(
-          ...tracks.map(
-            ({ tracks }) => tracks
-          )
-        )
+    let result = [].concat(
+      ...tracks
+      .map(
+        tracks => [].concat( ...tracks )
       )
     );
+    
+    if (id) {
+      result = result.filter(
+        track => !id || `tra.${id}` === track.id
+      )[0];
+    }
     
     return { result, http_code: result.length === 0 ? 204 : 200 };
   } catch (error) {

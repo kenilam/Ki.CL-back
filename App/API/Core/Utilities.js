@@ -1,13 +1,11 @@
 import request from 'request';
 import { Readable } from 'stream';
 
-const COLLECTION = 'napster';
-
-const track = async url => {
+const file = async url => {
   if (!url) {
     const stream = new Readable();
     
-    stream.push('No such image');
+    stream.push('No such file');
     stream.push(null);
     
     return stream;
@@ -16,5 +14,4 @@ const track = async url => {
   return request(url);
 }
 
-export default { COLLECTION, track };
-
+export default { file };

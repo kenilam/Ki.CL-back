@@ -1,4 +1,4 @@
-import { image } from '^/App/API/Behance/Utilities';
+import { file } from '^/App/API/Core/Utilities';
 
 import Core from './Core';
 
@@ -14,7 +14,7 @@ const avator = async username => {
     const { images } = result;
     const path = images && images[Math.max(...Object.keys(images))];
       
-    return await image(path);
+    return await file(path);
   } catch (error) {
     console.log(error.stack);
   }
