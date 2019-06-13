@@ -1,13 +1,9 @@
 import data from './data';
-import images from './images';
-
-import { Pinterest } from '^/App/API';
+import assets from './assets';
 
 const create = () => {
-  images();
+  assets();
   data();
-
-  Pinterest();
 }
 
 export default { create };

@@ -3,7 +3,7 @@ import { Behance, Napster } from '^/App/API';
 import { instance } from '^/App/Server';
 
 const { projects, project, user } = Behance;
-const { search } = Napster;
+const { search, track } = Napster;
 
 const data = () => {
   instance.get('/', emptyRoute);
@@ -39,8 +39,8 @@ const data = () => {
   });
   
   instance.get('/api/musics/:query/:id', async (req, res) => {
-    const { query, playlist } = req.params;
-    const { result, http_code } = await search(query, playlist);
+    const { query, id } = req.params;
+    const { result, http_code } = await search(query, id);
     
     res.status(http_code).send(result);
   });
