@@ -3,6 +3,10 @@ import { hosts } from '^/App/Utilities';
 const validateAccess = (req, res, next) => {
   const { headers, method } = req;
   const { origin } = headers;
+  
+  if (headers.range) {
+    console.log(headers.range);
+  }
 
   if ( origin === undefined || hosts.some(name => origin.startsWith(name)) ) {
     res.header('Access-Control-Allow-Origin', origin);

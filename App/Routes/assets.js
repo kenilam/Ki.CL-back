@@ -33,16 +33,11 @@ const assets = () => {
   
   instance.get(`${soundRoute}:id`, async (req, res) => {
     const { id } = req.params;
-    
     const result = await sound(id);
-    
-    result.pipe(res);
-  });
   
-  instance.post(`${soundRoute}:id`, async (req, res) => {
-    const { id } = req.params;
-    
-    const result = await sound(id);
+    res.header({
+      'Content-Type': 'audio/mpeg'
+    });
     
     result.pipe(res);
   });
