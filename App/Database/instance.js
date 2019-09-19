@@ -4,7 +4,7 @@ const { MongoClient } = mongodb;
 
 const URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ki-cl';
 
-const config = { useNewUrlParser: true };
+const config = { useNewUrlParser: true, useUnifiedTopology: true };
 
 let client;
 let instance;

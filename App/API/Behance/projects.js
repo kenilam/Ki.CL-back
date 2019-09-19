@@ -12,7 +12,9 @@ const projects = async () => {
       projects.map(async ({ id }) => {
         const { result } = await project(id);
 
-        return { id: result.id, name: result.name };
+        const image = result.modules.filter(({ type }) => type === 'image')[0];
+
+        return { image, id: result.id, name: result.name };
       })
     );
 
