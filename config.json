@@ -1,7 +1,7 @@
 {
   "allowedHosts" : {
-    "development" : ["https://ki-cl.com", "https://ki-cl.herokuapp.com", "https://localhost"],
-    "production" : ["https://ki-cl.com", "https://ki-cl.herokuapp.com", "https://localhost"]
+    "development" : ["https://ki-cl.com", "https://localhost"],
+    "production" : ["https://ki-cl.com", "https://localhost"]
   },
 
   "localhost" : {
