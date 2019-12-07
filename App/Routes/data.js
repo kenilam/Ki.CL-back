@@ -6,10 +6,6 @@ const { projects, project, user } = Behance;
 const { search, track } = Napster;
 
 const data = () => {
-  instance.get('/', emptyRoute);
-
-  instance.get('/api', emptyRoute);
-
   instance.get('/api/about', async (req, res) => {
     const { result, http_code } = await user();
 
