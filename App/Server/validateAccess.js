@@ -8,7 +8,7 @@ const validateAccess = (req, res, next) => {
     console.log(headers.range);
   }
 
-  if ( hosts.some(name => origin.startsWith(host || origin)) ) {
+  if (hosts.some(name => origin.startsWith(origin || origin)) ) {
     res.header('Access-Control-Allow-Origin', origin);
   }
 
