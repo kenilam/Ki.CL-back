@@ -3,28 +3,14 @@ import { instance } from '^/App/Server';
 import { Mailer } from '^/App/API';
 
 const contact = () => {
-  instance.get('/api/contact', async (req, res) => {
+  instance.post('/api/contact', async (req, res) => {
     try {
-        const { email, message, name } = req.query;
-        const results = await Mailer(email, message, name);
-
-        const errors = results.filter(
-            ({ response }) => response.startsWith('205')
-        );
-
-        let http_code = '204';
-
-        if (errors.length !== results.length) {
-            http_code = '207';
-        }
-
-        if (errors.length === results.length) {
-            http_code = '400';
-        }
+        const responses = await Mailer(req.body);
+        const { code } = responses;
         
-        res.status(http_code).send(results);
+        res.status(code).send(responses);
     } catch (errors) {
-        throw new Error(errors);
+        res.status(400).send('Bad Request');
     }
   });
 };

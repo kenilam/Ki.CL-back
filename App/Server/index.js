@@ -1,5 +1,7 @@
 import express from 'express';
 
+import bodyParser from 'body-parser';
+
 import { port } from '^/App/Utilities';
 
 import validateAccess from './validateAccess';
@@ -13,6 +15,6 @@ const start = () => {
 }
 
 instance.use(validateAccess);
-// instance.use(bodyParser.json());
+instance.use(bodyParser.json());
 
 export default { instance, start };
