@@ -3,39 +3,38 @@ import Send from './Send';
 import {emailValidate, messageValidate} from './Utilities';
 
 const VALIDATE_STATUS = {
-    error: { http_code: 401, error: true, result: 'All required Fields are missing' },
-    partial: { http_code: 401, error: true, result: 'Some required fields are missing' },
-    success: { http_code: 200, result: 'Email sent successfully' },
+    error: { http_code: 401, error: true, message: 'All required Fields are missing' },
+    partial: { http_code: 401, error: true, message: 'Some required fields are missing' },
+    success: { http_code: 200, success: true, message: 'Email sent successfully' },
     invalid: {
-        email: { http_code: 401, error: true, result: 'Email address is invalid' },
-        message: { http_code: 401, error: true, result: 'Message is invalid' }
+        email: { http_code: 401, error: true, message: 'Email address is invalid' },
+        message: { http_code: 401, error: true, message: 'Message is invalid' },
+        robot: { http_code: 401, error: true, message: 'I don\'t talk to robot' },
     }
 }
 
-const Mailer = async ({ email, message, name }) => {
+const Mailer = async ({ email, id, message, name }) => {
     try {
-        let error = null;
-
         const config = await Core.config();
 
         if (!email && !message && !name) {
-            error = VALIDATE_STATUS.error;
+            return Promise.resolve(VALIDATE_STATUS.error);
         }
 
-        else if (!email || !message || !name) {
-            error = VALIDATE_STATUS.partial;
+        if (!email || !message || !name) {
+            return Promise.resolve(VALIDATE_STATUS.partial);
         }
 
-        else if (!emailValidate(email)) {
-            error = VALIDATE_STATUS.invalid.email;
+        if (!emailValidate(email)) {
+            return Promise.resolve(VALIDATE_STATUS.invalid.email);
         }
 
-        else if (!messageValidate(message, config.message.maxLength, config.message.minLength)) {
-            error = VALIDATE_STATUS.invalid.message;
+        if (!messageValidate(message, config.message.maxLength, config.message.minLength)) {
+            return Promise.resolve(VALIDATE_STATUS.invalid.message);
         }
 
-        if (error) {
-            return Promise.resolve(error);
+        if (id) {
+            return Promise.resolve(VALIDATE_STATUS.invalid.robot);
         }
         
         const { user: owner } = await Core.auth();
@@ -59,7 +58,7 @@ const Mailer = async ({ email, message, name }) => {
 
         return Send([ conformation, notification ]).then(() => VALIDATE_STATUS.success);
     } catch (errors) {
-        return Promise.resolve({ http_code: 400, error: true, result: errors });
+        return Promise.resolve(errors);
     }
 }
 
