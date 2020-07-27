@@ -15,6 +15,8 @@ const data = () => {
   instance.get('/api/works', async (req, res) => {
     const { result, http_code } = await projects();
 
+    console.log('/api/works');
+
     res.status(http_code).send(result);
   });
 
