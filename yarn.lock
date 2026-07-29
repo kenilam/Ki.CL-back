@@ -967,7 +967,7 @@ __metadata:
 
 "@graphql-codegen/typescript-react-apollo@patch:@graphql-codegen/typescript-react-apollo@npm%3A4.4.2#~/.yarn/patches/@graphql-codegen-typescript-react-apollo-npm-4.4.2-d472e47341.patch":
   version: 4.4.2
-  resolution: "@graphql-codegen/typescript-react-apollo@patch:@graphql-codegen/typescript-react-apollo@npm%3A4.4.2#~/.yarn/patches/@graphql-codegen-typescript-react-apollo-npm-4.4.2-d472e47341.patch::version=4.4.2&hash=9896f9"
+  resolution: "@graphql-codegen/typescript-react-apollo@patch:@graphql-codegen/typescript-react-apollo@npm%3A4.4.2#~/.yarn/patches/@graphql-codegen-typescript-react-apollo-npm-4.4.2-d472e47341.patch::version=4.4.2&hash=313781"
   dependencies:
     "@graphql-codegen/plugin-helpers": "npm:^6.3.0"
     "@graphql-codegen/visitor-plugin-common": "npm:^6.3.0"
@@ -976,7 +976,7 @@ __metadata:
     tslib: "npm:^2.8.1"
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/58b15fe79c4be6af2a3280b6783fae6cf7555010459a86d03239e11eb4d58862aafe788fc0bc8419fa842fdc390ddab17bab1bdd8bd914ba148e0da6758a0f32
+  checksum: 10c0/2c1984d51e31bdce5daa08d7f6fc41c8de35e9da5c4907114d90caadf72f14b256094f7e9afcb15aa83f12f54583bd8f57d6381a237276008dcf8e4baeb869a3
   languageName: node
   linkType: hard
 

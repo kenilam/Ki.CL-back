@@ -2,230 +2,11 @@
 type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-import { DateTimeString } from '../scalars';
-import { EmailAddress } from '../scalars';
-import { JWT } from '../scalars';
-import { NonEmptyString } from '../scalars';
-import { URL } from '../scalars';
-import { UUID } from '../scalars';
 import { EmailAddress, UUID } from '../scalars';
 import { gql } from '@apollo/client';
 import * as ApolloReactCommon from '@apollo/client/react';
 import * as ApolloReactHooks from '@apollo/client/react';
-export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
 const defaultOptions = {} as const;
-/** All built-in and custom scalars, mapped to their actual values */
-export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  DateTime: { input: DateTimeString; output: DateTimeString; }
-  EmailAddress: { input: EmailAddress; output: EmailAddress; }
-  JWT: { input: JWT; output: JWT; }
-  NonEmptyString: { input: NonEmptyString; output: NonEmptyString; }
-  URL: { input: URL; output: URL; }
-  UUID: { input: UUID; output: UUID; }
-};
-
-export type ActivateInput = {
-  RegistrationGUID: Scalars['UUID']['input'];
-  Secret: Scalars['String']['input'];
-  UserGUID: Scalars['UUID']['input'];
-};
-
-export type Asset = {
-  __typename?: 'Asset';
-  /**
-   * How the asset was produced (e.g. openai:gpt-image-1).
-   * Null means manually created / uploaded — not AI-generated.
-   */
-  generator?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  url: Scalars['String']['output'];
-};
-
-export type MePayload = {
-  __typename?: 'MePayload';
-  Active?: Maybe<Scalars['Boolean']['output']>;
-  Avatar?: Maybe<Scalars['String']['output']>;
-  Email?: Maybe<Scalars['EmailAddress']['output']>;
-  FirstName?: Maybe<Scalars['String']['output']>;
-  LastName?: Maybe<Scalars['String']['output']>;
-  UserGUID?: Maybe<Scalars['UUID']['output']>;
-  aud?: Maybe<Scalars['String']['output']>;
-};
-
-export type Mutation = {
-  __typename?: 'Mutation';
-  Activate?: Maybe<Scalars['Boolean']['output']>;
-  ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
-  RefreshToken?: Maybe<Scalars['Boolean']['output']>;
-  Register?: Maybe<Scalars['Boolean']['output']>;
-  SignIn?: Maybe<Scalars['Boolean']['output']>;
-  SignOut?: Maybe<Scalars['Boolean']['output']>;
-  SocialSignIn?: Maybe<Scalars['Boolean']['output']>;
-};
-
-
-export type MutationActivateArgs = {
-  Activate: ActivateInput;
-};
-
-
-export type MutationRegisterArgs = {
-  Register: RegisterInput;
-};
-
-
-export type MutationSignInArgs = {
-  SignIn: SignInInput;
-};
-
-
-export type MutationSocialSignInArgs = {
-  SocialSignIn: SocialSignInInput;
-};
-
-export enum Provider {
-  Apple = 'apple',
-  Google = 'google'
-}
-
-export type Query = {
-  __typename?: 'Query';
-  Asset?: Maybe<Asset>;
-  Me?: Maybe<MePayload>;
-  TaxonVisual: TaxonVisual;
-  /**
-   * Subtree from Open Tree of Life (cached in Mongo).
-   * `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
-   * Warm Mongo rows skip OTOL (known leaf or existing child edges).
-   */
-  TreeOfLifeSubtree?: Maybe<TreeOfLifeNode>;
-  /**
-   * Batch subtree roots in one request. Prefer this over parallel
-   * `TreeOfLifeSubtree` calls (auto expand). Results are
-   * `[...ottId roots, ...nodeId roots]` (nullable slots on hard miss).
-   * Max 16 ids combined. Uses Mongo DataLoader batching + warm-path.
-   */
-  TreeOfLifeSubtrees: Array<Maybe<TreeOfLifeNode>>;
-};
-
-
-export type QueryAssetArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type QueryTaxonVisualArgs = {
-  name: Scalars['String']['input'];
-  ottId: Scalars['Int']['input'];
-  rank?: InputMaybe<Scalars['String']['input']>;
-};
-
-
-export type QueryTreeOfLifeSubtreeArgs = {
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
-  nodeId?: InputMaybe<Scalars['String']['input']>;
-  ottId?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-export type QueryTreeOfLifeSubtreesArgs = {
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
-  nodeIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  ottIds?: InputMaybe<Array<Scalars['Int']['input']>>;
-};
-
-export type RegisterInput = {
-  Email: Scalars['EmailAddress']['input'];
-  FirstName?: InputMaybe<Scalars['String']['input']>;
-  LastName?: InputMaybe<Scalars['String']['input']>;
-  Password: Scalars['String']['input'];
-};
-
-export type SignInInput = {
-  Email: Scalars['EmailAddress']['input'];
-  Password: Scalars['String']['input'];
-};
-
-export type SocialSignInInput = {
-  Provider: Provider;
-  Token: Scalars['String']['input'];
-};
-
-export type Subscription = {
-  __typename?: 'Subscription';
-  /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
-  TaxonVisualUpdated: TaxonVisual;
-};
-
-
-export type SubscriptionTaxonVisualUpdatedArgs = {
-  ottId: Scalars['Int']['input'];
-};
-
-/**
- * Studio generation signal only. Persist image/description on tree-of-life;
- * clients refetch TreeOfLifeSubtree for the node after settle.
- */
-export type TaxonVisual = {
-  __typename?: 'TaxonVisual';
-  assetId?: Maybe<Scalars['ID']['output']>;
-  description?: Maybe<Scalars['String']['output']>;
-  nodeId?: Maybe<Scalars['String']['output']>;
-  ottId: Scalars['Int']['output'];
-  status: TaxonVisualStatus;
-  visualScore?: Maybe<TaxonVisualScore>;
-};
-
-/** Vision QA scores from the studio generate pipeline. */
-export type TaxonVisualScore = {
-  __typename?: 'TaxonVisualScore';
-  overall: Scalars['Float']['output'];
-  pass: Scalars['Boolean']['output'];
-  taxonMatch: Scalars['Float']['output'];
-};
-
-export enum TaxonVisualStatus {
-  Error = 'ERROR',
-  Exhausted = 'EXHAUSTED',
-  Pending = 'PENDING',
-  Ready = 'READY'
-}
-
-/**
- * Flat OTOL + studio node. Tree edges are nodeId-only, parent-pointer style:
- * `ancestor` ← the node's own ancestorNodeId (shallow stitch by DataLoader),
- * `descendants` ← a live reverse lookup (`{ ancestorNodeId: nodeId }`, batched).
- * Nothing is stored forward on the parent. Studio image via `asset` ← assetId.
- */
-export type TreeOfLifeNode = {
-  __typename?: 'TreeOfLifeNode';
-  /** Parent node, stitched from this node's own ancestorNodeId. Null for the root (no OTOL parent). */
-  ancestor?: Maybe<TreeOfLifeNode>;
-  asset?: Maybe<Asset>;
-  assetId?: Maybe<Scalars['ID']['output']>;
-  descendants?: Maybe<Array<TreeOfLifeNode>>;
-  description?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  nodeId: Scalars['String']['output'];
-  /**
-   * OTOL tip count for this clade. `0` means a known leaf (do not expand).
-   * At height cutoffs, children may be omitted while numTips stays > 0.
-   */
-  numTips?: Maybe<Scalars['Int']['output']>;
-  /** OTOL taxonomy id — an attribute/lookup key, not a relationship. Missing on some unnamed / synthetic nodes. */
-  ottId?: Maybe<Scalars['Int']['output']>;
-  rank?: Maybe<Scalars['String']['output']>;
-  /** Studio vision QA for the current asset, when generated. */
-  visualScore?: Maybe<TaxonVisualScore>;
-  visualStatus?: Maybe<TaxonVisualStatus>;
-};
-
 export type ActivateInput = {
   RegistrationGUID: UUID;
   Secret: string;
@@ -383,16 +164,8 @@ export function useKicl_AssetLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryH
           const options = {...defaultOptions, ...baseOptions}
           return ApolloReactHooks.useLazyQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
         }
-// @ts-ignore
-export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_AssetData, Kicl_AssetVariables>;
-export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_AssetData | undefined, Kicl_AssetVariables>;
-export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
-        }
 export type Kicl_AssetHookResult = ReturnType<typeof useKicl_Asset>;
 export type Kicl_AssetLazyQueryHookResult = ReturnType<typeof useKicl_AssetLazyQuery>;
-export type Kicl_AssetSuspenseQueryHookResult = ReturnType<typeof useKicl_AssetSuspenseQuery>;
 export type Kicl_AssetQueryResult = ApolloReactCommon.QueryResult<Kicl_AssetData, Kicl_AssetVariables>;
 export const Kicl_MeDocument = gql`
     query kicl_Me {
@@ -431,16 +204,8 @@ export function useKicl_MeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHook
           const options = {...defaultOptions, ...baseOptions}
           return ApolloReactHooks.useLazyQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
         }
-// @ts-ignore
-export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_MeData, Kicl_MeVariables>;
-export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_MeData | undefined, Kicl_MeVariables>;
-export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
-        }
 export type Kicl_MeHookResult = ReturnType<typeof useKicl_Me>;
 export type Kicl_MeLazyQueryHookResult = ReturnType<typeof useKicl_MeLazyQuery>;
-export type Kicl_MeSuspenseQueryHookResult = ReturnType<typeof useKicl_MeSuspenseQuery>;
 export type Kicl_MeQueryResult = ApolloReactCommon.QueryResult<Kicl_MeData, Kicl_MeVariables>;
 export const Kicl_TaxonVisualDocument = gql`
     query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
@@ -485,16 +250,8 @@ export function useKicl_TaxonVisualLazyQuery(baseOptions?: ApolloReactHooks.Lazy
           const options = {...defaultOptions, ...baseOptions}
           return ApolloReactHooks.useLazyQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
         }
-// @ts-ignore
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TaxonVisualData | undefined, Kicl_TaxonVisualVariables>;
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
-        }
 export type Kicl_TaxonVisualHookResult = ReturnType<typeof useKicl_TaxonVisual>;
 export type Kicl_TaxonVisualLazyQueryHookResult = ReturnType<typeof useKicl_TaxonVisualLazyQuery>;
-export type Kicl_TaxonVisualSuspenseQueryHookResult = ReturnType<typeof useKicl_TaxonVisualSuspenseQuery>;
 export type Kicl_TaxonVisualQueryResult = ApolloReactCommon.QueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
 export const Kicl_TreeOfLifeSubtreeDocument = gql`
     query kicl_TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
@@ -865,16 +622,8 @@ export function useKicl_TreeOfLifeSubtreeLazyQuery(baseOptions?: ApolloReactHook
           const options = {...defaultOptions, ...baseOptions}
           return ApolloReactHooks.useLazyQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
         }
-// @ts-ignore
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData | undefined, Kicl_TreeOfLifeSubtreeVariables>;
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
-        }
 export type Kicl_TreeOfLifeSubtreeHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtree>;
 export type Kicl_TreeOfLifeSubtreeLazyQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreeLazyQuery>;
-export type Kicl_TreeOfLifeSubtreeSuspenseQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreeSuspenseQuery>;
 export type Kicl_TreeOfLifeSubtreeQueryResult = ApolloReactCommon.QueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
 export const Kicl_TreeOfLifeSubtreesDocument = gql`
     query kicl_TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
@@ -1249,23 +998,14 @@ export function useKicl_TreeOfLifeSubtreesLazyQuery(baseOptions?: ApolloReactHoo
           const options = {...defaultOptions, ...baseOptions}
           return ApolloReactHooks.useLazyQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
         }
-// @ts-ignore
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData | undefined, Kicl_TreeOfLifeSubtreesVariables>;
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
-          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return ApolloReactHooks.useSuspenseQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
-        }
 export type Kicl_TreeOfLifeSubtreesHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtrees>;
 export type Kicl_TreeOfLifeSubtreesLazyQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreesLazyQuery>;
-export type Kicl_TreeOfLifeSubtreesSuspenseQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreesSuspenseQuery>;
 export type Kicl_TreeOfLifeSubtreesQueryResult = ApolloReactCommon.QueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
 export const Kicl_ActivateDocument = gql`
     mutation kicl_Activate($Activate: ActivateInput!) {
   Activate(Activate: $Activate)
 }
     `;
-export type Kicl_ActivateMutationFn = ApolloReactCommon.MutationFunction<Kicl_ActivateData, Kicl_ActivateVariables>;
 
 /**
  * __useKicl_Activate__
@@ -1290,13 +1030,12 @@ export function useKicl_Activate(baseOptions?: ApolloReactHooks.MutationHookOpti
       }
 export type Kicl_ActivateHookResult = ReturnType<typeof useKicl_Activate>;
 export type Kicl_ActivateMutationResult = ApolloReactCommon.MutationResult<Kicl_ActivateData>;
-export type Kicl_ActivateMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_ActivateData, Kicl_ActivateVariables>;
+export type Kicl_ActivateMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_ActivateData, Kicl_ActivateVariables>;
 export const Kicl_ExchangeTokenDocument = gql`
     mutation kicl_ExchangeToken {
   ExchangeToken
 }
     `;
-export type Kicl_ExchangeTokenMutationFn = ApolloReactCommon.MutationFunction<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
 
 /**
  * __useKicl_ExchangeToken__
@@ -1320,13 +1059,12 @@ export function useKicl_ExchangeToken(baseOptions?: ApolloReactHooks.MutationHoo
       }
 export type Kicl_ExchangeTokenHookResult = ReturnType<typeof useKicl_ExchangeToken>;
 export type Kicl_ExchangeTokenMutationResult = ApolloReactCommon.MutationResult<Kicl_ExchangeTokenData>;
-export type Kicl_ExchangeTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
+export type Kicl_ExchangeTokenMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
 export const Kicl_RefreshTokenDocument = gql`
     mutation kicl_RefreshToken {
   RefreshToken
 }
     `;
-export type Kicl_RefreshTokenMutationFn = ApolloReactCommon.MutationFunction<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
 
 /**
  * __useKicl_RefreshToken__
@@ -1350,13 +1088,12 @@ export function useKicl_RefreshToken(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type Kicl_RefreshTokenHookResult = ReturnType<typeof useKicl_RefreshToken>;
 export type Kicl_RefreshTokenMutationResult = ApolloReactCommon.MutationResult<Kicl_RefreshTokenData>;
-export type Kicl_RefreshTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
+export type Kicl_RefreshTokenMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
 export const Kicl_RegisterDocument = gql`
     mutation kicl_Register($Register: RegisterInput!) {
   Register(Register: $Register)
 }
     `;
-export type Kicl_RegisterMutationFn = ApolloReactCommon.MutationFunction<Kicl_RegisterData, Kicl_RegisterVariables>;
 
 /**
  * __useKicl_Register__
@@ -1381,13 +1118,12 @@ export function useKicl_Register(baseOptions?: ApolloReactHooks.MutationHookOpti
       }
 export type Kicl_RegisterHookResult = ReturnType<typeof useKicl_Register>;
 export type Kicl_RegisterMutationResult = ApolloReactCommon.MutationResult<Kicl_RegisterData>;
-export type Kicl_RegisterMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_RegisterData, Kicl_RegisterVariables>;
+export type Kicl_RegisterMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_RegisterData, Kicl_RegisterVariables>;
 export const Kicl_SignInDocument = gql`
     mutation kicl_SignIn($SignIn: SignInInput!) {
   SignIn(SignIn: $SignIn)
 }
     `;
-export type Kicl_SignInMutationFn = ApolloReactCommon.MutationFunction<Kicl_SignInData, Kicl_SignInVariables>;
 
 /**
  * __useKicl_SignIn__
@@ -1412,13 +1148,12 @@ export function useKicl_SignIn(baseOptions?: ApolloReactHooks.MutationHookOption
       }
 export type Kicl_SignInHookResult = ReturnType<typeof useKicl_SignIn>;
 export type Kicl_SignInMutationResult = ApolloReactCommon.MutationResult<Kicl_SignInData>;
-export type Kicl_SignInMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SignInData, Kicl_SignInVariables>;
+export type Kicl_SignInMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_SignInData, Kicl_SignInVariables>;
 export const Kicl_SignOutDocument = gql`
     mutation kicl_SignOut {
   SignOut
 }
     `;
-export type Kicl_SignOutMutationFn = ApolloReactCommon.MutationFunction<Kicl_SignOutData, Kicl_SignOutVariables>;
 
 /**
  * __useKicl_SignOut__
@@ -1442,13 +1177,12 @@ export function useKicl_SignOut(baseOptions?: ApolloReactHooks.MutationHookOptio
       }
 export type Kicl_SignOutHookResult = ReturnType<typeof useKicl_SignOut>;
 export type Kicl_SignOutMutationResult = ApolloReactCommon.MutationResult<Kicl_SignOutData>;
-export type Kicl_SignOutMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SignOutData, Kicl_SignOutVariables>;
+export type Kicl_SignOutMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_SignOutData, Kicl_SignOutVariables>;
 export const Kicl_SocialSignInDocument = gql`
     mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
   SocialSignIn(SocialSignIn: $SocialSignIn)
 }
     `;
-export type Kicl_SocialSignInMutationFn = ApolloReactCommon.MutationFunction<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
 
 /**
  * __useKicl_SocialSignIn__
@@ -1473,7 +1207,7 @@ export function useKicl_SocialSignIn(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type Kicl_SocialSignInHookResult = ReturnType<typeof useKicl_SocialSignIn>;
 export type Kicl_SocialSignInMutationResult = ApolloReactCommon.MutationResult<Kicl_SocialSignInData>;
-export type Kicl_SocialSignInMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
+export type Kicl_SocialSignInMutationOptions = ApolloReactCommon.MutationHookOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
 export const Kicl_TaxonVisualUpdatedDocument = gql`
     subscription kicl_TaxonVisualUpdated($ottId: Int!) {
   TaxonVisualUpdated(ottId: $ottId) {

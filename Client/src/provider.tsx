@@ -4,7 +4,6 @@ import {
   InMemoryCache,
   createHttpLink,
   split,
-  type NormalizedCacheObject,
 } from '@apollo/client';
 // Apollo Client 4 serves the React bindings from their own entry point.
 import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
@@ -36,7 +35,7 @@ function toWsUri(httpUri: string): string {
 function createKiclClient(
   uri: string,
   wsUri: string,
-): ApolloClient<NormalizedCacheObject> {
+): ApolloClient {
   const httpLink = createHttpLink({
     uri,
     credentials: 'include',
@@ -96,12 +95,12 @@ function createKiclClient(
   });
 }
 
-let clientInstance: ApolloClient<NormalizedCacheObject> | null = null;
+let clientInstance: ApolloClient | null = null;
 
 export function getKiclClient(
   uri: string = '/api',
   wsUri?: string,
-): ApolloClient<NormalizedCacheObject> {
+): ApolloClient {
   if (!clientInstance) {
     clientInstance = createKiclClient(uri, wsUri ?? toWsUri(uri));
   }

@@ -49,7 +49,6 @@ const config: CodegenConfig = {
     // React hooks
     '../Client/src/generated/hooks.ts': {
       plugins: [
-        'typescript',
         'typescript-operations',
         'typescript-react-apollo',
       ],
@@ -58,6 +57,11 @@ const config: CodegenConfig = {
         withHooks: true,
         withComponent: false,
         withHOC: false,
+        // Its overloads are written against Apollo Client 3 and do not
+        // typecheck under 4; nothing consumes them. Opt-out added by patch.
+        withSuspenseQuery: false,
+        // Apollo Client 4 has no MutationFunction type; nothing uses the alias.
+        withMutationFn: false,
         scalars: SCALAR_MAP_CLIENT,
         // Avoid duplicate type names between operations and hook results
         omitOperationSuffix: true,
