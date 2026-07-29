@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "Server/Types/**",
+    "Client/src/generated/**",
+    "Client/@mf-types/**"
+  ],
+  "env": {
+    "es2024": true,
+    "node": true
+  },
+  "rules": {
+    "typescript/no-namespace": [
+      "error",
+      {
+        "allowDeclarations": true
+      }
+    ],
+    "no-unused-vars": [
+      "error",
+      {
+        "args": "none",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none",
+        "destructuredArrayIgnorePattern": "^_",
+        "ignoreRestSiblings": true,
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["Client/**/*.{ts,tsx}"],
+      "env": {
+        "browser": true
+      }
+    }
+  ]
+}

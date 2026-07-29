@@ -1,10 +1,10 @@
 {
   "latestErrorEvent": {
     "code": "TYPE-001",
-    "message": "Failed to generate type declaration. Execute the below cmd to reproduce and fix the error. #TYPE-001\nargs: {\"cmd\":\"/Users/kenilam/.nvm/versions/node/v24.3.0/bin/node /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/node_modules/typescript/bin/tsc --project /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/Client/node_modules/.federation/tsconfig.26bb2c6b3368ac022f445b97bff15fc1.json\"}\nView the docs to see how to solve: https://module-federation.io/guide/troubleshooting/type#type-001",
+    "message": "Failed to generate type declaration. Execute the below cmd to reproduce and fix the error. #TYPE-001\nargs: {\"cmd\":\"/Users/kenilam/.nvm/versions/node/v24.3.0/bin/node /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/node_modules/typescript/bin/tsc --project /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/Client/node_modules/.federation/tsconfig.7c1f56feae251d012f9fa93d58a6be92.json\"}\nView the docs to see how to solve: https://module-federation.io/guide/troubleshooting/type#type-001",
     "args": {
-      "cmd": "/Users/kenilam/.nvm/versions/node/v24.3.0/bin/node /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/node_modules/typescript/bin/tsc --project /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/Client/node_modules/.federation/tsconfig.26bb2c6b3368ac022f445b97bff15fc1.json"
+      "cmd": "/Users/kenilam/.nvm/versions/node/v24.3.0/bin/node /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/node_modules/typescript/bin/tsc --project /Users/kenilam/Documents/ME/WORK/ki-cl.com/Backend/Client/node_modules/.federation/tsconfig.7c1f56feae251d012f9fa93d58a6be92.json"
     },
-    "timestamp": 1785300337471
+    "timestamp": 1785303820000
   }
 }
