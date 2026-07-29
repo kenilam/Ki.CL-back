@@ -11,7 +11,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 
-import { Kicl_ExchangeTokenDocument } from 'api/generated/hooks';
+import { Kicl_ExchangeTokenDocument } from 'api/generated/graphql';
 import { hasSession } from 'api/utils';
 
 interface KiclProviderProps {

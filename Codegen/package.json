@@ -12,7 +12,6 @@
     "@graphql-codegen/client-preset": "^6.1.0",
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^6.1.2",
-    "@graphql-codegen/typescript-react-apollo": "patch:@graphql-codegen/typescript-react-apollo@npm%3A4.4.2#~/.yarn/patches/@graphql-codegen-typescript-react-apollo-npm-4.4.2-d472e47341.patch",
     "@graphql-codegen/typescript-resolvers": "^6.1.0",
     "@graphql-tools/load-files": "^7.0.1",
     "@graphql-tools/merge": "^9.2.2",
