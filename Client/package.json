@@ -16,7 +16,7 @@
     "@apollo/client": "^4.2.8",
     "@module-federation/vite": "^1.20.0",
     "@vitejs/plugin-react": "^6.0.4",
-    "graphql": "^16.14.2",
+    "graphql": "17",
     "graphql-ws": "^6.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
