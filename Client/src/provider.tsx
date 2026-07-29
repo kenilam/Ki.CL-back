@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import {
   ApolloClient,
   InMemoryCache,
-  ApolloProvider as BaseApolloProvider,
   createHttpLink,
   split,
   type NormalizedCacheObject,
 } from '@apollo/client';
+// Apollo Client 4 serves the React bindings from their own entry point.
+import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';

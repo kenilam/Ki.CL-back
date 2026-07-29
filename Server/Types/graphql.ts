@@ -8,11 +8,6 @@ import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from '
 import { Context } from 'server/Context/index.js';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -234,7 +229,7 @@ export type ResolverTypeWrapper<T> = Promise<T> | T;
 export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
   resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
 };
-export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> = ResolverFn<TResult, TParent, TContext, TArgs> | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
+export type Resolver<TResult, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> = ResolverFn<TResult, TParent, TContext, TArgs> | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
 
 export type ResolverFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
@@ -271,27 +266,29 @@ export type SubscriptionObject<TResult, TKey extends string, TParent, TContext, 
   | SubscriptionSubscriberObject<TResult, TKey, TParent, TContext, TArgs>
   | SubscriptionResolverObject<TResult, TParent, TContext, TArgs>;
 
-export type SubscriptionResolver<TResult, TKey extends string, TParent = {}, TContext = {}, TArgs = {}> =
+export type SubscriptionResolver<TResult, TKey extends string, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> =
   | ((...args: any[]) => SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>)
   | SubscriptionObject<TResult, TKey, TParent, TContext, TArgs>;
 
-export type TypeResolveFn<TTypes, TParent = {}, TContext = {}> = (
+export type TypeResolveFn<TTypes, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>> = (
   parent: TParent,
   context: TContext,
   info: GraphQLResolveInfo
 ) => Maybe<TTypes> | Promise<Maybe<TTypes>>;
 
-export type IsTypeOfResolverFn<T = {}, TContext = {}> = (obj: T, context: TContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
+export type IsTypeOfResolverFn<T = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>> = (obj: T, context: TContext, info: GraphQLResolveInfo) => boolean | Promise<boolean>;
 
 export type NextResolverFn<T> = () => Promise<T>;
 
-export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs = {}> = (
+export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = Record<PropertyKey, never>, TContext = Record<PropertyKey, never>, TArgs = Record<PropertyKey, never>> = (
   next: NextResolverFn<TResult>,
   parent: TParent,
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
 ) => TResult | Promise<TResult>;
+
+
 
 
 
@@ -307,15 +304,15 @@ export type ResolversTypes = ResolversObject<{
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
   MePayload: ResolverTypeWrapper<MePayload>;
-  Mutation: ResolverTypeWrapper<{}>;
+  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   NonEmptyString: ResolverTypeWrapper<Scalars['NonEmptyString']['output']>;
   Provider: Provider;
-  Query: ResolverTypeWrapper<{}>;
+  Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RegisterInput: RegisterInput;
   SignInInput: SignInInput;
   SocialSignInInput: SocialSignInInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  Subscription: ResolverTypeWrapper<{}>;
+  Subscription: ResolverTypeWrapper<Record<PropertyKey, never>>;
   TaxonVisual: ResolverTypeWrapper<TaxonVisual>;
   TaxonVisualScore: ResolverTypeWrapper<TaxonVisualScore>;
   TaxonVisualStatus: TaxonVisualStatus;
@@ -336,14 +333,14 @@ export type ResolversParentTypes = ResolversObject<{
   Int: Scalars['Int']['output'];
   JWT: Scalars['JWT']['output'];
   MePayload: MePayload;
-  Mutation: {};
+  Mutation: Record<PropertyKey, never>;
   NonEmptyString: Scalars['NonEmptyString']['output'];
-  Query: {};
+  Query: Record<PropertyKey, never>;
   RegisterInput: RegisterInput;
   SignInInput: SignInInput;
   SocialSignInInput: SocialSignInInput;
   String: Scalars['String']['output'];
-  Subscription: {};
+  Subscription: Record<PropertyKey, never>;
   TaxonVisual: TaxonVisual;
   TaxonVisualScore: TaxonVisualScore;
   TreeOfLifeNode: TreeOfLifeNode;
@@ -355,7 +352,6 @@ export type AssetResolvers<ContextType = Context, ParentType extends ResolversPa
   generator?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
@@ -378,7 +374,6 @@ export type MePayloadResolvers<ContextType = Context, ParentType extends Resolve
   LastName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   UserGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
   aud?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
@@ -414,14 +409,12 @@ export type TaxonVisualResolvers<ContextType = Context, ParentType extends Resol
   ottId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['TaxonVisualStatus'], ParentType, ContextType>;
   visualScore?: Resolver<Maybe<ResolversTypes['TaxonVisualScore']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TaxonVisualScoreResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TaxonVisualScore'] = ResolversParentTypes['TaxonVisualScore']> = ResolversObject<{
   overall?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   pass?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   taxonMatch?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TreeOfLifeNodeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TreeOfLifeNode'] = ResolversParentTypes['TreeOfLifeNode']> = ResolversObject<{
@@ -437,7 +430,6 @@ export type TreeOfLifeNodeResolvers<ContextType = Context, ParentType extends Re
   rank?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   visualScore?: Resolver<Maybe<ResolversTypes['TaxonVisualScore']>, ParentType, ContextType>;
   visualStatus?: Resolver<Maybe<ResolversTypes['TaxonVisualStatus']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export interface UrlScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['URL'], any> {

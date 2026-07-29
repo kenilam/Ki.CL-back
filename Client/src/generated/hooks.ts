@@ -1,18 +1,19 @@
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import { DateTimeString } from '../scalars';
 import { EmailAddress } from '../scalars';
 import { JWT } from '../scalars';
 import { NonEmptyString } from '../scalars';
 import { URL } from '../scalars';
 import { UUID } from '../scalars';
+import { EmailAddress, UUID } from '../scalars';
 import { gql } from '@apollo/client';
-import * as Apollo from '@apollo/client';
+import * as ApolloReactCommon from '@apollo/client/react';
+import * as ApolloReactHooks from '@apollo/client/react';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
-export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -225,94 +226,127 @@ export type TreeOfLifeNode = {
   visualStatus?: Maybe<TaxonVisualStatus>;
 };
 
+export type ActivateInput = {
+  RegistrationGUID: UUID;
+  Secret: string;
+  UserGUID: UUID;
+};
+
+export type Provider =
+  | 'apple'
+  | 'google';
+
+export type RegisterInput = {
+  Email: EmailAddress;
+  FirstName?: string | null | undefined;
+  LastName?: string | null | undefined;
+  Password: string;
+};
+
+export type SignInInput = {
+  Email: EmailAddress;
+  Password: string;
+};
+
+export type SocialSignInInput = {
+  Provider: Provider;
+  Token: string;
+};
+
+export type TaxonVisualStatus =
+  | 'ERROR'
+  | 'EXHAUSTED'
+  | 'PENDING'
+  | 'READY';
+
 export type Kicl_AssetVariables = Exact<{
-  id: Scalars['ID']['input'];
+  id: string | number;
 }>;
 
 
-export type Kicl_AssetData = { __typename?: 'Query', Asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null };
+export type Kicl_AssetData = { Asset: { id: string, url: string, generator: string | null } | null };
 
 export type Kicl_MeVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_MeData = { __typename?: 'Query', Me?: { __typename?: 'MePayload', UserGUID?: UUID | null, Email?: EmailAddress | null, FirstName?: string | null, LastName?: string | null, Avatar?: string | null, Active?: boolean | null, aud?: string | null } | null };
+export type Kicl_MeData = { Me: { UserGUID: UUID | null, Email: EmailAddress | null, FirstName: string | null, LastName: string | null, Avatar: string | null, Active: boolean | null, aud: string | null } | null };
 
 export type Kicl_TaxonVisualVariables = Exact<{
-  ottId: Scalars['Int']['input'];
-  name: Scalars['String']['input'];
-  rank?: InputMaybe<Scalars['String']['input']>;
+  ottId: number;
+  name: string;
+  rank?: string | null | undefined;
 }>;
 
 
-export type Kicl_TaxonVisualData = { __typename?: 'Query', TaxonVisual: { __typename?: 'TaxonVisual', status: TaxonVisualStatus, ottId: number, nodeId?: string | null, assetId?: string | null, description?: string | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null } };
+export type Kicl_TaxonVisualData = { TaxonVisual: { status: TaxonVisualStatus, ottId: number, nodeId: string | null, assetId: string | null, description: string | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null } };
 
 export type Kicl_TreeOfLifeSubtreeVariables = Exact<{
-  ottId?: InputMaybe<Scalars['Int']['input']>;
-  nodeId?: InputMaybe<Scalars['String']['input']>;
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
+  ottId?: number | null | undefined;
+  nodeId?: string | null | undefined;
+  heightLimit?: number | null | undefined;
 }>;
 
 
-export type Kicl_TreeOfLifeSubtreeData = { __typename?: 'Query', TreeOfLifeSubtree?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null }> | null }> | null }> | null } | null };
+export type Kicl_TreeOfLifeSubtreeData = { TreeOfLifeSubtree: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null }> | null }> | null }> | null } | null };
 
 export type Kicl_TreeOfLifeSubtreesVariables = Exact<{
-  ottIds?: InputMaybe<Array<Scalars['Int']['input']> | Scalars['Int']['input']>;
-  nodeIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
+  ottIds?: Array<number> | number | null | undefined;
+  nodeIds?: Array<string> | string | null | undefined;
+  heightLimit?: number | null | undefined;
 }>;
 
 
-export type Kicl_TreeOfLifeSubtreesData = { __typename?: 'Query', TreeOfLifeSubtrees: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null }> | null }> | null }> | null } | null> };
+export type Kicl_TreeOfLifeSubtreesData = { TreeOfLifeSubtrees: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null }> | null }> | null }> | null } | null> };
 
 export type Kicl_ActivateVariables = Exact<{
   Activate: ActivateInput;
 }>;
 
 
-export type Kicl_ActivateData = { __typename?: 'Mutation', Activate?: boolean | null };
+export type Kicl_ActivateData = { Activate: boolean | null };
 
 export type Kicl_ExchangeTokenVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_ExchangeTokenData = { __typename?: 'Mutation', ExchangeToken?: boolean | null };
+export type Kicl_ExchangeTokenData = { ExchangeToken: boolean | null };
 
 export type Kicl_RefreshTokenVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_RefreshTokenData = { __typename?: 'Mutation', RefreshToken?: boolean | null };
+export type Kicl_RefreshTokenData = { RefreshToken: boolean | null };
 
 export type Kicl_RegisterVariables = Exact<{
   Register: RegisterInput;
 }>;
 
 
-export type Kicl_RegisterData = { __typename?: 'Mutation', Register?: boolean | null };
+export type Kicl_RegisterData = { Register: boolean | null };
 
 export type Kicl_SignInVariables = Exact<{
   SignIn: SignInInput;
 }>;
 
 
-export type Kicl_SignInData = { __typename?: 'Mutation', SignIn?: boolean | null };
+export type Kicl_SignInData = { SignIn: boolean | null };
 
 export type Kicl_SignOutVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_SignOutData = { __typename?: 'Mutation', SignOut?: boolean | null };
+export type Kicl_SignOutData = { SignOut: boolean | null };
 
 export type Kicl_SocialSignInVariables = Exact<{
   SocialSignIn: SocialSignInInput;
 }>;
 
 
-export type Kicl_SocialSignInData = { __typename?: 'Mutation', SocialSignIn?: boolean | null };
+export type Kicl_SocialSignInData = { SocialSignIn: boolean | null };
 
 export type Kicl_TaxonVisualUpdatedVariables = Exact<{
-  ottId: Scalars['Int']['input'];
+  ottId: number;
 }>;
 
 
-export type Kicl_TaxonVisualUpdatedData = { __typename?: 'Subscription', TaxonVisualUpdated: { __typename?: 'TaxonVisual', status: TaxonVisualStatus, ottId: number, nodeId?: string | null, assetId?: string | null, description?: string | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null } };
+export type Kicl_TaxonVisualUpdatedData = { TaxonVisualUpdated: { status: TaxonVisualStatus, ottId: number, nodeId: string | null, assetId: string | null, description: string | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null } };
 
 
 export const Kicl_AssetDocument = gql`
@@ -341,25 +375,25 @@ export const Kicl_AssetDocument = gql`
  *   },
  * });
  */
-export function useKicl_Asset(baseOptions: Apollo.QueryHookOptions<Kicl_AssetData, Kicl_AssetVariables> & ({ variables: Kicl_AssetVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useKicl_Asset(baseOptions: ApolloReactHooks.QueryHookOptions<Kicl_AssetData, Kicl_AssetVariables> & ({ variables: Kicl_AssetVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
+        return ApolloReactHooks.useQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
       }
-export function useKicl_AssetLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>) {
+export function useKicl_AssetLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
+          return ApolloReactHooks.useLazyQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
         }
 // @ts-ignore
-export function useKicl_AssetSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): Apollo.UseSuspenseQueryResult<Kicl_AssetData, Kicl_AssetVariables>;
-export function useKicl_AssetSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): Apollo.UseSuspenseQueryResult<Kicl_AssetData | undefined, Kicl_AssetVariables>;
-export function useKicl_AssetSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
+export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_AssetData, Kicl_AssetVariables>;
+export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_AssetData | undefined, Kicl_AssetVariables>;
+export function useKicl_AssetSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_AssetData, Kicl_AssetVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<Kicl_AssetData, Kicl_AssetVariables>(Kicl_AssetDocument, options);
         }
 export type Kicl_AssetHookResult = ReturnType<typeof useKicl_Asset>;
 export type Kicl_AssetLazyQueryHookResult = ReturnType<typeof useKicl_AssetLazyQuery>;
 export type Kicl_AssetSuspenseQueryHookResult = ReturnType<typeof useKicl_AssetSuspenseQuery>;
-export type Kicl_AssetQueryResult = Apollo.QueryResult<Kicl_AssetData, Kicl_AssetVariables>;
+export type Kicl_AssetQueryResult = ApolloReactCommon.QueryResult<Kicl_AssetData, Kicl_AssetVariables>;
 export const Kicl_MeDocument = gql`
     query kicl_Me {
   Me {
@@ -389,25 +423,25 @@ export const Kicl_MeDocument = gql`
  *   },
  * });
  */
-export function useKicl_Me(baseOptions?: Apollo.QueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
+export function useKicl_Me(baseOptions?: ApolloReactHooks.QueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
+        return ApolloReactHooks.useQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
       }
-export function useKicl_MeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
+export function useKicl_MeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
+          return ApolloReactHooks.useLazyQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
         }
 // @ts-ignore
-export function useKicl_MeSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): Apollo.UseSuspenseQueryResult<Kicl_MeData, Kicl_MeVariables>;
-export function useKicl_MeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): Apollo.UseSuspenseQueryResult<Kicl_MeData | undefined, Kicl_MeVariables>;
-export function useKicl_MeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
+export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_MeData, Kicl_MeVariables>;
+export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_MeData | undefined, Kicl_MeVariables>;
+export function useKicl_MeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_MeData, Kicl_MeVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<Kicl_MeData, Kicl_MeVariables>(Kicl_MeDocument, options);
         }
 export type Kicl_MeHookResult = ReturnType<typeof useKicl_Me>;
 export type Kicl_MeLazyQueryHookResult = ReturnType<typeof useKicl_MeLazyQuery>;
 export type Kicl_MeSuspenseQueryHookResult = ReturnType<typeof useKicl_MeSuspenseQuery>;
-export type Kicl_MeQueryResult = Apollo.QueryResult<Kicl_MeData, Kicl_MeVariables>;
+export type Kicl_MeQueryResult = ApolloReactCommon.QueryResult<Kicl_MeData, Kicl_MeVariables>;
 export const Kicl_TaxonVisualDocument = gql`
     query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
   TaxonVisual(ottId: $ottId, name: $name, rank: $rank) {
@@ -443,25 +477,25 @@ export const Kicl_TaxonVisualDocument = gql`
  *   },
  * });
  */
-export function useKicl_TaxonVisual(baseOptions: Apollo.QueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables> & ({ variables: Kicl_TaxonVisualVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useKicl_TaxonVisual(baseOptions: ApolloReactHooks.QueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables> & ({ variables: Kicl_TaxonVisualVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
+        return ApolloReactHooks.useQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
       }
-export function useKicl_TaxonVisualLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>) {
+export function useKicl_TaxonVisualLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
+          return ApolloReactHooks.useLazyQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
         }
 // @ts-ignore
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): Apollo.UseSuspenseQueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): Apollo.UseSuspenseQueryResult<Kicl_TaxonVisualData | undefined, Kicl_TaxonVisualVariables>;
-export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
+export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
+export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TaxonVisualData | undefined, Kicl_TaxonVisualVariables>;
+export function useKicl_TaxonVisualSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>(Kicl_TaxonVisualDocument, options);
         }
 export type Kicl_TaxonVisualHookResult = ReturnType<typeof useKicl_TaxonVisual>;
 export type Kicl_TaxonVisualLazyQueryHookResult = ReturnType<typeof useKicl_TaxonVisualLazyQuery>;
 export type Kicl_TaxonVisualSuspenseQueryHookResult = ReturnType<typeof useKicl_TaxonVisualSuspenseQuery>;
-export type Kicl_TaxonVisualQueryResult = Apollo.QueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
+export type Kicl_TaxonVisualQueryResult = ApolloReactCommon.QueryResult<Kicl_TaxonVisualData, Kicl_TaxonVisualVariables>;
 export const Kicl_TreeOfLifeSubtreeDocument = gql`
     query kicl_TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
   TreeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
@@ -823,25 +857,25 @@ export const Kicl_TreeOfLifeSubtreeDocument = gql`
  *   },
  * });
  */
-export function useKicl_TreeOfLifeSubtree(baseOptions?: Apollo.QueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
+export function useKicl_TreeOfLifeSubtree(baseOptions?: ApolloReactHooks.QueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
+        return ApolloReactHooks.useQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
       }
-export function useKicl_TreeOfLifeSubtreeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
+export function useKicl_TreeOfLifeSubtreeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
+          return ApolloReactHooks.useLazyQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
         }
 // @ts-ignore
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): Apollo.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): Apollo.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData | undefined, Kicl_TreeOfLifeSubtreeVariables>;
-export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
+export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
+export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreeData | undefined, Kicl_TreeOfLifeSubtreeVariables>;
+export function useKicl_TreeOfLifeSubtreeSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>(Kicl_TreeOfLifeSubtreeDocument, options);
         }
 export type Kicl_TreeOfLifeSubtreeHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtree>;
 export type Kicl_TreeOfLifeSubtreeLazyQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreeLazyQuery>;
 export type Kicl_TreeOfLifeSubtreeSuspenseQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreeSuspenseQuery>;
-export type Kicl_TreeOfLifeSubtreeQueryResult = Apollo.QueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
+export type Kicl_TreeOfLifeSubtreeQueryResult = ApolloReactCommon.QueryResult<Kicl_TreeOfLifeSubtreeData, Kicl_TreeOfLifeSubtreeVariables>;
 export const Kicl_TreeOfLifeSubtreesDocument = gql`
     query kicl_TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
   TreeOfLifeSubtrees(
@@ -1207,31 +1241,31 @@ export const Kicl_TreeOfLifeSubtreesDocument = gql`
  *   },
  * });
  */
-export function useKicl_TreeOfLifeSubtrees(baseOptions?: Apollo.QueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
+export function useKicl_TreeOfLifeSubtrees(baseOptions?: ApolloReactHooks.QueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
+        return ApolloReactHooks.useQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
       }
-export function useKicl_TreeOfLifeSubtreesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
+export function useKicl_TreeOfLifeSubtreesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
+          return ApolloReactHooks.useLazyQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
         }
 // @ts-ignore
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): Apollo.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): Apollo.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData | undefined, Kicl_TreeOfLifeSubtreesVariables>;
-export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
+export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
+export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>): ApolloReactHooks.UseSuspenseQueryResult<Kicl_TreeOfLifeSubtreesData | undefined, Kicl_TreeOfLifeSubtreesVariables>;
+export function useKicl_TreeOfLifeSubtreesSuspenseQuery(baseOptions?: ApolloReactHooks.SkipToken | ApolloReactHooks.SuspenseQueryHookOptions<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>) {
+          const options = baseOptions === ApolloReactHooks.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useSuspenseQuery<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>(Kicl_TreeOfLifeSubtreesDocument, options);
         }
 export type Kicl_TreeOfLifeSubtreesHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtrees>;
 export type Kicl_TreeOfLifeSubtreesLazyQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreesLazyQuery>;
 export type Kicl_TreeOfLifeSubtreesSuspenseQueryHookResult = ReturnType<typeof useKicl_TreeOfLifeSubtreesSuspenseQuery>;
-export type Kicl_TreeOfLifeSubtreesQueryResult = Apollo.QueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
+export type Kicl_TreeOfLifeSubtreesQueryResult = ApolloReactCommon.QueryResult<Kicl_TreeOfLifeSubtreesData, Kicl_TreeOfLifeSubtreesVariables>;
 export const Kicl_ActivateDocument = gql`
     mutation kicl_Activate($Activate: ActivateInput!) {
   Activate(Activate: $Activate)
 }
     `;
-export type Kicl_ActivateMutationFn = Apollo.MutationFunction<Kicl_ActivateData, Kicl_ActivateVariables>;
+export type Kicl_ActivateMutationFn = ApolloReactCommon.MutationFunction<Kicl_ActivateData, Kicl_ActivateVariables>;
 
 /**
  * __useKicl_Activate__
@@ -1250,19 +1284,19 @@ export type Kicl_ActivateMutationFn = Apollo.MutationFunction<Kicl_ActivateData,
  *   },
  * });
  */
-export function useKicl_Activate(baseOptions?: Apollo.MutationHookOptions<Kicl_ActivateData, Kicl_ActivateVariables>) {
+export function useKicl_Activate(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_ActivateData, Kicl_ActivateVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_ActivateData, Kicl_ActivateVariables>(Kicl_ActivateDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_ActivateData, Kicl_ActivateVariables>(Kicl_ActivateDocument, options);
       }
 export type Kicl_ActivateHookResult = ReturnType<typeof useKicl_Activate>;
-export type Kicl_ActivateMutationResult = Apollo.MutationResult<Kicl_ActivateData>;
-export type Kicl_ActivateMutationOptions = Apollo.BaseMutationOptions<Kicl_ActivateData, Kicl_ActivateVariables>;
+export type Kicl_ActivateMutationResult = ApolloReactCommon.MutationResult<Kicl_ActivateData>;
+export type Kicl_ActivateMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_ActivateData, Kicl_ActivateVariables>;
 export const Kicl_ExchangeTokenDocument = gql`
     mutation kicl_ExchangeToken {
   ExchangeToken
 }
     `;
-export type Kicl_ExchangeTokenMutationFn = Apollo.MutationFunction<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
+export type Kicl_ExchangeTokenMutationFn = ApolloReactCommon.MutationFunction<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
 
 /**
  * __useKicl_ExchangeToken__
@@ -1280,19 +1314,19 @@ export type Kicl_ExchangeTokenMutationFn = Apollo.MutationFunction<Kicl_Exchange
  *   },
  * });
  */
-export function useKicl_ExchangeToken(baseOptions?: Apollo.MutationHookOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>) {
+export function useKicl_ExchangeToken(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>(Kicl_ExchangeTokenDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>(Kicl_ExchangeTokenDocument, options);
       }
 export type Kicl_ExchangeTokenHookResult = ReturnType<typeof useKicl_ExchangeToken>;
-export type Kicl_ExchangeTokenMutationResult = Apollo.MutationResult<Kicl_ExchangeTokenData>;
-export type Kicl_ExchangeTokenMutationOptions = Apollo.BaseMutationOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
+export type Kicl_ExchangeTokenMutationResult = ApolloReactCommon.MutationResult<Kicl_ExchangeTokenData>;
+export type Kicl_ExchangeTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_ExchangeTokenData, Kicl_ExchangeTokenVariables>;
 export const Kicl_RefreshTokenDocument = gql`
     mutation kicl_RefreshToken {
   RefreshToken
 }
     `;
-export type Kicl_RefreshTokenMutationFn = Apollo.MutationFunction<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
+export type Kicl_RefreshTokenMutationFn = ApolloReactCommon.MutationFunction<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
 
 /**
  * __useKicl_RefreshToken__
@@ -1310,19 +1344,19 @@ export type Kicl_RefreshTokenMutationFn = Apollo.MutationFunction<Kicl_RefreshTo
  *   },
  * });
  */
-export function useKicl_RefreshToken(baseOptions?: Apollo.MutationHookOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>) {
+export function useKicl_RefreshToken(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>(Kicl_RefreshTokenDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>(Kicl_RefreshTokenDocument, options);
       }
 export type Kicl_RefreshTokenHookResult = ReturnType<typeof useKicl_RefreshToken>;
-export type Kicl_RefreshTokenMutationResult = Apollo.MutationResult<Kicl_RefreshTokenData>;
-export type Kicl_RefreshTokenMutationOptions = Apollo.BaseMutationOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
+export type Kicl_RefreshTokenMutationResult = ApolloReactCommon.MutationResult<Kicl_RefreshTokenData>;
+export type Kicl_RefreshTokenMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_RefreshTokenData, Kicl_RefreshTokenVariables>;
 export const Kicl_RegisterDocument = gql`
     mutation kicl_Register($Register: RegisterInput!) {
   Register(Register: $Register)
 }
     `;
-export type Kicl_RegisterMutationFn = Apollo.MutationFunction<Kicl_RegisterData, Kicl_RegisterVariables>;
+export type Kicl_RegisterMutationFn = ApolloReactCommon.MutationFunction<Kicl_RegisterData, Kicl_RegisterVariables>;
 
 /**
  * __useKicl_Register__
@@ -1341,19 +1375,19 @@ export type Kicl_RegisterMutationFn = Apollo.MutationFunction<Kicl_RegisterData,
  *   },
  * });
  */
-export function useKicl_Register(baseOptions?: Apollo.MutationHookOptions<Kicl_RegisterData, Kicl_RegisterVariables>) {
+export function useKicl_Register(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_RegisterData, Kicl_RegisterVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_RegisterData, Kicl_RegisterVariables>(Kicl_RegisterDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_RegisterData, Kicl_RegisterVariables>(Kicl_RegisterDocument, options);
       }
 export type Kicl_RegisterHookResult = ReturnType<typeof useKicl_Register>;
-export type Kicl_RegisterMutationResult = Apollo.MutationResult<Kicl_RegisterData>;
-export type Kicl_RegisterMutationOptions = Apollo.BaseMutationOptions<Kicl_RegisterData, Kicl_RegisterVariables>;
+export type Kicl_RegisterMutationResult = ApolloReactCommon.MutationResult<Kicl_RegisterData>;
+export type Kicl_RegisterMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_RegisterData, Kicl_RegisterVariables>;
 export const Kicl_SignInDocument = gql`
     mutation kicl_SignIn($SignIn: SignInInput!) {
   SignIn(SignIn: $SignIn)
 }
     `;
-export type Kicl_SignInMutationFn = Apollo.MutationFunction<Kicl_SignInData, Kicl_SignInVariables>;
+export type Kicl_SignInMutationFn = ApolloReactCommon.MutationFunction<Kicl_SignInData, Kicl_SignInVariables>;
 
 /**
  * __useKicl_SignIn__
@@ -1372,19 +1406,19 @@ export type Kicl_SignInMutationFn = Apollo.MutationFunction<Kicl_SignInData, Kic
  *   },
  * });
  */
-export function useKicl_SignIn(baseOptions?: Apollo.MutationHookOptions<Kicl_SignInData, Kicl_SignInVariables>) {
+export function useKicl_SignIn(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_SignInData, Kicl_SignInVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_SignInData, Kicl_SignInVariables>(Kicl_SignInDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_SignInData, Kicl_SignInVariables>(Kicl_SignInDocument, options);
       }
 export type Kicl_SignInHookResult = ReturnType<typeof useKicl_SignIn>;
-export type Kicl_SignInMutationResult = Apollo.MutationResult<Kicl_SignInData>;
-export type Kicl_SignInMutationOptions = Apollo.BaseMutationOptions<Kicl_SignInData, Kicl_SignInVariables>;
+export type Kicl_SignInMutationResult = ApolloReactCommon.MutationResult<Kicl_SignInData>;
+export type Kicl_SignInMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SignInData, Kicl_SignInVariables>;
 export const Kicl_SignOutDocument = gql`
     mutation kicl_SignOut {
   SignOut
 }
     `;
-export type Kicl_SignOutMutationFn = Apollo.MutationFunction<Kicl_SignOutData, Kicl_SignOutVariables>;
+export type Kicl_SignOutMutationFn = ApolloReactCommon.MutationFunction<Kicl_SignOutData, Kicl_SignOutVariables>;
 
 /**
  * __useKicl_SignOut__
@@ -1402,19 +1436,19 @@ export type Kicl_SignOutMutationFn = Apollo.MutationFunction<Kicl_SignOutData, K
  *   },
  * });
  */
-export function useKicl_SignOut(baseOptions?: Apollo.MutationHookOptions<Kicl_SignOutData, Kicl_SignOutVariables>) {
+export function useKicl_SignOut(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_SignOutData, Kicl_SignOutVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_SignOutData, Kicl_SignOutVariables>(Kicl_SignOutDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_SignOutData, Kicl_SignOutVariables>(Kicl_SignOutDocument, options);
       }
 export type Kicl_SignOutHookResult = ReturnType<typeof useKicl_SignOut>;
-export type Kicl_SignOutMutationResult = Apollo.MutationResult<Kicl_SignOutData>;
-export type Kicl_SignOutMutationOptions = Apollo.BaseMutationOptions<Kicl_SignOutData, Kicl_SignOutVariables>;
+export type Kicl_SignOutMutationResult = ApolloReactCommon.MutationResult<Kicl_SignOutData>;
+export type Kicl_SignOutMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SignOutData, Kicl_SignOutVariables>;
 export const Kicl_SocialSignInDocument = gql`
     mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
   SocialSignIn(SocialSignIn: $SocialSignIn)
 }
     `;
-export type Kicl_SocialSignInMutationFn = Apollo.MutationFunction<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
+export type Kicl_SocialSignInMutationFn = ApolloReactCommon.MutationFunction<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
 
 /**
  * __useKicl_SocialSignIn__
@@ -1433,13 +1467,13 @@ export type Kicl_SocialSignInMutationFn = Apollo.MutationFunction<Kicl_SocialSig
  *   },
  * });
  */
-export function useKicl_SocialSignIn(baseOptions?: Apollo.MutationHookOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>) {
+export function useKicl_SocialSignIn(baseOptions?: ApolloReactHooks.MutationHookOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<Kicl_SocialSignInData, Kicl_SocialSignInVariables>(Kicl_SocialSignInDocument, options);
+        return ApolloReactHooks.useMutation<Kicl_SocialSignInData, Kicl_SocialSignInVariables>(Kicl_SocialSignInDocument, options);
       }
 export type Kicl_SocialSignInHookResult = ReturnType<typeof useKicl_SocialSignIn>;
-export type Kicl_SocialSignInMutationResult = Apollo.MutationResult<Kicl_SocialSignInData>;
-export type Kicl_SocialSignInMutationOptions = Apollo.BaseMutationOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
+export type Kicl_SocialSignInMutationResult = ApolloReactCommon.MutationResult<Kicl_SocialSignInData>;
+export type Kicl_SocialSignInMutationOptions = ApolloReactCommon.BaseMutationOptions<Kicl_SocialSignInData, Kicl_SocialSignInVariables>;
 export const Kicl_TaxonVisualUpdatedDocument = gql`
     subscription kicl_TaxonVisualUpdated($ottId: Int!) {
   TaxonVisualUpdated(ottId: $ottId) {
@@ -1473,9 +1507,9 @@ export const Kicl_TaxonVisualUpdatedDocument = gql`
  *   },
  * });
  */
-export function useKicl_TaxonVisualUpdated(baseOptions: Apollo.SubscriptionHookOptions<Kicl_TaxonVisualUpdatedData, Kicl_TaxonVisualUpdatedVariables> & ({ variables: Kicl_TaxonVisualUpdatedVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useKicl_TaxonVisualUpdated(baseOptions: ApolloReactHooks.SubscriptionHookOptions<Kicl_TaxonVisualUpdatedData, Kicl_TaxonVisualUpdatedVariables> & ({ variables: Kicl_TaxonVisualUpdatedVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useSubscription<Kicl_TaxonVisualUpdatedData, Kicl_TaxonVisualUpdatedVariables>(Kicl_TaxonVisualUpdatedDocument, options);
+        return ApolloReactHooks.useSubscription<Kicl_TaxonVisualUpdatedData, Kicl_TaxonVisualUpdatedVariables>(Kicl_TaxonVisualUpdatedDocument, options);
       }
 export type Kicl_TaxonVisualUpdatedHookResult = ReturnType<typeof useKicl_TaxonVisualUpdated>;
-export type Kicl_TaxonVisualUpdatedSubscriptionResult = Apollo.SubscriptionResult<Kicl_TaxonVisualUpdatedData>;
+export type Kicl_TaxonVisualUpdatedSubscriptionResult = ApolloReactCommon.SubscriptionResult<Kicl_TaxonVisualUpdatedData>;

@@ -6,10 +6,10 @@ export interface IUser extends Document {
   UserName: string;
   Email: string;
   Password: string;
-  FirstName?: string;
-  LastName?: string;
+  FirstName?: string | null;
+  LastName?: string | null;
   Active: boolean;
-  Avatar?: string;
+  Avatar?: string | null;
   SocialProviders: Array<{
     Provider: string;
     ProviderId: string;

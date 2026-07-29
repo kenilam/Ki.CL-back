@@ -3,14 +3,14 @@ import express from 'express';
 import appRoot from 'app-root-path';
 import { createServer } from 'node:http';
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/lib/use/ws';
+import { useServer } from 'graphql-ws/use/ws';
 
 import { schema } from './Schema.js';
 import { createContext, createWsContext, type Context } from './Context/index.js';
@@ -89,7 +89,6 @@ const server = new ApolloServer<Partial<Context>>({
       ? ApolloServerPluginLandingPageLocalDefault({ footer: true })
       : ApolloServerPluginLandingPageDisabled(),
   ],
-  status400ForVariableCoercionErrors: true,
 });
 
 async function start() {

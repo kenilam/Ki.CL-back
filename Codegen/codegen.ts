@@ -62,6 +62,11 @@ const config: CodegenConfig = {
         // Avoid duplicate type names between operations and hook results
         omitOperationSuffix: true,
         operationResultSuffix: 'Data',
+        // Apollo Client 4 serves the React bindings from their own entry point;
+        // the plugin still defaults to the v3 root export.
+        reactApolloVersion: 3,
+        apolloReactCommonImportFrom: '@apollo/client/react',
+        apolloReactHooksImportFrom: '@apollo/client/react',
       },
     },
   },

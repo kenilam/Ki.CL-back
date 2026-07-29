@@ -1,4 +1,4 @@
-import type { ExpressContextFunctionArgument } from '@apollo/server/express4';
+import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
 import type { Response } from 'express';
 import type { IncomingMessage } from 'node:http';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';

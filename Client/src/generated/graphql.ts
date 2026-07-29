@@ -1,317 +1,131 @@
 /* eslint-disable */
-import { DateTimeString } from '../scalars';
-import { EmailAddress } from '../scalars';
-import { JWT } from '../scalars';
-import { NonEmptyString } from '../scalars';
-import { URL } from '../scalars';
-import { UUID } from '../scalars';
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
-export type Maybe<T> = T | null;
-export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-/** All built-in and custom scalars, mapped to their actual values */
-export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
-  DateTime: { input: DateTimeString; output: DateTimeString; }
-  EmailAddress: { input: EmailAddress; output: EmailAddress; }
-  JWT: { input: JWT; output: JWT; }
-  NonEmptyString: { input: NonEmptyString; output: NonEmptyString; }
-  URL: { input: URL; output: URL; }
-  UUID: { input: UUID; output: UUID; }
-};
-
+import { EmailAddress, UUID } from '../scalars';
+import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type ActivateInput = {
-  RegistrationGUID: Scalars['UUID']['input'];
-  Secret: Scalars['String']['input'];
-  UserGUID: Scalars['UUID']['input'];
+  RegistrationGUID: UUID;
+  Secret: string;
+  UserGUID: UUID;
 };
 
-export type Asset = {
-  __typename?: 'Asset';
-  /**
-   * How the asset was produced (e.g. openai:gpt-image-1).
-   * Null means manually created / uploaded — not AI-generated.
-   */
-  generator?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  url: Scalars['String']['output'];
-};
-
-export type MePayload = {
-  __typename?: 'MePayload';
-  Active?: Maybe<Scalars['Boolean']['output']>;
-  Avatar?: Maybe<Scalars['String']['output']>;
-  Email?: Maybe<Scalars['EmailAddress']['output']>;
-  FirstName?: Maybe<Scalars['String']['output']>;
-  LastName?: Maybe<Scalars['String']['output']>;
-  UserGUID?: Maybe<Scalars['UUID']['output']>;
-  aud?: Maybe<Scalars['String']['output']>;
-};
-
-export type Mutation = {
-  __typename?: 'Mutation';
-  Activate?: Maybe<Scalars['Boolean']['output']>;
-  ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
-  RefreshToken?: Maybe<Scalars['Boolean']['output']>;
-  Register?: Maybe<Scalars['Boolean']['output']>;
-  SignIn?: Maybe<Scalars['Boolean']['output']>;
-  SignOut?: Maybe<Scalars['Boolean']['output']>;
-  SocialSignIn?: Maybe<Scalars['Boolean']['output']>;
-};
-
-
-export type MutationActivateArgs = {
-  Activate: ActivateInput;
-};
-
-
-export type MutationRegisterArgs = {
-  Register: RegisterInput;
-};
-
-
-export type MutationSignInArgs = {
-  SignIn: SignInInput;
-};
-
-
-export type MutationSocialSignInArgs = {
-  SocialSignIn: SocialSignInInput;
-};
-
-export enum Provider {
-  Apple = 'apple',
-  Google = 'google'
-}
-
-export type Query = {
-  __typename?: 'Query';
-  Asset?: Maybe<Asset>;
-  Me?: Maybe<MePayload>;
-  TaxonVisual: TaxonVisual;
-  /**
-   * Subtree from Open Tree of Life (cached in Mongo).
-   * `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
-   * Warm Mongo rows skip OTOL (known leaf or existing child edges).
-   */
-  TreeOfLifeSubtree?: Maybe<TreeOfLifeNode>;
-  /**
-   * Batch subtree roots in one request. Prefer this over parallel
-   * `TreeOfLifeSubtree` calls (auto expand). Results are
-   * `[...ottId roots, ...nodeId roots]` (nullable slots on hard miss).
-   * Max 16 ids combined. Uses Mongo DataLoader batching + warm-path.
-   */
-  TreeOfLifeSubtrees: Array<Maybe<TreeOfLifeNode>>;
-};
-
-
-export type QueryAssetArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type QueryTaxonVisualArgs = {
-  name: Scalars['String']['input'];
-  ottId: Scalars['Int']['input'];
-  rank?: InputMaybe<Scalars['String']['input']>;
-};
-
-
-export type QueryTreeOfLifeSubtreeArgs = {
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
-  nodeId?: InputMaybe<Scalars['String']['input']>;
-  ottId?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-export type QueryTreeOfLifeSubtreesArgs = {
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
-  nodeIds?: InputMaybe<Array<Scalars['String']['input']>>;
-  ottIds?: InputMaybe<Array<Scalars['Int']['input']>>;
-};
+export type Provider =
+  | 'apple'
+  | 'google';
 
 export type RegisterInput = {
-  Email: Scalars['EmailAddress']['input'];
-  FirstName?: InputMaybe<Scalars['String']['input']>;
-  LastName?: InputMaybe<Scalars['String']['input']>;
-  Password: Scalars['String']['input'];
+  Email: EmailAddress;
+  FirstName?: string | null | undefined;
+  LastName?: string | null | undefined;
+  Password: string;
 };
 
 export type SignInInput = {
-  Email: Scalars['EmailAddress']['input'];
-  Password: Scalars['String']['input'];
+  Email: EmailAddress;
+  Password: string;
 };
 
 export type SocialSignInInput = {
   Provider: Provider;
-  Token: Scalars['String']['input'];
+  Token: string;
 };
 
-export type Subscription = {
-  __typename?: 'Subscription';
-  /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
-  TaxonVisualUpdated: TaxonVisual;
-};
-
-
-export type SubscriptionTaxonVisualUpdatedArgs = {
-  ottId: Scalars['Int']['input'];
-};
-
-/**
- * Studio generation signal only. Persist image/description on tree-of-life;
- * clients refetch TreeOfLifeSubtree for the node after settle.
- */
-export type TaxonVisual = {
-  __typename?: 'TaxonVisual';
-  assetId?: Maybe<Scalars['ID']['output']>;
-  description?: Maybe<Scalars['String']['output']>;
-  nodeId?: Maybe<Scalars['String']['output']>;
-  ottId: Scalars['Int']['output'];
-  status: TaxonVisualStatus;
-  visualScore?: Maybe<TaxonVisualScore>;
-};
-
-/** Vision QA scores from the studio generate pipeline. */
-export type TaxonVisualScore = {
-  __typename?: 'TaxonVisualScore';
-  overall: Scalars['Float']['output'];
-  pass: Scalars['Boolean']['output'];
-  taxonMatch: Scalars['Float']['output'];
-};
-
-export enum TaxonVisualStatus {
-  Error = 'ERROR',
-  Exhausted = 'EXHAUSTED',
-  Pending = 'PENDING',
-  Ready = 'READY'
-}
-
-/**
- * Flat OTOL + studio node. Tree edges are nodeId-only, parent-pointer style:
- * `ancestor` ← the node's own ancestorNodeId (shallow stitch by DataLoader),
- * `descendants` ← a live reverse lookup (`{ ancestorNodeId: nodeId }`, batched).
- * Nothing is stored forward on the parent. Studio image via `asset` ← assetId.
- */
-export type TreeOfLifeNode = {
-  __typename?: 'TreeOfLifeNode';
-  /** Parent node, stitched from this node's own ancestorNodeId. Null for the root (no OTOL parent). */
-  ancestor?: Maybe<TreeOfLifeNode>;
-  asset?: Maybe<Asset>;
-  assetId?: Maybe<Scalars['ID']['output']>;
-  descendants?: Maybe<Array<TreeOfLifeNode>>;
-  description?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  nodeId: Scalars['String']['output'];
-  /**
-   * OTOL tip count for this clade. `0` means a known leaf (do not expand).
-   * At height cutoffs, children may be omitted while numTips stays > 0.
-   */
-  numTips?: Maybe<Scalars['Int']['output']>;
-  /** OTOL taxonomy id — an attribute/lookup key, not a relationship. Missing on some unnamed / synthetic nodes. */
-  ottId?: Maybe<Scalars['Int']['output']>;
-  rank?: Maybe<Scalars['String']['output']>;
-  /** Studio vision QA for the current asset, when generated. */
-  visualScore?: Maybe<TaxonVisualScore>;
-  visualStatus?: Maybe<TaxonVisualStatus>;
-};
+export type TaxonVisualStatus =
+  | 'ERROR'
+  | 'EXHAUSTED'
+  | 'PENDING'
+  | 'READY';
 
 export type Kicl_AssetQueryVariables = Exact<{
-  id: Scalars['ID']['input'];
+  id: string | number;
 }>;
 
 
-export type Kicl_AssetQuery = { __typename?: 'Query', Asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null };
+export type Kicl_AssetQuery = { Asset: { id: string, url: string, generator: string | null } | null };
 
 export type Kicl_MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_MeQuery = { __typename?: 'Query', Me?: { __typename?: 'MePayload', UserGUID?: UUID | null, Email?: EmailAddress | null, FirstName?: string | null, LastName?: string | null, Avatar?: string | null, Active?: boolean | null, aud?: string | null } | null };
+export type Kicl_MeQuery = { Me: { UserGUID: UUID | null, Email: EmailAddress | null, FirstName: string | null, LastName: string | null, Avatar: string | null, Active: boolean | null, aud: string | null } | null };
 
 export type Kicl_TaxonVisualQueryVariables = Exact<{
-  ottId: Scalars['Int']['input'];
-  name: Scalars['String']['input'];
-  rank?: InputMaybe<Scalars['String']['input']>;
+  ottId: number;
+  name: string;
+  rank?: string | null | undefined;
 }>;
 
 
-export type Kicl_TaxonVisualQuery = { __typename?: 'Query', TaxonVisual: { __typename?: 'TaxonVisual', status: TaxonVisualStatus, ottId: number, nodeId?: string | null, assetId?: string | null, description?: string | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null } };
+export type Kicl_TaxonVisualQuery = { TaxonVisual: { status: TaxonVisualStatus, ottId: number, nodeId: string | null, assetId: string | null, description: string | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null } };
 
 export type Kicl_TreeOfLifeSubtreeQueryVariables = Exact<{
-  ottId?: InputMaybe<Scalars['Int']['input']>;
-  nodeId?: InputMaybe<Scalars['String']['input']>;
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
+  ottId?: number | null | undefined;
+  nodeId?: string | null | undefined;
+  heightLimit?: number | null | undefined;
 }>;
 
 
-export type Kicl_TreeOfLifeSubtreeQuery = { __typename?: 'Query', TreeOfLifeSubtree?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null }> | null }> | null }> | null } | null };
+export type Kicl_TreeOfLifeSubtreeQuery = { TreeOfLifeSubtree: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null }> | null }> | null }> | null } | null };
 
 export type Kicl_TreeOfLifeSubtreesQueryVariables = Exact<{
-  ottIds?: InputMaybe<Array<Scalars['Int']['input']> | Scalars['Int']['input']>;
-  nodeIds?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
-  heightLimit?: InputMaybe<Scalars['Int']['input']>;
+  ottIds?: Array<number> | number | null | undefined;
+  nodeIds?: Array<string> | string | null | undefined;
+  heightLimit?: number | null | undefined;
 }>;
 
 
-export type Kicl_TreeOfLifeSubtreesQuery = { __typename?: 'Query', TreeOfLifeSubtrees: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null, descendants?: Array<{ __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null, numTips?: number | null, assetId?: string | null, description?: string | null, visualStatus?: TaxonVisualStatus | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null, ancestor?: { __typename?: 'TreeOfLifeNode', nodeId: string, ottId?: number | null, name?: string | null, rank?: string | null } | null, asset?: { __typename?: 'Asset', id: string, url: string, generator?: string | null } | null }> | null }> | null }> | null } | null> };
+export type Kicl_TreeOfLifeSubtreesQuery = { TreeOfLifeSubtrees: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null }> | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null, descendants: Array<{ nodeId: string, ottId: number | null, name: string | null, rank: string | null, numTips: number | null, assetId: string | null, description: string | null, visualStatus: TaxonVisualStatus | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null, ancestor: { nodeId: string, ottId: number | null, name: string | null, rank: string | null } | null, asset: { id: string, url: string, generator: string | null } | null }> | null }> | null }> | null } | null> };
 
 export type Kicl_ActivateMutationVariables = Exact<{
   Activate: ActivateInput;
 }>;
 
 
-export type Kicl_ActivateMutation = { __typename?: 'Mutation', Activate?: boolean | null };
+export type Kicl_ActivateMutation = { Activate: boolean | null };
 
 export type Kicl_ExchangeTokenMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_ExchangeTokenMutation = { __typename?: 'Mutation', ExchangeToken?: boolean | null };
+export type Kicl_ExchangeTokenMutation = { ExchangeToken: boolean | null };
 
 export type Kicl_RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_RefreshTokenMutation = { __typename?: 'Mutation', RefreshToken?: boolean | null };
+export type Kicl_RefreshTokenMutation = { RefreshToken: boolean | null };
 
 export type Kicl_RegisterMutationVariables = Exact<{
   Register: RegisterInput;
 }>;
 
 
-export type Kicl_RegisterMutation = { __typename?: 'Mutation', Register?: boolean | null };
+export type Kicl_RegisterMutation = { Register: boolean | null };
 
 export type Kicl_SignInMutationVariables = Exact<{
   SignIn: SignInInput;
 }>;
 
 
-export type Kicl_SignInMutation = { __typename?: 'Mutation', SignIn?: boolean | null };
+export type Kicl_SignInMutation = { SignIn: boolean | null };
 
 export type Kicl_SignOutMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_SignOutMutation = { __typename?: 'Mutation', SignOut?: boolean | null };
+export type Kicl_SignOutMutation = { SignOut: boolean | null };
 
 export type Kicl_SocialSignInMutationVariables = Exact<{
   SocialSignIn: SocialSignInInput;
 }>;
 
 
-export type Kicl_SocialSignInMutation = { __typename?: 'Mutation', SocialSignIn?: boolean | null };
+export type Kicl_SocialSignInMutation = { SocialSignIn: boolean | null };
 
 export type Kicl_TaxonVisualUpdatedSubscriptionVariables = Exact<{
-  ottId: Scalars['Int']['input'];
+  ottId: number;
 }>;
 
 
-export type Kicl_TaxonVisualUpdatedSubscription = { __typename?: 'Subscription', TaxonVisualUpdated: { __typename?: 'TaxonVisual', status: TaxonVisualStatus, ottId: number, nodeId?: string | null, assetId?: string | null, description?: string | null, visualScore?: { __typename?: 'TaxonVisualScore', overall: number, taxonMatch: number, pass: boolean } | null } };
+export type Kicl_TaxonVisualUpdatedSubscription = { TaxonVisualUpdated: { status: TaxonVisualStatus, ottId: number, nodeId: string | null, assetId: string | null, description: string | null, visualScore: { overall: number, taxonMatch: number, pass: boolean } | null } };
 
 
 export const Kicl_AssetDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"kicl_Asset"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Asset"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"generator"}}]}}]}}]} as unknown as DocumentNode<Kicl_AssetQuery, Kicl_AssetQueryVariables>;

@@ -1,6 +1,15 @@
 import DataLoader from 'dataloader';
+import mongoose from 'mongoose';
 
-import { TreeOfLifeNodes } from './Model.js';
+import { TreeOfLifeNodes, type ITreeOfLifeNode } from './Model.js';
+
+/**
+ * What `.lean()` hands back, taken from the model rather than restated. Mongoose
+ * 9 types this precisely, which is why the old `Record<string, unknown>` cast
+ * stopped compiling.
+ */
+type RawTreeOfLifeNode = ITreeOfLifeNode &
+  Required<{ _id: mongoose.Types.ObjectId }> & { __v: number };
 
 export type LeanTreeOfLifeNode = {
   nodeId: string;
@@ -21,7 +30,7 @@ export type LeanTreeOfLifeNode = {
   error?: string | null;
 };
 
-function toLean(doc: Record<string, unknown>): LeanTreeOfLifeNode {
+function toLean(doc: RawTreeOfLifeNode): LeanTreeOfLifeNode {
   const score = doc.visualScore as LeanTreeOfLifeNode['visualScore'] | undefined;
   return {
     ...(doc as Omit<LeanTreeOfLifeNode, 'assetId' | 'visualScore' | 'ancestorNodeId'>),
@@ -48,7 +57,7 @@ async function batchNodesByOttId(
   const byOttId = new Map<number, LeanTreeOfLifeNode>();
   for (const doc of docs) {
     if (doc.ottId != null) {
-      byOttId.set(doc.ottId, toLean(doc as Record<string, unknown>));
+      byOttId.set(doc.ottId, toLean(doc));
     }
   }
 
@@ -64,7 +73,7 @@ async function batchNodesByNodeId(
 
   const byNodeId = new Map<string, LeanTreeOfLifeNode>();
   for (const doc of docs) {
-    byNodeId.set(doc.nodeId, toLean(doc as Record<string, unknown>));
+    byNodeId.set(doc.nodeId, toLean(doc));
   }
 
   return nodeIds.map((nodeId) => byNodeId.get(nodeId) ?? null);
@@ -85,7 +94,7 @@ async function batchChildrenByAncestorNodeId(
   const byAncestor = new Map<string, LeanTreeOfLifeNode[]>();
   for (const doc of docs) {
     const key = doc.ancestorNodeId as string;
-    const lean = toLean(doc as Record<string, unknown>);
+    const lean = toLean(doc);
     const list = byAncestor.get(key);
     if (list) {
       list.push(lean);
