@@ -18,7 +18,7 @@
     "production": "yarn codegen && yarn workspace @ki-cl/client run build && NODE_ENV=production tsx Server/index.ts",
     "start": "yarn run development",
     "build": "yarn codegen && tsc --noEmit",
-    "lint": "eslint Server/ --ext .ts",
+    "lint": "eslint .",
     "codegen": "yarn workspace codegen run generate",
     "codegen:operations": "yarn workspace codegen run operations"
   },
@@ -29,6 +29,7 @@
     "url": "git+https://github.com/kenilam/Ki.CL-back.git"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/app-root-path": "^3.1.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
@@ -38,6 +39,10 @@
     "@types/node": "24",
     "@types/uuid": "^11.0.0",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.8.0",
     "tsx": "^4.23.1",
     "typescript": "5.9.3"
   },

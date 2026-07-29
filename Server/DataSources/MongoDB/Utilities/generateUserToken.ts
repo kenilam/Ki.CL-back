@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
-import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 import { getAccessTokenExpiry, getRefreshTokenExpiry, secondsUntil } from 'server/Helpers/tokenExpiry.js';
 import { rateLimitStore } from 'server/Middleware/rateLimit.js';
 

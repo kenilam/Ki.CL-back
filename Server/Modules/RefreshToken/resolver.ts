@@ -15,12 +15,7 @@ interface RefreshPayload {
 export default {
   Mutation: {
     RefreshToken: async (_: unknown, __: unknown, context: Context) => {
-      const refreshToken = context.headers?.cookie
-        ? undefined
-        : undefined;
-
-      // Extract refresh_token from cookies (req is available via context)
-      // The refresh token comes from the cookie, not from a GraphQL input
+      // The refresh token comes from the cookie, not from a GraphQL input.
       const cookieHeader = context.headers['cookie'] as string | undefined;
       let token: string | undefined;
 
