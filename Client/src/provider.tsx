@@ -1,0 +1,142 @@
+import React, { useEffect, useState } from 'react';
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider as BaseApolloProvider,
+  createHttpLink,
+  split,
+  type NormalizedCacheObject,
+} from '@apollo/client';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { createClient } from 'graphql-ws';
+
+import { Kicl_ExchangeTokenDocument } from 'api/generated/hooks';
+import { hasSession } from 'api/utils';
+
+interface KiclProviderProps {
+  uri?: string;
+  /** WebSocket URL. Defaults to uri with http→ws. */
+  wsUri?: string;
+  children: React.ReactNode;
+}
+
+function toWsUri(httpUri: string): string {
+  if (httpUri.startsWith('https://')) return `wss://${httpUri.slice('https://'.length)}`;
+  if (httpUri.startsWith('http://')) return `ws://${httpUri.slice('http://'.length)}`;
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const path = httpUri.startsWith('/') ? httpUri : `/${httpUri}`;
+    return `${protocol}//${window.location.host}${path}`;
+  }
+  return httpUri.replace(/^http/, 'ws');
+}
+
+function createKiclClient(
+  uri: string,
+  wsUri: string,
+): ApolloClient<NormalizedCacheObject> {
+  const httpLink = createHttpLink({
+    uri,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const wsLink =
+    typeof window !== 'undefined'
+      ? new GraphQLWsLink(
+          createClient({
+            url: wsUri,
+            // Cookies on same-origin (Vite proxy) are sent on the upgrade request.
+            // connectionParams covers cross-origin cases where Cookie is not automatic.
+            connectionParams: () => {
+              const cookie = typeof document !== 'undefined' ? document.cookie : '';
+              return cookie ? { cookie } : {};
+            },
+            retryAttempts: 5,
+          }),
+        )
+      : null;
+
+  const link =
+    wsLink != null
+      ? split(
+          ({ query }) => {
+            const definition = getMainDefinition(query);
+            return (
+              definition.kind === 'OperationDefinition' &&
+              definition.operation === 'subscription'
+            );
+          },
+          wsLink,
+          httpLink,
+        )
+      : httpLink;
+
+  return new ApolloClient({
+    link,
+    cache: new InMemoryCache({
+      typePolicies: {
+        TreeOfLifeNode: {
+          keyFields: ['nodeId'],
+        },
+      },
+    }),
+    defaultOptions: {
+      watchQuery: {
+        fetchPolicy: 'cache-and-network',
+      },
+      mutate: {
+        fetchPolicy: 'no-cache',
+      },
+    },
+  });
+}
+
+let clientInstance: ApolloClient<NormalizedCacheObject> | null = null;
+
+export function getKiclClient(
+  uri: string = '/api',
+  wsUri?: string,
+): ApolloClient<NormalizedCacheObject> {
+  if (!clientInstance) {
+    clientInstance = createKiclClient(uri, wsUri ?? toWsUri(uri));
+  }
+  return clientInstance;
+}
+
+export function KiclProvider({
+  uri = '/api',
+  wsUri,
+  children,
+}: KiclProviderProps) {
+  const client = getKiclClient(uri, wsUri);
+  const [ready, setReady] = useState(() => hasSession());
+
+  useEffect(() => {
+    if (ready) return;
+
+    let cancelled = false;
+
+    client
+      .mutate({ mutation: Kicl_ExchangeTokenDocument })
+      .catch(() => {
+        // Session bootstrap failed; children still render so the app can recover
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [client, ready]);
+
+  return (
+    <BaseApolloProvider client={client}>
+      {ready ? children : null}
+    </BaseApolloProvider>
+  );
+}

@@ -1,0 +1,759 @@
+query kicl_Asset($id: ID!) {
+  Asset(id: $id) {
+    id
+    url
+    generator
+  }
+}
+
+query kicl_Me {
+  Me {
+    UserGUID
+    Email
+    FirstName
+    LastName
+    Avatar
+    Active
+    aud
+  }
+}
+
+query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
+  TaxonVisual(ottId: $ottId, name: $name, rank: $rank) {
+    status
+    ottId
+    nodeId
+    assetId
+    description
+    visualScore {
+      overall
+      taxonMatch
+      pass
+    }
+  }
+}
+
+query kicl_TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
+  TreeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
+    nodeId
+    ottId
+    name
+    rank
+    numTips
+    assetId
+    description
+    visualStatus
+    visualScore {
+      overall
+      taxonMatch
+      pass
+    }
+    ancestor {
+      nodeId
+      ottId
+      name
+      rank
+      numTips
+      assetId
+      description
+      visualStatus
+      descendants {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+      }
+      ancestor {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+        descendants {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+        }
+        ancestor {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+          descendants {
+            nodeId
+            ottId
+            name
+            rank
+            numTips
+            assetId
+            description
+            visualStatus
+          }
+          ancestor {
+            nodeId
+            ottId
+            name
+            rank
+            numTips
+            assetId
+            description
+            visualStatus
+            descendants {
+              nodeId
+              ottId
+              name
+              rank
+              numTips
+              assetId
+              description
+              visualStatus
+            }
+            ancestor {
+              nodeId
+              ottId
+              name
+              rank
+              numTips
+              assetId
+              description
+              visualStatus
+              descendants {
+                nodeId
+                ottId
+                name
+                rank
+                numTips
+                assetId
+                description
+                visualStatus
+              }
+              ancestor {
+                nodeId
+                ottId
+                name
+                rank
+                numTips
+                assetId
+                description
+                visualStatus
+                descendants {
+                  nodeId
+                  ottId
+                  name
+                  rank
+                  numTips
+                  assetId
+                  description
+                  visualStatus
+                }
+                ancestor {
+                  nodeId
+                  ottId
+                  name
+                  rank
+                  numTips
+                  assetId
+                  description
+                  visualStatus
+                  descendants {
+                    nodeId
+                    ottId
+                    name
+                    rank
+                    numTips
+                    assetId
+                    description
+                    visualStatus
+                  }
+                  ancestor {
+                    nodeId
+                    ottId
+                    name
+                    rank
+                    numTips
+                    assetId
+                    description
+                    visualStatus
+                    descendants {
+                      nodeId
+                      ottId
+                      name
+                      rank
+                      numTips
+                      assetId
+                      description
+                      visualStatus
+                    }
+                    ancestor {
+                      nodeId
+                      ottId
+                      name
+                      rank
+                      numTips
+                      assetId
+                      description
+                      visualStatus
+                      descendants {
+                        nodeId
+                        ottId
+                        name
+                        rank
+                        numTips
+                        assetId
+                        description
+                        visualStatus
+                      }
+                      ancestor {
+                        nodeId
+                        ottId
+                        name
+                        rank
+                        numTips
+                        assetId
+                        description
+                        visualStatus
+                        descendants {
+                          nodeId
+                          ottId
+                          name
+                          rank
+                          numTips
+                          assetId
+                          description
+                          visualStatus
+                        }
+                        ancestor {
+                          nodeId
+                          ottId
+                          name
+                          rank
+                          numTips
+                          assetId
+                          description
+                          visualStatus
+                          descendants {
+                            nodeId
+                            ottId
+                            name
+                            rank
+                            numTips
+                            assetId
+                            description
+                            visualStatus
+                          }
+                          ancestor {
+                            nodeId
+                            ottId
+                            name
+                            rank
+                            numTips
+                            assetId
+                            description
+                            visualStatus
+                            descendants {
+                              nodeId
+                              ottId
+                              name
+                              rank
+                              numTips
+                              assetId
+                              description
+                              visualStatus
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    asset {
+      id
+      url
+      generator
+    }
+    descendants {
+      nodeId
+      ottId
+      name
+      rank
+      numTips
+      assetId
+      description
+      visualStatus
+      visualScore {
+        overall
+        taxonMatch
+        pass
+      }
+      ancestor {
+        nodeId
+        ottId
+        name
+        rank
+      }
+      asset {
+        id
+        url
+        generator
+      }
+      descendants {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+        visualScore {
+          overall
+          taxonMatch
+          pass
+        }
+        ancestor {
+          nodeId
+          ottId
+          name
+          rank
+        }
+        asset {
+          id
+          url
+          generator
+        }
+        descendants {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+          visualScore {
+            overall
+            taxonMatch
+            pass
+          }
+          ancestor {
+            nodeId
+            ottId
+            name
+            rank
+          }
+          asset {
+            id
+            url
+            generator
+          }
+        }
+      }
+    }
+  }
+}
+
+query kicl_TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
+  TreeOfLifeSubtrees(ottIds: $ottIds, nodeIds: $nodeIds, heightLimit: $heightLimit) {
+    nodeId
+    ottId
+    name
+    rank
+    numTips
+    assetId
+    description
+    visualStatus
+    visualScore {
+      overall
+      taxonMatch
+      pass
+    }
+    ancestor {
+      nodeId
+      ottId
+      name
+      rank
+      numTips
+      assetId
+      description
+      visualStatus
+      descendants {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+      }
+      ancestor {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+        descendants {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+        }
+        ancestor {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+          descendants {
+            nodeId
+            ottId
+            name
+            rank
+            numTips
+            assetId
+            description
+            visualStatus
+          }
+          ancestor {
+            nodeId
+            ottId
+            name
+            rank
+            numTips
+            assetId
+            description
+            visualStatus
+            descendants {
+              nodeId
+              ottId
+              name
+              rank
+              numTips
+              assetId
+              description
+              visualStatus
+            }
+            ancestor {
+              nodeId
+              ottId
+              name
+              rank
+              numTips
+              assetId
+              description
+              visualStatus
+              descendants {
+                nodeId
+                ottId
+                name
+                rank
+                numTips
+                assetId
+                description
+                visualStatus
+              }
+              ancestor {
+                nodeId
+                ottId
+                name
+                rank
+                numTips
+                assetId
+                description
+                visualStatus
+                descendants {
+                  nodeId
+                  ottId
+                  name
+                  rank
+                  numTips
+                  assetId
+                  description
+                  visualStatus
+                }
+                ancestor {
+                  nodeId
+                  ottId
+                  name
+                  rank
+                  numTips
+                  assetId
+                  description
+                  visualStatus
+                  descendants {
+                    nodeId
+                    ottId
+                    name
+                    rank
+                    numTips
+                    assetId
+                    description
+                    visualStatus
+                  }
+                  ancestor {
+                    nodeId
+                    ottId
+                    name
+                    rank
+                    numTips
+                    assetId
+                    description
+                    visualStatus
+                    descendants {
+                      nodeId
+                      ottId
+                      name
+                      rank
+                      numTips
+                      assetId
+                      description
+                      visualStatus
+                    }
+                    ancestor {
+                      nodeId
+                      ottId
+                      name
+                      rank
+                      numTips
+                      assetId
+                      description
+                      visualStatus
+                      descendants {
+                        nodeId
+                        ottId
+                        name
+                        rank
+                        numTips
+                        assetId
+                        description
+                        visualStatus
+                      }
+                      ancestor {
+                        nodeId
+                        ottId
+                        name
+                        rank
+                        numTips
+                        assetId
+                        description
+                        visualStatus
+                        descendants {
+                          nodeId
+                          ottId
+                          name
+                          rank
+                          numTips
+                          assetId
+                          description
+                          visualStatus
+                        }
+                        ancestor {
+                          nodeId
+                          ottId
+                          name
+                          rank
+                          numTips
+                          assetId
+                          description
+                          visualStatus
+                          descendants {
+                            nodeId
+                            ottId
+                            name
+                            rank
+                            numTips
+                            assetId
+                            description
+                            visualStatus
+                          }
+                          ancestor {
+                            nodeId
+                            ottId
+                            name
+                            rank
+                            numTips
+                            assetId
+                            description
+                            visualStatus
+                            descendants {
+                              nodeId
+                              ottId
+                              name
+                              rank
+                              numTips
+                              assetId
+                              description
+                              visualStatus
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    asset {
+      id
+      url
+      generator
+    }
+    descendants {
+      nodeId
+      ottId
+      name
+      rank
+      numTips
+      assetId
+      description
+      visualStatus
+      visualScore {
+        overall
+        taxonMatch
+        pass
+      }
+      ancestor {
+        nodeId
+        ottId
+        name
+        rank
+      }
+      asset {
+        id
+        url
+        generator
+      }
+      descendants {
+        nodeId
+        ottId
+        name
+        rank
+        numTips
+        assetId
+        description
+        visualStatus
+        visualScore {
+          overall
+          taxonMatch
+          pass
+        }
+        ancestor {
+          nodeId
+          ottId
+          name
+          rank
+        }
+        asset {
+          id
+          url
+          generator
+        }
+        descendants {
+          nodeId
+          ottId
+          name
+          rank
+          numTips
+          assetId
+          description
+          visualStatus
+          visualScore {
+            overall
+            taxonMatch
+            pass
+          }
+          ancestor {
+            nodeId
+            ottId
+            name
+            rank
+          }
+          asset {
+            id
+            url
+            generator
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation kicl_Activate($Activate: ActivateInput!) {
+  Activate(Activate: $Activate)
+}
+
+mutation kicl_ExchangeToken {
+  ExchangeToken
+}
+
+mutation kicl_RefreshToken {
+  RefreshToken
+}
+
+mutation kicl_Register($Register: RegisterInput!) {
+  Register(Register: $Register)
+}
+
+mutation kicl_SignIn($SignIn: SignInInput!) {
+  SignIn(SignIn: $SignIn)
+}
+
+mutation kicl_SignOut {
+  SignOut
+}
+
+mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
+  SocialSignIn(SocialSignIn: $SocialSignIn)
+}
+
+subscription kicl_TaxonVisualUpdated($ottId: Int!) {
+  TaxonVisualUpdated(ottId: $ottId) {
+    status
+    ottId
+    nodeId
+    assetId
+    description
+    visualScore {
+      overall
+      taxonMatch
+      pass
+    }
+  }
+}

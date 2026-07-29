@@ -1,0 +1,13 @@
+type Asset {
+  id: ID!
+  url: String!
+  """
+  How the asset was produced (e.g. openai:gpt-image-1).
+  Null means manually created / uploaded — not AI-generated.
+  """
+  generator: String
+}
+
+type Query {
+  Asset(id: ID!): Asset
+}

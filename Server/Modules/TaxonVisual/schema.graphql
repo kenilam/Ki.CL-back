@@ -1,0 +1,39 @@
+enum TaxonVisualStatus {
+  PENDING
+  READY
+  ERROR
+  EXHAUSTED
+}
+
+"""Vision QA scores from the studio generate pipeline."""
+type TaxonVisualScore {
+  overall: Float!
+  taxonMatch: Float!
+  pass: Boolean!
+}
+
+"""
+Studio generation signal only. Persist image/description on tree-of-life;
+clients refetch TreeOfLifeSubtree for the node after settle.
+"""
+type TaxonVisual {
+  status: TaxonVisualStatus!
+  ottId: Int!
+  nodeId: String
+  assetId: ID
+  description: String
+  visualScore: TaxonVisualScore
+}
+
+type Query {
+  TaxonVisual(
+    ottId: Int!
+    name: String!
+    rank: String
+  ): TaxonVisual!
+}
+
+type Subscription {
+  """Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED)."""
+  TaxonVisualUpdated(ottId: Int!): TaxonVisual!
+}

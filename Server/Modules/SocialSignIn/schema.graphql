@@ -1,0 +1,13 @@
+enum Provider {
+  google
+  apple
+}
+
+type Mutation {
+  SocialSignIn(SocialSignIn: SocialSignInInput!): Boolean
+}
+
+input SocialSignInInput {
+  Provider: Provider!
+  Token: String!
+}

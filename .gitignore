@@ -1,49 +1,43 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# Dependencies
+node_modules/
 
-# Packages #
-############
-# it's better to unpack these files and commit the raw source
-# git has its own built in compression methods
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+# Build output
+dist/
 
-# Logs and databases #
-######################
-*.log
-*.sql
-*.sqlite
+# Environment
+.env
+.env.local
 
-# OS generated files #
-######################
+# Certs (legacy, now stored in DB)
+App/Certs/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Local Files #
-###############
-node_modules
+# Logs
+*.log
 
-# IDE files #
-#############
-.idea
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
 
-# Local files #
-################
-project/build
+# History
+.history/
+
+# Google service-account key material written at runtime
+Server/.secret/
+
+# Legacy local taxon visuals (now stored in GCS)
+Server/Assets/TaxonVisuals/

@@ -1,0 +1,22 @@
+{
+  "name": "codegen",
+  "version": "2.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "operations": "tsx generateOperations.ts",
+    "generate": "tsx generateOperations.ts && graphql-codegen --config codegen.ts"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/client-preset": "^4.5.1",
+    "@graphql-codegen/typescript": "^4.1.2",
+    "@graphql-codegen/typescript-operations": "^4.4.0",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.2",
+    "@graphql-codegen/typescript-resolvers": "^4.4.1",
+    "@graphql-tools/load-files": "^7.0.0",
+    "@graphql-tools/merge": "^9.0.0",
+    "app-root-path": "^3.1.0",
+    "graphql": "^16.9.0"
+  }
+}

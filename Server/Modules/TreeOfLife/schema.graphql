@@ -1,0 +1,52 @@
+type Query {
+  """
+  Subtree from Open Tree of Life (cached in Mongo).
+  `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
+  Warm Mongo rows skip OTOL (known leaf or existing child edges).
+  """
+  TreeOfLifeSubtree(
+    ottId: Int
+    nodeId: String
+    heightLimit: Int = 3
+  ): TreeOfLifeNode
+
+  """
+  Batch subtree roots in one request. Prefer this over parallel
+  `TreeOfLifeSubtree` calls (auto expand). Results are
+  `[...ottId roots, ...nodeId roots]` (nullable slots on hard miss).
+  Max 16 ids combined. Uses Mongo DataLoader batching + warm-path.
+  """
+  TreeOfLifeSubtrees(
+    ottIds: [Int!]
+    nodeIds: [String!]
+    heightLimit: Int = 3
+  ): [TreeOfLifeNode]!
+}
+
+"""
+Flat OTOL + studio node. Tree edges are nodeId-only, parent-pointer style:
+`ancestor` ← the node's own ancestorNodeId (shallow stitch by DataLoader),
+`descendants` ← a live reverse lookup (`{ ancestorNodeId: nodeId }`, batched).
+Nothing is stored forward on the parent. Studio image via `asset` ← assetId.
+"""
+type TreeOfLifeNode {
+  nodeId: String!
+  """OTOL taxonomy id — an attribute/lookup key, not a relationship. Missing on some unnamed / synthetic nodes."""
+  ottId: Int
+  name: String
+  rank: String
+  """Parent node, stitched from this node's own ancestorNodeId. Null for the root (no OTOL parent)."""
+  ancestor: TreeOfLifeNode
+  descendants: [TreeOfLifeNode!]
+  """
+  OTOL tip count for this clade. `0` means a known leaf (do not expand).
+  At height cutoffs, children may be omitted while numTips stays > 0.
+  """
+  numTips: Int
+  assetId: ID
+  asset: Asset
+  description: String
+  visualStatus: TaxonVisualStatus
+  """Studio vision QA for the current asset, when generated."""
+  visualScore: TaxonVisualScore
+}

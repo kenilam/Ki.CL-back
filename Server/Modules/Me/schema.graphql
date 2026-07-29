@@ -1,0 +1,13 @@
+type Query {
+  Me: MePayload
+}
+
+type MePayload {
+  UserGUID: UUID
+  Email: EmailAddress
+  FirstName: String
+  LastName: String
+  Avatar: String
+  Active: Boolean
+  aud: String
+}

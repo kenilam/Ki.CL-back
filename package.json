@@ -1,53 +1,47 @@
 {
   "name": "ki-cl-back",
-  "version": "1.0.0",
-  "description": "Ki.CL Backend",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "NODE_ENV=development nodemon start --exec npm",
-    "start": "babel-node index.js"
+  "version": "2.0.0",
+  "description": "Ki.CL Backend - Apollo GraphQL API",
+  "type": "module",
+  "private": true,
+  "packageManager": "yarn@4.9.1",
+  "engines": {
+    "node": ">=24"
   },
+  "workspaces": [
+    "Server",
+    "Codegen",
+    "Client"
+  ],
+  "scripts": {
+    "development": "yarn codegen && yarn workspace @ki-cl/client run build && NODE_ENV=development tsx watch Server/index.ts",
+    "production": "yarn codegen && yarn workspace @ki-cl/client run build && NODE_ENV=production tsx Server/index.ts",
+    "start": "yarn run development",
+    "build": "yarn codegen && tsc --noEmit",
+    "lint": "eslint Server/ --ext .ts",
+    "codegen": "yarn workspace codegen run generate",
+    "codegen:operations": "yarn workspace codegen run operations"
+  },
+  "author": "Keni Lam",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kenilam/Ki.CL-back.git"
   },
-  "author": "Keni Lam",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/kenilam/Ki.CL-back/issues"
+  "devDependencies": {
+    "@types/app-root-path": "^3.1.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^24.0.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
   },
-  "homepage": "https://github.com/kenilam/Ki.CL-back#readme",
   "dependencies": {
-    "@babel/core": "^7.10.3",
-    "@babel/node": "^7.10.3",
-    "@babel/plugin-proposal-export-default-from": "^7.10.1",
-    "@babel/plugin-proposal-object-rest-spread": "^7.10.3",
-    "@babel/plugin-syntax-export-extensions": "^7.0.0-beta.32",
-    "@babel/plugin-transform-runtime": "^7.10.3",
-    "@babel/preset-env": "^7.10.3",
-    "@babel/register": "^7.10.3",
-    "@babel/runtime": "^7.10.3",
-    "app-root-path": "^3.0.0",
-    "babel-plugin-add-module-exports": "^1.0.2",
-    "babel-plugin-root-import": "^6.5.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-export-extensions": "^6.22.0",
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "http-headers": "^3.0.2",
-    "juice": "^6.0.0",
-    "mongodb": "^3.5.9",
-    "node-fetch": "^2.6.0",
-    "node-pinterest": "0.0.4",
-    "node-sass": "^4.14.1",
-    "nodemailer": "^6.4.10",
-    "nodemon": "^2.0.4",
-    "passport": "^0.4.1",
-    "passport-pinterest-oauth": "^0.3.2",
-    "pug": "^3.0.0",
-    "request": "^2.88.2",
-    "stream": "0.0.2",
-    "timestamp": "0.0.1"
+    "dotenv": "^16.4.5"
   }
 }
