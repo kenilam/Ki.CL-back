@@ -2,7 +2,6 @@ import { withFilter } from 'graphql-subscriptions';
 import { Types } from 'mongoose';
 
 import { validate } from 'server/Helpers/Validation/validate.js';
-import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { TaxonVisualStatus } from 'server/Types/graphql.js';
 import { ensureTreeOfLifeNodeByOttId } from 'server/Modules/TreeOfLife/persist.js';
@@ -11,10 +10,7 @@ import { buildTaxonDescriptionPrompt } from './prompt.js';
 import { taxonVisualObjectExists } from './generateImage.js';
 import { generateTaxonDescription } from './generateDescription.js';
 import { runTaxonVisualPipeline } from './pipeline.js';
-import {
-  anyProviderAvailable,
-  isProviderCoolingDown,
-} from './providers/failover.js';
+import { anyProviderAvailable } from './providers/failover.js';
 import { buildImageProviders } from './providers/image/index.js';
 import { ProviderLimitError } from './providerLimitError.js';
 import {
@@ -24,7 +20,14 @@ import {
 } from './pubsub.js';
 import type { TaxonVisualResult, TaxonVisualScoreResult } from './types.js';
 
-const OPENAI_IMAGE_PROVIDER = 'openai:gpt-image-1';
+/**
+ * How many plates a taxon gets before the best one stands.
+ *
+ * Some taxa the generator cannot draw — a rod-shaped bacterium keeps returning
+ * as an insect however the prompt is tightened — and without a ceiling those
+ * retry on every view for as long as the score stays low.
+ */
+const MAX_VISUAL_ATTEMPTS = 3;
 
 const generatingOttIds = new Set<number>();
 
@@ -279,7 +282,20 @@ async function runDescriptionOnly(
  * Failover asset is provisional: try OpenAI only. On success, replace the
  * asset; on failure, keep the existing failover render.
  */
-async function runOpenAiUpgrade(
+/**
+ * Try again for a plate the reviewer rejected.
+ *
+ * Was gated on the generator's name: anything not from OpenAI counted as
+ * provisional and was re-rendered on every view, forever. That was a stand-in
+ * for quality, chosen when the only score available was a fabricated 7 — and a
+ * poor one, since it retried good renders as hard as bad ones and stopped
+ * retrying a bad OpenAI render entirely. The review score says the thing the
+ * vendor name was guessing at, so it is what decides now.
+ *
+ * The whole chain is used rather than OpenAI alone, so this still works when
+ * the preferred provider is out of credit.
+ */
+async function runRegeneration(
   ottId: number,
   nodeId: string,
   name: string,
@@ -299,9 +315,7 @@ async function runOpenAiUpgrade(
       prompt,
       description,
       imageScore,
-    } = await runTaxonVisualPipeline(ottId, name, rank, {
-      openaiOnly: true,
-    });
+    } = await runTaxonVisualPipeline(ottId, name, rank);
 
     /*
      * Only a real review is stored. `scored: false` means no provider ever
@@ -333,6 +347,7 @@ async function runOpenAiUpgrade(
           visualScore,
           error: null,
         },
+        $inc: { visualAttempts: 1 },
       },
     );
     publishTaxonVisualUpdated(toResult({
@@ -345,8 +360,29 @@ async function runOpenAiUpgrade(
     }));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+
+    /*
+     * A failed attempt counts only if something was actually drawn.
+     *
+     * The ceiling exists to stop retrying a taxon the generator cannot render
+     * well — it is a statement about the subject, not about the weather. When
+     * every provider is out of quota nothing was attempted at all, and counting
+     * that would retire taxa for the duration of an outage and never let them
+     * back. Measured: two of one taxon's three attempts were spent this way
+     * before the exhaustion was even visible.
+     */
+    const nothingRendered = error instanceof ProviderLimitError
+      || message.includes('exhausted quota')
+      || message.includes('No image providers configured');
+
+    if (!nothingRendered) {
+      await TreeOfLifeNodes.updateOne({ ottId }, { $inc: { visualAttempts: 1 } });
+    }
+
     console.warn(
-      `[TaxonVisual] OpenAI upgrade failed for ottId ${ottId}; keeping failover asset:`,
+      `[TaxonVisual] regeneration failed for ottId ${ottId}`
+      + `${nothingRendered ? ' (providers unavailable — attempt not counted)' : ''};`
+      + ` keeping existing asset:`,
       message,
     );
     publishTaxonVisualUpdated(toResult({
@@ -396,16 +432,17 @@ export default {
         const inBucket = await taxonVisualObjectExists(ottId);
         if (inBucket) {
           const assetId = String(existing.assetId);
-          const asset = await Assets.findById(existing.assetId)
-            .select('generator')
-            .lean();
-          // Prefer cached OpenAI renders. Failover assets are provisional —
-          // attempt OpenAI-only upgrade; keep failover if OpenAI still fails.
-          const isOpenAiAsset = Boolean(
-            asset?.generator?.startsWith('openai:'),
-          );
 
-          if (isOpenAiAsset) {
+          /*
+           * A plate the reviewer passed is finished, whoever drew it. One that
+           * failed — or that no reviewer ever saw — is worth another attempt,
+           * up to a ceiling.
+           */
+          const reviewed = existing.visualScore ?? null;
+          const settled = reviewed?.pass === true;
+          const spent = (existing.visualAttempts ?? 0) >= MAX_VISUAL_ATTEMPTS;
+
+          if (settled || spent) {
             if (!existing.description?.trim()) {
               void runDescriptionOnly(
                 ottId,
@@ -420,22 +457,12 @@ export default {
               nodeId,
               assetId,
               description: existing.description,
+              visualScore: toVisualScore(reviewed),
               status: TaxonVisualStatus.Ready,
             });
           }
 
-          // OpenAI budget cooldown — keep failover render; skip upgrade noise.
-          if (isProviderCoolingDown(OPENAI_IMAGE_PROVIDER)) {
-            return toResult({
-              ottId,
-              nodeId,
-              assetId,
-              description: existing.description,
-              status: TaxonVisualStatus.Ready,
-            });
-          }
-
-          void runOpenAiUpgrade(
+          void runRegeneration(
             ottId,
             nodeId,
             resolvedName,
@@ -444,12 +471,20 @@ export default {
             existing.description ?? null,
           );
 
+          /*
+           * `READY`, not `PENDING`: there is a usable plate on screen right
+           * now, and calling it pending told the client to show a spinner over
+           * an image it already had — usually for a replacement that never
+           * arrived. If the attempt does produce something better, the
+           * subscription pushes it.
+           */
           return toResult({
             ottId,
             nodeId,
             assetId,
             description: existing.description,
-            status: TaxonVisualStatus.Pending,
+            visualScore: toVisualScore(reviewed),
+            status: TaxonVisualStatus.Ready,
           });
         }
       } else if (status === TaxonVisualStatus.Error) {

@@ -24,6 +24,28 @@ export function isBudgetOrRateLimitError(message: string): boolean {
   );
 }
 
+/**
+ * A spent account, as opposed to a quota that refills.
+ *
+ * Both arrive as a 429 and both are non-retryable in the moment, but they end
+ * very differently: a daily allocation returns tomorrow, while an empty balance
+ * returns only when someone pays. Cooling an exhausted account for the same
+ * half hour as a rate limit means retrying it forever, twice an hour, against a
+ * wall — which is what a whole library of failover renders was quietly doing.
+ */
+export function isCreditExhaustedError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('insufficient_quota')
+    || lower.includes('insufficient balance')
+    || lower.includes('no credits remaining')
+    || lower.includes('credit_balance_exhausted')
+    || lower.includes('billing hard limit')
+    || lower.includes('billing_hard_limit')
+    || (lower.includes('pollen') && lower.includes('insufficient'))
+  );
+}
+
 export function isBudgetError(message: string): boolean {
   const lower = message.toLowerCase();
   return (

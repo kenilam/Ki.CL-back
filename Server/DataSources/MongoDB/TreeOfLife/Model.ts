@@ -39,6 +39,17 @@ export interface ITreeOfLifeNode extends Document {
   /** Vision QA for the current studio asset. */
   visualScore: TreeOfLifeVisualScore | null;
   prompt: string | null;
+  /**
+   * How many times a plate has been generated for this taxon.
+   *
+   * Regeneration is driven by the review score, and some taxa simply cannot be
+   * drawn well — a bacterium keeps coming back as an animal however the prompt
+   * is worded. Without a ceiling those retry on every view forever. Counted
+   * rather than time-boxed so the limit survives a restart.
+   *
+   * Internal only — not exposed on TreeOfLife GraphQL.
+   */
+  visualAttempts: number;
   /** Internal only — not exposed on TreeOfLife GraphQL. */
   error: string | null;
   createdAt: Date;
@@ -107,6 +118,10 @@ const TreeOfLifeNodeSchema = new Schema<ITreeOfLifeNode>(
     prompt: {
       type: String,
       default: null,
+    },
+    visualAttempts: {
+      type: Number,
+      default: 0,
     },
     error: {
       type: String,

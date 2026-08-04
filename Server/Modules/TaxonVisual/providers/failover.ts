@@ -1,4 +1,7 @@
-import { ProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import {
+  isCreditExhaustedError,
+  ProviderLimitError,
+} from 'server/Modules/TaxonVisual/providerLimitError.js';
 
 export type ProviderAttempt<T> = {
   name: string;
@@ -14,6 +17,15 @@ const RATE_LIMIT_MAX_RETRIES = 2;
 /** Skip agents that already hit non-retryable budget this process. */
 const exhaustedUntilMs = new Map<string, number>();
 const BUDGET_COOLDOWN_MS = 30 * 60 * 1000;
+
+/**
+ * How long a spent account is left alone.
+ *
+ * Long, because nothing this process does can end it — an empty balance lifts
+ * when someone tops it up, not when a timer expires. Half an hour is the right
+ * patience for a refilling quota and the wrong patience for this.
+ */
+const CREDIT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 function markProviderExhausted(provider: string, untilMs?: number): void {
   exhaustedUntilMs.set(
@@ -76,6 +88,15 @@ async function withRetries<T>(
 
       if (lastError instanceof ProviderLimitError) {
         if (!lastError.retryable) {
+          if (isCreditExhaustedError(lastError.message)) {
+            console.warn(
+              `[TaxonVisual] "${provider}" is out of credit; standing down for `
+              + `${CREDIT_COOLDOWN_MS / 3_600_000}h`,
+            );
+            markProviderExhausted(provider, Date.now() + CREDIT_COOLDOWN_MS);
+            throw lastError;
+          }
+
           const retryAfter = retryAfterMsFromMessage(lastError.message);
           markProviderExhausted(
             provider,
