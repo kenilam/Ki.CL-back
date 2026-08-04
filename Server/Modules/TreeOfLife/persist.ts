@@ -48,13 +48,54 @@ function flattenArguson(
 }
 
 /**
+ * Collapse repeats of one node into a single entry, keeping whatever is known.
+ *
+ * A batch can name the same node twice — a spine starts at its subject, and
+ * two lineages in one response share every ancestor above their split. Two
+ * inserts for one id is a duplicate-key error, so they are merged before any
+ * of it reaches Mongo.
+ */
+function mergeByNodeId(flat: FlatNode[]): FlatNode[] {
+  const merged = new Map<string, FlatNode>();
+
+  for (const node of flat) {
+    const prev = merged.get(node.nodeId);
+
+    if (!prev) {
+      merged.set(node.nodeId, { ...node });
+      continue;
+    }
+
+    prev.ottId ??= node.ottId;
+    prev.name ??= node.name;
+    prev.rank ??= node.rank;
+    prev.ancestorNodeId ??= node.ancestorNodeId;
+
+    if (node.numTips != null && (prev.numTips == null || node.numTips > prev.numTips)) {
+      prev.numTips = node.numTips;
+    }
+  }
+
+  return [...merged.values()];
+}
+
+/**
  * Persist a flat node list with a single bulkWrite.
- * - Insert only when nodeId is new
+ * - Upsert, so a node another writer created in the meantime is filled, not duplicated
  * - Fill null ancestorNodeId once when discovered, never overwrite
  * Relationships are nodeId-only, parent-pointer style: each node stores only
  * its own ancestorNodeId; descendants are reverse-looked-up by query.
+ *
+ * Reading which nodes exist and then inserting the rest is not one operation,
+ * and lineage spines are written concurrently for taxa that share ancestors —
+ * so two writers routinely decided the same node was missing and both inserted
+ * it. Upserting makes the write idempotent, which is what it always needed to
+ * be: the second writer fills the row the first created instead of colliding
+ * with it.
  */
-async function writeFlatNodes(flat: FlatNode[]): Promise<void> {
+async function writeFlatNodes(input: FlatNode[]): Promise<void> {
+  const flat = mergeByNodeId(input);
+
   if (!flat.length) {
     return;
   }
@@ -89,23 +130,33 @@ async function writeFlatNodes(flat: FlatNode[]): Promise<void> {
 
     if (!prev) {
       ops.push({
-        insertOne: {
-          document: {
-            nodeId: node.nodeId,
-            ...(node.ottId != null ? { ottId: node.ottId } : {}),
-            name: node.name,
-            rank: node.rank,
-            ...(node.ancestorNodeId != null
-              ? { ancestorNodeId: node.ancestorNodeId }
-              : {}),
-            numTips: node.numTips,
-            assetId: null,
-            description: null,
-            visualStatus: null,
-            visualScore: null,
-            prompt: null,
-            error: null,
+        updateOne: {
+          filter: { nodeId: node.nodeId },
+          update: {
+            $set: {
+              ...(node.ottId != null ? { ottId: node.ottId } : {}),
+              name: node.name,
+              rank: node.rank,
+              ...(node.ancestorNodeId != null
+                ? { ancestorNodeId: node.ancestorNodeId }
+                : {}),
+              numTips: node.numTips,
+            },
+            // Only when this write is the one that creates the row — a plate
+            // and its review belong to the pipeline, not to the OTOL import,
+            // and must not be reset by a later pass over the same node.
+            $setOnInsert: {
+              nodeId: node.nodeId,
+              assetId: null,
+              description: null,
+              visualStatus: null,
+              visualScore: null,
+              prompt: null,
+              visualAttempts: 0,
+              error: null,
+            },
           },
+          upsert: true,
         },
       });
       continue;
