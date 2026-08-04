@@ -20,6 +20,24 @@ export type ResolvedSpecimen = {
   domain: SpecimenDomain;
 };
 
+/**
+ * Human and near-human subjects, which need a composition of their own.
+ *
+ * A natural-history plate of an animal is a whole unclothed body, and for a
+ * furred or scaled creature that is simply what it looks like. For a human it
+ * is a nude, which is not what this site is illustrating — and the image
+ * providers agree: the whole-body human prompt is rejected outright by
+ * Cloudflare's content filter, so every human plate silently failed over to a
+ * provider with no filter at all.
+ *
+ * Only the hairless hominids. Monkeys and apes are drawn whole, as any other
+ * animal is.
+ */
+function isHumanSubject(...names: Array<string | null | undefined>): boolean {
+  const hay = names.filter(Boolean).join(' ').toLowerCase();
+  return /\bhomo\b|\bhuman\b|hominid|hominin|sapiens|neanderthal|denisovan/.test(hay);
+}
+
 function isLikelyMicrobial(name: string, rank?: string | null): boolean {
   const hay = `${name} ${rank ?? ''}`.toLowerCase();
   return /candidatus|archae|bacter|microb|protist|cyanobacter|prokaryot|unicellular|\bvirus\b|viral|fungal spore|yeast\b/.test(hay);
@@ -54,7 +72,20 @@ export function buildResolveSpecimenPrompt(
       'If the taxon is already a species, use it. If it is a higher clade, pick a familiar extant member.',
       'Reply with ONLY valid JSON (no markdown):',
       '{"specimenName":"…","morphology":"…","isMicroscopic":true|false,"domain":"microbe"|"animal"|"plant"|"fungus"|"other"}',
-      'morphology: 1 short sentence on body plan / appearance (no habitat essay).',
+      /*
+       * `morphology` is pasted straight into the image prompt, so it is written
+       * for a painter rather than a taxonomist: concrete shape, proportion,
+       * colour and texture, which is what a diffusion model can actually draw.
+       * A terse lock like "bipedal, upright posture" leaves it to invent the
+       * rest, and what it invents is where the distortions come from.
+       *
+       * Phrased only as what is there. A negation here would be copied into the
+       * image prompt, and naming a thing to exclude it is what puts it in the
+       * picture.
+       */
+      'morphology: 20-40 words a painter could follow — overall shape and proportions,',
+      'colour, surface texture, and the one or two features that make it recognisable.',
+      'Describe only what is present; never phrase it as what the organism is not.',
       'domain=microbe for bacteria, archaea, unicellular protists, and other non-metazoan microbial eukaryotes.',
       'domain=animal ONLY if the lineage includes Metazoa/Animalia.',
       hintClause,
@@ -102,31 +133,47 @@ export function buildTaxonVisualPromptFromSpecimen(
 
   if (specimen.isMicroscopic || specimen.domain === 'microbe') {
     return [
-      `19th-century hand-colored microscope lithograph of ${subject}`,
-      `(living specimen representing ${taxon}).`,
+      `Hand-colored 19th-century microscope plate of ${subject}`,
+      `(${taxon}).`,
       rankClause,
-      `Morphology lock: ${specimen.morphology}.`,
-      'Subject: single-celled microbe / protist / archaeon / bacterium only — cells, flagellates, rods, cocci, or filaments under a light microscope.',
-      'NOT a fish, insect, fly, moth, beetle, mite, spider, worm, mammal, plant, or any macroscopic animal.',
-      'Ignore mythic or animal-sounding parts of Latin names (e.g. -delphis, -saurus).',
-      'Style: antique scientific plate on parchment, fine engraving linework, muted ochre washes. One centered microscopic subject, plain background.',
-      'No text, numbers, labels, scale bar, watermark, or collage.',
+      `${specimen.morphology}.`,
+      'A few cells of one kind seen through a brass microscope, drawn large and',
+      'filling most of the plate: translucent bodies with faint internal detail',
+      'on a plain pale ground.',
+      'Fine engraved linework, visible hatching, muted ochre and grey washes,',
+      'antique parchment.',
     ].join(' ');
   }
 
   return [
-    `19th-century natural-history illustration of living specimen ${subject}`,
-    `(representing taxon ${taxon}).`,
+    `Hand-colored 19th-century natural-history lithograph of ${subject}`,
+    `(${taxon}).`,
     rankClause,
-    `Morphology lock: ${specimen.morphology}.`,
-    'Style: hand-colored engraving or lithograph on antique parchment — fine linework, soft muted watercolor washes, earthy ochres and greys with restrained color accents. Flat staged scientific-plate composition, not a photograph.',
-    `Depict only ${subject} with real-world morphology — do not invent an unrelated animal from how the name sounds.`,
-    specimen.domain === 'plant' || specimen.domain === 'fungus'
-      ? 'Show that single organism in a simple pastoral or plain paper field, anatomically clear.'
-      : 'Single organism in profile or three-quarter view, anatomically clear, simple plain or pastoral field.',
-    'Single centered subject filling most of the frame. No species montage, no crowded panorama, no collage of other taxa.',
-    'No photorealism, no camera photo, no 3D render, no CGI, no plastic studio lighting, no modern digital sheen.',
-    'No text, numbers, labels, legend, watermark, scale bar, UI, or captions.',
+    `${specimen.morphology}.`,
+    'Fine engraved linework with visible hatching, soft muted watercolor washes,',
+    'earthy ochres and greys on antique parchment, flat staged scientific-plate',
+    'composition, drawn by hand.',
+    // eslint-disable-next-line no-nested-ternary
+    isHumanSubject(taxon, subject)
+      /*
+       * Head and shoulders, and clothed. Described as what to draw rather than
+       * as a restriction: naming anatomy in order to exclude it is what puts it
+       * in the picture. A bust also happens to be the safer subject to draw —
+       * fewer limbs and joints to get wrong.
+       */
+      ? 'A head-and-shoulders portrait study in three-quarter view, the figure'
+        + ' wearing a plain draped cloth across the shoulders and chest,'
+      : specimen.domain === 'plant' || specimen.domain === 'fungus'
+        ? 'The single specimen laid out on plain paper, every part clearly drawn,'
+        : 'One animal in profile, the whole body from head to feet inside the picture,'
+          + ' natural stance with correct limbs and joints,',
+    /*
+     * "Blank margins" summoned a physical mount: the plate came back as a
+     * framed print with a border, and the border carried a garbled caption.
+     * Describing the ground the organism sits on, rather than the edge of the
+     * paper, keeps the frame out of the picture.
+     */
+    'centered and drawn large against a plain pale ground.',
   ].join(' ');
 }
 
@@ -140,8 +187,20 @@ export function buildTaxonVisualPrompt(name: string, rank?: string | null): stri
 }
 
 /**
- * Flux / Schnell follows short front-loaded prompts; long policy text is ignored.
- * Rebuild a tight prompt when the subject looks microbial.
+ * Flux follows short, front-loaded, positive description; long policy text is
+ * ignored at best and obeyed backwards at worst.
+ *
+ * The prompt used to carry a ban list — "hard ban: insect, fly, moth, beetle,
+ * mite, spider" — and microbes came back drawn as insect larvae and mites. A
+ * diffusion model conditions on the tokens it is given; naming a thing to
+ * forbid it puts that thing in the conditioning. Measured on one taxon, same
+ * model and steps: with the ban list, a spiked mass ringed by a dozen
+ * mite-like specks; with the bans removed and the organism simply described,
+ * a single centered red alga with a holdfast, no text and nothing else in
+ * frame.
+ *
+ * So nothing here names what must not appear. What is wanted is described, and
+ * the rest is left unsaid.
  */
 export function adaptImagePromptForFlux(
   prompt: string,
@@ -152,30 +211,20 @@ export function adaptImagePromptForFlux(
     : isLikelyMicrobial(prompt);
 
   if (microbial) {
-    const subject = specimen?.specimenName
-      ? `Depict ${specimen.specimenName} only.`
-      : '';
-    const morph = specimen?.morphology ? specimen.morphology : '';
+    const subject = specimen?.specimenName ?? '';
+    const morph = specimen?.morphology ?? '';
     return [
-      'Antique microscope engraving of a single-celled microbe/protist only:',
-      'tiny cells, flagellates, rods, or colonial filaments OK.',
+      'Hand-colored 19th-century microscope plate on antique parchment.',
       subject,
       morph,
-      'Subject from this scientific name — microbe/protist, not animals.',
-      'Hard ban: insect, fly, moth, butterfly, beetle, mite, spider, bird, mammal, fish, plant leaf.',
-      'Hand-colored 19th-century lithograph, parchment, no text, no 3D, no photo.',
-      prompt.slice(0, 220),
+      'A few translucent cells of one kind on a plain pale ground,',
+      'fine engraved linework, muted ochre washes, one centered subject,',
+      'empty margins.',
     ].filter(Boolean).join(' ');
   }
 
   const clipped = prompt.length > 900 ? `${prompt.slice(0, 900)}…` : prompt;
-  return [
-    clipped,
-    'Vintage hand-colored lithograph only — not photo, not 3D, not CGI.',
-    specimen?.specimenName
-      ? `Real organism ${specimen.specimenName} only — never swap in an insect because the Latin sounds biological.`
-      : 'Real organism for this scientific name only — never swap in an insect because the Latin sounds biological.',
-  ].join(' ');
+  return clipped;
 }
 
 export function tightenImagePrompt(
