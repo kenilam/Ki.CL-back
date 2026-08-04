@@ -32,7 +32,14 @@ export function taxonVisualObjectPrefix(ottId: number): string {
  */
 export function taxonVisualObjectName(ottId: number, buffer: Buffer): string {
   const digest = createHash('sha256').update(buffer).digest('hex').slice(0, 12);
-  return `${taxonVisualObjectPrefix(ottId)}${digest}.png`;
+  /*
+   * Extension from the same reading of the bytes that sets the content type.
+   * It was hardcoded `.png` while the type was sniffed, so a JPEG — which is
+   * what these providers mostly return — was stored under a name claiming to
+   * be a PNG. Browsers were unaffected, since the proxy serves the stored
+   * `Content-Type`, but anyone saving the file got a mislabelled one.
+   */
+  return `${taxonVisualObjectPrefix(ottId)}${digest}.${imageExtension(buffer)}`;
 }
 
 export async function taxonVisualObjectExists(ottId: number): Promise<boolean> {
@@ -40,18 +47,10 @@ export async function taxonVisualObjectExists(ottId: number): Promise<boolean> {
   return names.length > 0;
 }
 
-function imageContentType(buffer: Buffer): string {
+/** The format the bytes actually are, whatever the provider called it. */
+function imageFormat(buffer: Buffer): 'jpeg' | 'png' | 'webp' {
   if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'image/jpeg';
-  }
-  if (
-    buffer.length >= 8
-    && buffer[0] === 0x89
-    && buffer[1] === 0x50
-    && buffer[2] === 0x4e
-    && buffer[3] === 0x47
-  ) {
-    return 'image/png';
+    return 'jpeg';
   }
   if (
     buffer.length >= 12
@@ -60,9 +59,18 @@ function imageContentType(buffer: Buffer): string {
     && buffer[2] === 0x46
     && buffer[3] === 0x46
   ) {
-    return 'image/webp';
+    return 'webp';
   }
-  return 'image/png';
+  return 'png';
+}
+
+function imageContentType(buffer: Buffer): string {
+  return `image/${imageFormat(buffer)}`;
+}
+
+function imageExtension(buffer: Buffer): string {
+  const format = imageFormat(buffer);
+  return format === 'jpeg' ? 'jpg' : format;
 }
 
 export type CreatedTaxonAsset = {
