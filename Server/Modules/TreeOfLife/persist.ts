@@ -8,6 +8,9 @@ import {
   type ArgusonNode,
 } from './otol.js';
 
+/** Mongo's duplicate-key error code. */
+const DUPLICATE_KEY = 11000;
+
 type FlatNode = {
   nodeId: string;
   ottId: number | null;
@@ -215,7 +218,50 @@ async function writeFlatNodes(input: FlatNode[]): Promise<void> {
     return;
   }
 
-  await TreeOfLifeNodes.bulkWrite(ops, { ordered: false });
+  await bulkWriteTolerantOfRaces(ops);
+}
+
+/** A duplicate-key error, from anywhere inside a bulk write. */
+function isDuplicateKeyError(error: unknown): boolean {
+  const code = (error as { code?: number })?.code;
+
+  if (code === DUPLICATE_KEY) {
+    return true;
+  }
+
+  const writeErrors = (error as { writeErrors?: Array<{ code?: number }> })
+    ?.writeErrors;
+
+  return Array.isArray(writeErrors)
+    && writeErrors.length > 0
+    && writeErrors.every((entry) => entry.code === DUPLICATE_KEY);
+}
+
+/**
+ * Run the batch, and run it once more if a concurrent writer beat us to a row.
+ *
+ * Upserting is what stopped this happening on every request, but it is not a
+ * guarantee: matching and inserting are not one atomic step against a unique
+ * index, so two upserts for the same node can still collide. The loser's work
+ * is not lost — by the time it retries the row exists, so the same operation
+ * becomes an ordinary update and succeeds.
+ *
+ * Only duplicate-key failures are retried. Anything else is a real error and
+ * is left to propagate; swallowing those is how a write silently stops
+ * happening.
+ */
+async function bulkWriteTolerantOfRaces(
+  ops: Parameters<typeof TreeOfLifeNodes.bulkWrite>[0],
+): Promise<void> {
+  try {
+    await TreeOfLifeNodes.bulkWrite(ops, { ordered: false });
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) {
+      throw error;
+    }
+
+    await TreeOfLifeNodes.bulkWrite(ops, { ordered: false });
+  }
 }
 
 /** Walk OTOL arguson once, then persist the whole subtree. */
