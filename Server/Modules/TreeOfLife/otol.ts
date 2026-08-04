@@ -1,5 +1,7 @@
 const OTOL_SUBTREE_URL = 'https://api.opentreeoflife.org/v3/tree_of_life/subtree';
 const OTOL_TAXON_INFO_URL = 'https://api.opentreeoflife.org/v3/taxonomy/taxon_info';
+const OTOL_AUTOCOMPLETE_URL =
+  'https://api.opentreeoflife.org/v3/tnrs/autocomplete_name';
 
 export interface ArgusonTaxon {
   name?: string;
@@ -178,4 +180,88 @@ export function lineageNamesForTaxon(info: OtolTaxonInfo): string[] {
 export function formatLineagePath(info: OtolTaxonInfo, maxDepth = 12): string {
   const names = lineageNamesForTaxon(info).slice(0, maxDepth);
   return names.join(' › ');
+}
+
+/**
+ * A name match from OTOL's taxonomic name resolution service.
+ *
+ * `nodeId` is deliberately absent: TNRS answers about *taxa*, and a taxon only
+ * acquires a synthetic-tree node id once the subtree around it is fetched. The
+ * search resolver takes the `ottId` from here and goes through the normal
+ * subtree path to get one, so a result from the API and one from the database
+ * end up indistinguishable to the client.
+ */
+export type OtolNameMatch = {
+  ottId: number;
+  name: string;
+  /**
+   * Whether OTOL considers this a higher taxon — above species level.
+   *
+   * The endpoint returns no rank and no score, only this flag, so a result's
+   * rank has to come from the taxon record once it is fetched. Order is as
+   * returned, which is already best-match first.
+   */
+  higher: boolean;
+};
+
+/**
+ * Ask OTOL for taxa whose name starts with `query`.
+ *
+ * This is the autocomplete endpoint rather than full TNRS matching: it is built
+ * for prefix search against a partial name typed by a person, which is exactly
+ * the case here, and it answers in one call without the two-step context
+ * inference `match_names` needs.
+ */
+export async function fetchOtolNameMatches(
+  query: string,
+  limit = 10,
+): Promise<OtolNameMatch[]> {
+  let response: Response;
+
+  try {
+    response = await fetch(OTOL_AUTOCOMPLETE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: query,
+        include_suppressed: false,
+      }),
+    });
+  } catch {
+    return [];
+  }
+
+  if (!response.ok) {
+    return [];
+  }
+
+  let json: unknown;
+
+  try {
+    json = await response.json();
+  } catch {
+    return [];
+  }
+
+  if (!Array.isArray(json)) {
+    return [];
+  }
+
+  return json
+    .map((entry) => {
+      const row = entry as Record<string, unknown>;
+      const ottId = Number(row.ott_id);
+
+      if (!Number.isFinite(ottId)) {
+        return null;
+      }
+
+      return {
+        ottId,
+        name: typeof row.unique_name === 'string' ? row.unique_name : '',
+        higher: row.is_higher === true,
+      };
+    })
+    .filter((match): match is OtolNameMatch => Boolean(match?.name))
+    .slice(0, limit);
 }

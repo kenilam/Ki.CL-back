@@ -92,6 +92,16 @@ export type Query = {
   __typename?: 'Query';
   Asset?: Maybe<Asset>;
   Me?: Maybe<MePayload>;
+  /**
+   * Find taxa by name.
+   *
+   * Stored nodes are searched first, since they are the ones already placed in
+   * the tree and can be navigated to immediately. Only when nothing is stored
+   * does this fall through to Open Tree's name index — so exploring somewhere new
+   * still works, and the cost of the remote call is paid only when it buys
+   * something.
+   */
+  TaxonSearch: Array<TaxonSearchResult>;
   TaxonVisual: TaxonVisual;
   /**
    * Subtree from Open Tree of Life (cached in Mongo).
@@ -111,6 +121,12 @@ export type Query = {
 
 export type QueryAssetArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryTaxonSearchArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
 };
 
 
@@ -161,6 +177,31 @@ export type Subscription = {
 export type SubscriptionTaxonVisualUpdatedArgs = {
   ottId: Scalars['Int']['input'];
 };
+
+/**
+ * A taxon matching a search, from whichever source could answer.
+ *
+ * Both sources yield a `nodeId`, so a result navigates the same way wherever it
+ * came from. A stored node has one recorded; a name matched against Open Tree's
+ * taxonomy has it derived from the ott id, which is the same thing — the
+ * synthetic tree names taxon nodes `ott` followed by their ott id.
+ */
+export type TaxonSearchResult = {
+  __typename?: 'TaxonSearchResult';
+  name: Scalars['String']['output'];
+  nodeId?: Maybe<Scalars['String']['output']>;
+  ottId?: Maybe<Scalars['Int']['output']>;
+  rank?: Maybe<Scalars['String']['output']>;
+  /** Where the match came from, so the client can say so if it wants. */
+  source: TaxonSearchSource;
+};
+
+export enum TaxonSearchSource {
+  /** Already known — matched against stored nodes. */
+  Database = 'DATABASE',
+  /** Matched against Open Tree's taxonomy because nothing was stored. */
+  OpenTree = 'OPEN_TREE'
+}
 
 /**
  * Studio generation signal only. Persist image/description on tree-of-life;
@@ -313,6 +354,8 @@ export type ResolversTypes = ResolversObject<{
   SocialSignInInput: SocialSignInInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subscription: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  TaxonSearchResult: ResolverTypeWrapper<TaxonSearchResult>;
+  TaxonSearchSource: TaxonSearchSource;
   TaxonVisual: ResolverTypeWrapper<TaxonVisual>;
   TaxonVisualScore: ResolverTypeWrapper<TaxonVisualScore>;
   TaxonVisualStatus: TaxonVisualStatus;
@@ -341,6 +384,7 @@ export type ResolversParentTypes = ResolversObject<{
   SocialSignInInput: SocialSignInInput;
   String: Scalars['String']['output'];
   Subscription: Record<PropertyKey, never>;
+  TaxonSearchResult: TaxonSearchResult;
   TaxonVisual: TaxonVisual;
   TaxonVisualScore: TaxonVisualScore;
   TreeOfLifeNode: TreeOfLifeNode;
@@ -393,6 +437,7 @@ export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<Reso
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   Asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   Me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
+  TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
   TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
   TreeOfLifeSubtrees?: Resolver<Array<Maybe<ResolversTypes['TreeOfLifeNode']>>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreesArgs, 'heightLimit'>>;
@@ -400,6 +445,14 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
   TaxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "TaxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
+}>;
+
+export type TaxonSearchResultResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TaxonSearchResult'] = ResolversParentTypes['TaxonSearchResult']> = ResolversObject<{
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  nodeId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  ottId?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  rank?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  source?: Resolver<ResolversTypes['TaxonSearchSource'], ParentType, ContextType>;
 }>;
 
 export type TaxonVisualResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TaxonVisual'] = ResolversParentTypes['TaxonVisual']> = ResolversObject<{
@@ -450,6 +503,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   NonEmptyString?: GraphQLScalarType;
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
+  TaxonSearchResult?: TaxonSearchResultResolvers<ContextType>;
   TaxonVisual?: TaxonVisualResolvers<ContextType>;
   TaxonVisualScore?: TaxonVisualScoreResolvers<ContextType>;
   TreeOfLifeNode?: TreeOfLifeNodeResolvers<ContextType>;

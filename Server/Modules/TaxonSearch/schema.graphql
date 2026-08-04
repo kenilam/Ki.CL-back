@@ -1,0 +1,36 @@
+"""
+A taxon matching a search, from whichever source could answer.
+
+Both sources yield a `nodeId`, so a result navigates the same way wherever it
+came from. A stored node has one recorded; a name matched against Open Tree's
+taxonomy has it derived from the ott id, which is the same thing — the
+synthetic tree names taxon nodes `ott` followed by their ott id.
+"""
+type TaxonSearchResult {
+  nodeId: String
+  ottId: Int
+  name: String!
+  rank: String
+  """Where the match came from, so the client can say so if it wants."""
+  source: TaxonSearchSource!
+}
+
+enum TaxonSearchSource {
+  """Already known — matched against stored nodes."""
+  DATABASE
+  """Matched against Open Tree's taxonomy because nothing was stored."""
+  OPEN_TREE
+}
+
+extend type Query {
+  """
+  Find taxa by name.
+
+  Stored nodes are searched first, since they are the ones already placed in
+  the tree and can be navigated to immediately. Only when nothing is stored
+  does this fall through to Open Tree's name index — so exploring somewhere new
+  still works, and the cost of the remote call is paid only when it buys
+  something.
+  """
+  TaxonSearch(query: String!, limit: Int = 10): [TaxonSearchResult!]!
+}
