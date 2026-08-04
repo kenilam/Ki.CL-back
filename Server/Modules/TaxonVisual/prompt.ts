@@ -94,6 +94,21 @@ export function buildResolveSpecimenPrompt(
   };
 }
 
+/**
+ * What a microbe looks like, for a painter, when no model was available to say.
+ *
+ * Said as what to draw. It used to end "— not a macroscopic animal", and this
+ * string is pasted straight into the image prompt — so every microbe plate was
+ * conditioned on the words "macroscopic animal", which is the same trap the ban
+ * list fell into and is documented under `adaptImagePromptForFlux`. It runs
+ * whenever no text model is available to resolve a specimen, which is the norm
+ * once a quota is spent, and so was in force for much of the library that came
+ * back drawn as animals.
+ */
+const MICROBE_MORPHOLOGY = 'Colonies of tiny single cells at high magnification'
+  + ' — smooth translucent rods and spheres with faint granular interiors,'
+  + ' drawn in pale grey-green and ochre washes';
+
 export function fallbackSpecimen(
   name: string,
   rank?: string | null,
@@ -104,7 +119,7 @@ export function fallbackSpecimen(
     return {
       specimenName: name.trim(),
       morphology: domainHint === 'microbe'
-        ? 'Unicellular cells or small colonies as under a light microscope — not a macroscopic animal'
+        ? MICROBE_MORPHOLOGY
         : `Recognizable living form of ${name.trim()}`,
       isMicroscopic: domainHint === 'microbe',
       domain: domainHint,
@@ -113,7 +128,7 @@ export function fallbackSpecimen(
   return {
     specimenName: name.trim(),
     morphology: microbial
-      ? 'Unicellular cells or small colonies as under a light microscope — not a macroscopic animal'
+      ? MICROBE_MORPHOLOGY
       : `Recognizable living form of ${name.trim()}`,
     isMicroscopic: microbial,
     domain: microbial ? 'microbe' : 'other',

@@ -49,7 +49,15 @@ export function isCreditExhaustedError(message: string): boolean {
 export function isBudgetError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
-    lower.includes('billing hard limit')
+    /*
+     * A spent account is a budget error by definition. Kept in step
+     * deliberately: these two lists disagreeing meant OpenAI's actual wording,
+     * "You have no credits remaining", was recognised by one and not the other
+     * — so no limit error was raised at all, and every call spent three full
+     * retries against an empty account before failing over.
+     */
+    isCreditExhaustedError(message)
+    || lower.includes('billing hard limit')
     || lower.includes('billing_hard_limit')
     || lower.includes('insufficient_quota')
     || lower.includes('insufficient balance')
