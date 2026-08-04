@@ -14,7 +14,11 @@ RUN corepack enable
 
 # Manifests first, so a dependency install is only redone when they change.
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn/ ./.yarn/
+# `.yarn/` is not copied here: `.gitignore` keeps everything in it out of the
+# repository, so the directory is absent from a clean checkout and the COPY
+# fails. It exists locally — install state and an empty patches folder — which
+# is why a deploy from local sources built and the first build from git did
+# not. Should patches ever be committed, `COPY . .` below picks them up.
 COPY Server/package.json ./Server/
 COPY Codegen/package.json ./Codegen/
 COPY Client/package.json ./Client/
