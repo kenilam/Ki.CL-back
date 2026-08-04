@@ -162,8 +162,14 @@ async function runGeneration(
       imageScore,
     } = await runTaxonVisualPipeline(ottId, name, rank);
 
+    /*
+     * Only a real review is stored. `scored: false` means no provider ever
+     * looked at the image, and writing numbers for that would put an
+     * unreviewed plate on record as a reviewed one — which is exactly how a
+     * whole library of them came to look approved.
+     */
     const visualScore = toVisualScore(
-      imageScore
+      imageScore?.scored
         ? {
             overall: imageScore.overall,
             taxonMatch: imageScore.taxon_match,
@@ -297,8 +303,14 @@ async function runOpenAiUpgrade(
       openaiOnly: true,
     });
 
+    /*
+     * Only a real review is stored. `scored: false` means no provider ever
+     * looked at the image, and writing numbers for that would put an
+     * unreviewed plate on record as a reviewed one — which is exactly how a
+     * whole library of them came to look approved.
+     */
     const visualScore = toVisualScore(
-      imageScore
+      imageScore?.scored
         ? {
             overall: imageScore.overall,
             taxonMatch: imageScore.taxon_match,

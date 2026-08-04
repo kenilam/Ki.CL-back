@@ -16,6 +16,7 @@ import {
 import { resolveSpecimen } from 'server/Modules/TaxonVisual/resolveSpecimen.js';
 import {
   scoreTaxonImage,
+  unscored,
   type ImageScore,
 } from 'server/Modules/TaxonVisual/scoreImage.js';
 import {
@@ -50,7 +51,7 @@ function formatScore(score: ImageScore): string {
     `single_subject=${score.single_subject}`,
     `no_text=${score.no_text}`,
     `pass=${score.pass}`,
-    score.skipped ? 'skipped=true' : null,
+    score.scored ? null : 'scored=false',
   ].filter(Boolean).join(' ');
 }
 
@@ -157,20 +158,18 @@ export async function runTaxonVisualPipeline(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(
-        `${LOG} vision score failed ottId=${ottId} attempt=${attempt + 1}: ${message}`,
+        `${LOG} vision score unavailable ottId=${ottId} attempt=${attempt + 1}: ${message}`,
       );
-      // Don't block upload if vision is down — accept this render.
-      score = {
-        taxon_match: 7,
-        morphology: 7,
-        style_plate: 7,
-        single_subject: 7,
-        no_text: 7,
-        overall: 7,
-        pass: true,
-        suggestions: [],
-        skipped: true,
-      };
+      /*
+       * Vision is down, so this render goes out unreviewed rather than not at
+       * all — but it is recorded as unreviewed.
+       *
+       * This used to substitute a passing 7 across the board, which is how 123
+       * plates came to be stored as reviewed when not one of them had ever been
+       * looked at. An unreviewed image is a fine thing to publish; an
+       * unreviewed image wearing a passing score is not.
+       */
+      score = unscored();
     }
 
     const candidate: Candidate = {

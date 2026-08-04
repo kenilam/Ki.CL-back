@@ -1,14 +1,10 @@
-import { throwIfProviderLimitError } from './providerLimitError.js';
-import { isOpenAiTextConfigured } from './providers/text/openai.js';
+import { runProviderFailover } from './providers/failover.js';
+import { buildVisionProviders } from './providers/vision/index.js';
 import {
   buildScoreImageSystemPrompt,
   buildScoreImageUserPrompt,
   type ResolvedSpecimen,
 } from './prompt.js';
-
-const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
-const VISION_MODEL = 'gpt-4o';
-const PROVIDER = 'openai-vision';
 
 export type ImageScore = {
   taxon_match: number;
@@ -19,14 +15,37 @@ export type ImageScore = {
   overall: number;
   pass: boolean;
   suggestions: string[];
-  skipped?: boolean;
+  /**
+   * Whether a model actually looked at the image.
+   *
+   * The one field that must never be inferred. Everything above it is a
+   * judgement; this says whether there was a judgement at all, and it is what
+   * keeps an unreviewed plate from being stored as a reviewed one.
+   */
+  scored: boolean;
 };
 
-interface OpenAIChatResponse {
-  choices?: Array<{
-    message?: { content?: string | null };
-  }>;
-  error?: { message?: string; code?: string; type?: string };
+/**
+ * The stand-in used when no provider could look at the image.
+ *
+ * It passes, because a review that did not happen is not grounds for throwing
+ * away a render — but it is marked `scored: false`, and nothing marked that way
+ * is persisted as a score.
+ */
+const UNSCORED: ImageScore = {
+  taxon_match: 0,
+  morphology: 0,
+  style_plate: 0,
+  single_subject: 0,
+  no_text: 0,
+  overall: 0,
+  pass: true,
+  suggestions: [],
+  scored: false,
+};
+
+export function unscored(): ImageScore {
+  return { ...UNSCORED };
 }
 
 function parseScore(raw: string): ImageScore | null {
@@ -61,6 +80,7 @@ function parseScore(raw: string): ImageScore | null {
       overall,
       pass,
       suggestions: suggestions.slice(0, 3),
+      scored: true,
     };
   } catch {
     return null;
@@ -84,8 +104,11 @@ function mimeForBuffer(buffer: Buffer): string {
 }
 
 /**
- * Vision QA (GPT-4o). If OpenAI is unavailable, skip and pass so generation
- * still completes — same spirit as accepting best-after-retry.
+ * Vision QA across the provider chain.
+ *
+ * Throws when no provider could produce a usable score, rather than returning
+ * an invented one. The caller decides what to do with a render that could not
+ * be reviewed — it is not this function's place to call it a pass.
  */
 export async function scoreTaxonImage(
   buffer: Buffer,
@@ -93,76 +116,31 @@ export async function scoreTaxonImage(
   specimen: ResolvedSpecimen,
   lineagePath?: string | null,
 ): Promise<ImageScore> {
-  if (!isOpenAiTextConfigured()) {
-    console.warn('[TaxonVisual] vision score skipped (no OPENAI_API_KEY)');
-    return {
-      taxon_match: 10,
-      morphology: 10,
-      style_plate: 10,
-      single_subject: 10,
-      no_text: 10,
-      overall: 10,
-      pass: true,
-      suggestions: [],
-      skipped: true,
-    };
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY!.trim();
-  const mime = mimeForBuffer(buffer);
-  const dataUrl = `data:${mime};base64,${buffer.toString('base64')}`;
-
-  const response = await fetch(OPENAI_CHAT_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: VISION_MODEL,
+  const text = await runProviderFailover(
+    buildVisionProviders({
+      system: buildScoreImageSystemPrompt(),
+      user: buildScoreImageUserPrompt(taxonName, specimen, lineagePath),
+      image: buffer,
+      mime: mimeForBuffer(buffer),
+      /*
+       * The reply itself is ~100 tokens, but reasoning is spent from the same
+       * budget and runs first — measured at ~450 tokens before a single
+       * character of JSON. The old ceiling of 280 was therefore consumed
+       * before the answer started, and the half-written object that came back
+       * did not parse, which used to be converted into a passing score.
+       */
+      maxTokens: 2048,
       temperature: 0.1,
-      max_tokens: 280,
-      messages: [
-        { role: 'system', content: buildScoreImageSystemPrompt() },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: buildScoreImageUserPrompt(taxonName, specimen, lineagePath) },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
-      ],
     }),
-  });
-
-  const payload = (await response.json()) as OpenAIChatResponse;
-
-  if (!response.ok) {
-    const message = payload.error?.message
-      ?? payload.error?.code
-      ?? `OpenAI vision HTTP ${response.status}`;
-    throwIfProviderLimitError(message, PROVIDER);
-    throw new Error(message);
-  }
-
-  const text = payload.choices?.[0]?.message?.content?.trim();
-  if (!text) {
-    throw new Error('OpenAI vision returned no score');
-  }
+    'vision',
+  );
 
   const score = parseScore(text);
+
   if (!score) {
-    console.warn('[TaxonVisual] vision score parse failed; treating as pass');
-    return {
-      taxon_match: 7,
-      morphology: 7,
-      style_plate: 7,
-      single_subject: 7,
-      no_text: 7,
-      overall: 7,
-      pass: true,
-      suggestions: [],
-    };
+    throw new Error(
+      `Vision score could not be parsed: ${text.slice(0, 200)}`,
+    );
   }
 
   return score;

@@ -132,7 +132,7 @@ async function withRetries<T>(
  */
 export async function runProviderFailover<T>(
   providers: ProviderAttempt<T>[],
-  kind: 'image' | 'description',
+  kind: 'image' | 'description' | 'vision',
 ): Promise<T> {
   const configured = providers.filter((provider) => provider.isConfigured());
   if (configured.length === 0) {
