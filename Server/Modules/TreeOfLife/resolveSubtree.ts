@@ -3,8 +3,11 @@ import {
   clearTreeOfLifeLoaders,
   type LeanTreeOfLifeNode,
 } from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
-import { fetchOtolSubtreeResult } from './otol.js';
-import { persistArgusonTree } from './persist.js';
+import { fetchOtolNodeLineage, fetchOtolSubtreeResult } from './otol.js';
+import { persistArgusonTree, persistLineageSpine } from './persist.js';
+import { ROOT_OTT_ID } from './validation.js';
+
+const ROOT_NODE_ID = `ott${ROOT_OTT_ID}`;
 
 export type SubtreeKey = {
   ottId: number | null;
@@ -142,6 +145,42 @@ export async function resolveSubtreeRoots(
 
     if (persisted.length) {
       // Persist may have filled previously-null DataLoader slots.
+      clearTreeOfLifeLoaders(context.loaders.treeOfLife);
+    }
+
+    /*
+     * A subtree describes only what hangs below its root, so the root itself
+     * comes out of the fetch with no known parent. Left there it is stored as
+     * `ancestorNodeId: null`, which is the same thing the origin of life
+     * stores — and clients walking rootward stop at it, believing they have
+     * arrived. Fetching the spine is what keeps that null meaning one thing.
+     *
+     * Only for roots that actually lack a parent: a node reached by walking
+     * down from somewhere already has one, and the great majority do.
+     */
+    const spineCandidates = (await loadKeys(
+      persisted.map((entry) => keys[entry.index]),
+      context,
+    )).filter(
+      (doc): doc is LeanTreeOfLifeNode =>
+        doc != null
+        && doc.nodeId !== ROOT_NODE_ID
+        && doc.ancestorNodeId == null,
+    );
+
+    if (spineCandidates.length) {
+      await Promise.all(
+        spineCandidates.map(async (doc) => {
+          const lineage = await fetchOtolNodeLineage({ nodeId: doc.nodeId });
+
+          if (!lineage.ok) {
+            return;
+          }
+
+          await persistLineageSpine(doc.nodeId, lineage.lineage);
+        }),
+      );
+
       clearTreeOfLifeLoaders(context.loaders.treeOfLife);
     }
   }

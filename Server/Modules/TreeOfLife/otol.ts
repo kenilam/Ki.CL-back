@@ -1,5 +1,6 @@
 const OTOL_SUBTREE_URL = 'https://api.opentreeoflife.org/v3/tree_of_life/subtree';
 const OTOL_TAXON_INFO_URL = 'https://api.opentreeoflife.org/v3/taxonomy/taxon_info';
+const OTOL_NODE_INFO_URL = 'https://api.opentreeoflife.org/v3/tree_of_life/node_info';
 const OTOL_AUTOCOMPLETE_URL =
   'https://api.opentreeoflife.org/v3/tnrs/autocomplete_name';
 
@@ -101,6 +102,74 @@ export async function fetchOtolSubtreeResult(options: {
   }
 
   return { ok: true, arguson: json.arguson };
+}
+
+export type OtolLineageResult =
+  | { ok: true; lineage: ArgusonNode[] }
+  | { ok: false; status: number; message?: string };
+
+/**
+ * A node's rootward spine in the synthetic tree — parent first, ending at the
+ * origin of life.
+ *
+ * `subtree` only ever describes what hangs *below* the node it was asked for,
+ * so persisting one leaves its top with no known parent. That is
+ * indistinguishable, once stored, from the one node that genuinely has none —
+ * and a genus was being served to clients as the root of all life. This is what
+ * closes the gap.
+ *
+ * `tree_of_life/node_info` rather than `taxonomy/taxon_info`: the taxonomy
+ * knows only named ranks, while the synthetic tree strings unnamed `mrcaott…`
+ * nodes between them. A taxonomy lineage would skip those and the spine would
+ * not join up.
+ */
+export async function fetchOtolNodeLineage(options: {
+  ottId?: number | null;
+  nodeId?: string | null;
+}): Promise<OtolLineageResult> {
+  const body: Record<string, unknown> = { include_lineage: true };
+
+  if (options.ottId != null) {
+    body.ott_id = options.ottId;
+  } else if (options.nodeId != null) {
+    body.node_id = options.nodeId;
+  } else {
+    return { ok: false, status: 400, message: 'No node given' };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(OTOL_NODE_INFO_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    return { ok: false, status: 0, message: 'Failed to reach Open Tree of Life' };
+  }
+
+  if (!response.ok) {
+    return { ok: false, status: response.status };
+  }
+
+  const json = (await response.json()) as {
+    lineage?: unknown;
+    message?: string;
+  };
+
+  if (!Array.isArray(json.lineage)) {
+    return {
+      ok: false,
+      status: 404,
+      message: json.message ?? 'Tree of Life lineage not found',
+    };
+  }
+
+  const lineage = (json.lineage as ArgusonNode[]).filter((node) =>
+    Boolean(node?.node_id),
+  );
+
+  return { ok: true, lineage };
 }
 
 function asLineageTaxon(raw: unknown): OtolLineageTaxon | null {
