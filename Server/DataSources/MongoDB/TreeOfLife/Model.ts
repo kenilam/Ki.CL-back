@@ -50,6 +50,13 @@ export interface ITreeOfLifeNode extends Document {
    * Internal only — not exposed on TreeOfLife GraphQL.
    */
   visualAttempts: number;
+  /**
+   * Why the last generation ran out of quota, when it did.
+   *
+   * Kept because the reason outlives the request that discovered it: a client
+   * asking later still needs to know whether waiting will help.
+   */
+  visualExhaustion: 'REFILLS' | 'BILLING' | null;
   /** Internal only — not exposed on TreeOfLife GraphQL. */
   error: string | null;
   createdAt: Date;
@@ -122,6 +129,11 @@ const TreeOfLifeNodeSchema = new Schema<ITreeOfLifeNode>(
     visualAttempts: {
       type: Number,
       default: 0,
+    },
+    visualExhaustion: {
+      type: String,
+      enum: ['REFILLS', 'BILLING', null],
+      default: null,
     },
     error: {
       type: String,

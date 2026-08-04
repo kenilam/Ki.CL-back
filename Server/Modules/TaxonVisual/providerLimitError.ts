@@ -2,12 +2,26 @@
 export class ProviderLimitError extends Error {
   readonly retryable: boolean;
   readonly provider: string;
+  /**
+   * Whether this can only be resolved by paying.
+   *
+   * A daily allowance and an empty balance both stop the work, but only one of
+   * them ends on its own — and telling a reader to "try again shortly" when it
+   * does not is how the failure message came to be untrue.
+   */
+  readonly needsBilling: boolean;
 
-  constructor(rawMessage: string, retryable: boolean, provider = 'unknown') {
+  constructor(
+    rawMessage: string,
+    retryable: boolean,
+    provider = 'unknown',
+    needsBilling = isCreditExhaustedError(rawMessage),
+  ) {
     super(rawMessage);
     this.name = 'ProviderLimitError';
     this.retryable = retryable;
     this.provider = provider;
+    this.needsBilling = needsBilling;
   }
 }
 

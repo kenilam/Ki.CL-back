@@ -40,6 +40,7 @@ query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
       taxonMatch
       pass
     }
+    exhaustion
   }
 }
 
@@ -765,5 +766,6 @@ subscription kicl_TaxonVisualUpdated($ottId: Int!) {
       taxonMatch
       pass
     }
+    exhaustion
   }
 }

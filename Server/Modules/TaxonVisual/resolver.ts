@@ -18,7 +18,11 @@ import {
   TAXON_VISUAL_UPDATED,
   taxonVisualPubSub,
 } from './pubsub.js';
-import type { TaxonVisualResult, TaxonVisualScoreResult } from './types.js';
+import type {
+  TaxonVisualExhaustion,
+  TaxonVisualResult,
+  TaxonVisualScoreResult,
+} from './types.js';
 
 /**
  * How many plates a taxon gets before the best one stands.
@@ -36,6 +40,21 @@ const SETTLED: TaxonVisualStatus[] = [
   TaxonVisualStatus.Error,
   TaxonVisualStatus.Exhausted,
 ];
+
+/**
+ * Whether waiting will help, when generation ran out of quota.
+ *
+ * Only `BILLING` when every provider is out of credit — one allowance that
+ * refills tomorrow is reason enough to wait, and saying otherwise would send
+ * someone to a billing page they do not need.
+ */
+function exhaustionKind(error: unknown): 'REFILLS' | 'BILLING' | null {
+  if (!(error instanceof ProviderLimitError)) {
+    return null;
+  }
+
+  return error.needsBilling ? 'BILLING' : 'REFILLS';
+}
 
 function failureStatus(error: unknown): TaxonVisualStatus.Error | TaxonVisualStatus.Exhausted {
   if (error instanceof ProviderLimitError) {
@@ -83,6 +102,7 @@ function toResult(doc: {
   assetId?: unknown;
   visualStatus?: TaxonVisualStatus | null;
   visualScore?: TaxonVisualScoreResult | null;
+  visualExhaustion?: TaxonVisualExhaustion | null;
   status?: TaxonVisualStatus;
   error?: string | null;
 }): TaxonVisualResult {
@@ -107,6 +127,14 @@ function toResult(doc: {
     assetId: doc.assetId != null ? String(doc.assetId) : null,
     description: doc.description ?? null,
     visualScore: toVisualScore(doc.visualScore),
+    /*
+     * Only meaningful while the quota is what is stopping us. Carrying it into
+     * a READY result would leave a stale reason attached to a plate that
+     * exists.
+     */
+    exhaustion: status === TaxonVisualStatus.Exhausted
+      ? doc.visualExhaustion ?? 'REFILLS'
+      : null,
   };
 }
 
@@ -224,6 +252,7 @@ async function runGeneration(
           description: null,
           visualStatus: status,
           visualScore: null,
+          visualExhaustion: exhaustionKind(error),
           error: message,
         },
         $unset: { assetId: 1, imageUrl: 1 },
@@ -531,6 +560,8 @@ export default {
         assetId: null,
         description: null,
         visualScore: null,
+        // Generation has just been started, so nothing is exhausted yet.
+        exhaustion: null,
       };
     },
   },

@@ -8,6 +8,9 @@ export type TaxonVisualScoreResult = {
   pass: boolean;
 };
 
+/** Whether waiting helps, when generation is out of quota. */
+export type TaxonVisualExhaustion = 'REFILLS' | 'BILLING';
+
 export interface TaxonVisualResult {
   status: TaxonVisualStatus;
   ottId: number;
@@ -15,4 +18,6 @@ export interface TaxonVisualResult {
   assetId: string | null;
   description: string | null;
   visualScore: TaxonVisualScoreResult | null;
+  /** Set only when status is EXHAUSTED. */
+  exhaustion: TaxonVisualExhaustion | null;
 }

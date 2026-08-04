@@ -175,6 +175,9 @@ export async function runProviderFailover<T>(
       `All ${kind} providers exhausted quota`,
       false,
       configured.map((provider) => provider.name).join('|'),
+      // Nothing was attempted, so nothing is known about why. Treat it as the
+      // recoverable case: a cooldown is what put us here, and cooldowns end.
+      false,
     );
   }
 
@@ -203,10 +206,20 @@ export async function runProviderFailover<T>(
     (error) => error instanceof ProviderLimitError && !error.retryable,
   );
   if (allBudget) {
+    /*
+     * Only "needs billing" if every one of them does. A single provider whose
+     * allowance refills tomorrow is enough for the wait to be worth it, and
+     * saying otherwise would send someone to a billing page they do not need.
+     */
+    const everyOneNeedsBilling = errors.every(
+      (error) => error instanceof ProviderLimitError && error.needsBilling,
+    );
+
     throw new ProviderLimitError(
       `All ${kind} providers exhausted quota`,
       false,
       available.map((provider) => provider.name).join('|'),
+      everyOneNeedsBilling,
     );
   }
 

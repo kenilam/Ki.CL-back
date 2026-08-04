@@ -211,11 +211,26 @@ export type TaxonVisual = {
   __typename?: 'TaxonVisual';
   assetId?: Maybe<Scalars['ID']['output']>;
   description?: Maybe<Scalars['String']['output']>;
+  /** Set only when status is EXHAUSTED. */
+  exhaustion?: Maybe<TaxonVisualExhaustion>;
   nodeId?: Maybe<Scalars['String']['output']>;
   ottId: Scalars['Int']['output'];
   status: TaxonVisualStatus;
   visualScore?: Maybe<TaxonVisualScore>;
 };
+
+/**
+ * Why generation is out of quota, when status is EXHAUSTED.
+ *
+ * `REFILLS` — at least one provider's allowance returns on a timer, so waiting
+ * works. `BILLING` — every provider is out of credit, and only paying changes
+ * that. The difference decides whether telling someone to try again later is
+ * true.
+ */
+export enum TaxonVisualExhaustion {
+  Billing = 'BILLING',
+  Refills = 'REFILLS'
+}
 
 /** Vision QA scores from the studio generate pipeline. */
 export type TaxonVisualScore = {
@@ -357,6 +372,7 @@ export type ResolversTypes = ResolversObject<{
   TaxonSearchResult: ResolverTypeWrapper<TaxonSearchResult>;
   TaxonSearchSource: TaxonSearchSource;
   TaxonVisual: ResolverTypeWrapper<TaxonVisual>;
+  TaxonVisualExhaustion: TaxonVisualExhaustion;
   TaxonVisualScore: ResolverTypeWrapper<TaxonVisualScore>;
   TaxonVisualStatus: TaxonVisualStatus;
   TreeOfLifeNode: ResolverTypeWrapper<TreeOfLifeNode>;
@@ -458,6 +474,7 @@ export type TaxonSearchResultResolvers<ContextType = Context, ParentType extends
 export type TaxonVisualResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TaxonVisual'] = ResolversParentTypes['TaxonVisual']> = ResolversObject<{
   assetId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  exhaustion?: Resolver<Maybe<ResolversTypes['TaxonVisualExhaustion']>, ParentType, ContextType>;
   nodeId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   ottId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['TaxonVisualStatus'], ParentType, ContextType>;
