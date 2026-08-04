@@ -17,7 +17,20 @@ function ensureServiceAccountFile(serviceAccount: string) {
   writeFileSync(SERVICE_ACCOUNT_PATH, serviceAccount);
 }
 
-/** Lazy bucket — server can boot without GCS; TaxonVisual throws when used. */
+/**
+ * Lazy bucket — server can boot without GCS; TaxonVisual throws when used.
+ *
+ * Credentials come from the environment the server is running in whenever it
+ * can supply them: on Cloud Run that is the service account the service runs
+ * as, and locally it is whatever `gcloud auth application-default login` left
+ * behind. Neither is a file this process has to hold.
+ *
+ * An explicit key is still honoured, because somewhere without a Google
+ * identity has no other way in. It is the fallback rather than the requirement
+ * it used to be — a private key in an environment variable, rewritten to disk
+ * on every boot, is a durable credential in two more places than it needs to
+ * be, and this repository has already had one such key leak into its history.
+ */
 export function getBucket(): Bucket {
   if (bucketInstance) {
     return bucketInstance;
@@ -26,16 +39,22 @@ export function getBucket(): Bucket {
   const serviceAccount = process.env.GOOGLE_STORAGE_SERVICE_ACCOUNT;
   const bucketId = process.env.GOOGLE_STORAGE_BUCKET_ID;
 
-  if (!serviceAccount || !bucketId) {
-    throw new Error(
-      'Google Storage is not configured (GOOGLE_STORAGE_SERVICE_ACCOUNT / GOOGLE_STORAGE_BUCKET_ID)',
-    );
+  if (!bucketId) {
+    throw new Error('Google Storage is not configured (GOOGLE_STORAGE_BUCKET_ID)');
   }
 
-  ensureServiceAccountFile(serviceAccount);
+  if (serviceAccount) {
+    ensureServiceAccountFile(serviceAccount);
 
-  const client = new Storage({ keyFilename: SERVICE_ACCOUNT_PATH });
-  bucketInstance = client.bucket(bucketId);
+    bucketInstance = new Storage({ keyFilename: SERVICE_ACCOUNT_PATH })
+      .bucket(bucketId);
+
+    return bucketInstance;
+  }
+
+  // Application Default Credentials: the runtime's own identity.
+  bucketInstance = new Storage().bucket(bucketId);
+
   return bucketInstance;
 }
 

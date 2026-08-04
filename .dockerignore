@@ -1,0 +1,23 @@
+# Secrets never enter the image — Cloud Run supplies them from Secret Manager,
+# and a baked-in `.env` would ship credentials inside a layer that anyone with
+# pull access can read.
+.env
+.env.*
+!.env.template
+Server/.secret/
+
+node_modules
+**/node_modules
+
+.git
+.github
+.claude
+.cursor
+
+# Build output, regenerated during the image build.
+Client/dist
+Server/Types/graphql.ts
+Client/src/generated
+
+*.log
+.DS_Store
