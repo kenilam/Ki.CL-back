@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { Storage } from 'server/DataSources/Google/index.js';
 import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { runProviderFailover } from './providers/failover.js';
@@ -7,17 +9,35 @@ import {
 } from './providers/image/index.js';
 import type { GeneratedImage } from './providers/image/types.js';
 
-export function taxonVisualObjectName(ottId: number): string {
-  return `${ottId}.png`;
+/**
+ * Every render of one taxon shares this prefix; the digest after it is what
+ * tells two renders apart.
+ */
+export function taxonVisualObjectPrefix(ottId: number): string {
+  return `${ottId}-`;
 }
 
-/** Proxied public path, e.g. `/assets/taxon-visual/123.png`. */
-export function taxonVisualPublicPath(ottId: number): string {
-  return Storage.publicObjectPath(taxonVisualObjectName(ottId));
+/**
+ * Object name from the bytes themselves.
+ *
+ * The name used to be `${ottId}.png`, so every regeneration of a taxon wrote a
+ * different picture to the same URL — while the proxy served it with
+ * `immutable, max-age=31536000`. Anyone who had seen the old plate kept seeing
+ * it forever, and a regenerated image simply never reached them.
+ *
+ * Naming the object after a digest of its contents makes that header true
+ * instead of a promise the URL cannot keep: identical bytes resolve to one
+ * name, new bytes to a new one, and a fresh render arrives as a URL no cache
+ * has. Nothing needs a cache-busting parameter, and nothing needs revalidating.
+ */
+export function taxonVisualObjectName(ottId: number, buffer: Buffer): string {
+  const digest = createHash('sha256').update(buffer).digest('hex').slice(0, 12);
+  return `${taxonVisualObjectPrefix(ottId)}${digest}.png`;
 }
 
 export async function taxonVisualObjectExists(ottId: number): Promise<boolean> {
-  return Storage.objectExists(taxonVisualObjectName(ottId));
+  const names = await Storage.listObjects(taxonVisualObjectPrefix(ottId));
+  return names.length > 0;
 }
 
 function imageContentType(buffer: Buffer): string {
@@ -65,9 +85,11 @@ export async function persistTaxonImage(
   ottId: number,
   image: GeneratedImage,
 ): Promise<CreatedTaxonAsset> {
+  const objectName = taxonVisualObjectName(ottId, image.buffer);
+
   const { path } = await Storage.uploadBuffer({
     buffer: image.buffer,
-    objectName: taxonVisualObjectName(ottId),
+    objectName,
     contentType: imageContentType(image.buffer),
   });
 
@@ -75,6 +97,17 @@ export async function persistTaxonImage(
     url: path,
     generator: image.generator,
   });
+
+  /*
+   * Superseded renders of this taxon go now. Content-addressed names mean the
+   * old object keeps its own URL rather than being overwritten, so without this
+   * every regeneration would leave its predecessor behind, referenced by
+   * nothing and paid for indefinitely.
+   */
+  const stale = (await Storage.listObjects(taxonVisualObjectPrefix(ottId)))
+    .filter((name) => name !== objectName);
+
+  await Promise.all(stale.map((name) => Storage.deleteObject(name)));
 
   return {
     assetId: String(asset._id),

@@ -227,6 +227,16 @@ export function adaptImagePromptForFlux(
   return clipped;
 }
 
+/**
+ * Second attempt, with the reviewer's corrections folded in.
+ *
+ * Kept as positive description like the first attempt. This used to append
+ * "never an insect or animal" and paste the reviewer's notes verbatim — notes
+ * that read "remove the text labels" — so the retry reintroduced exactly the
+ * naming that makes a diffusion model draw the thing. The rubric now asks for
+ * fixes phrased as what the plate should show, so they can be passed straight
+ * through.
+ */
 export function tightenImagePrompt(
   prompt: string,
   specimen: ResolvedSpecimen,
@@ -235,12 +245,12 @@ export function tightenImagePrompt(
   const fixes = suggestions.filter(Boolean).slice(0, 3).join('; ');
   return [
     prompt,
-    `CRITICAL CORRECTION: depict living specimen ${specimen.specimenName} only.`,
-    `Morphology: ${specimen.morphology}.`,
+    `Again, and more precisely: ${specimen.specimenName}.`,
+    `${specimen.morphology}.`,
     specimen.isMicroscopic || specimen.domain === 'microbe'
-      ? 'Must remain microscopic cells — never an insect or animal.'
+      ? 'Cells at microscope magnification.'
       : '',
-    fixes ? `Reviewer notes to fix: ${fixes}` : '',
+    fixes,
   ].filter(Boolean).join(' ');
 }
 
@@ -285,7 +295,9 @@ export function buildScoreImageSystemPrompt(): string {
     'single_subject: one centered organism, not a collage.',
     'no_text: no labels, numbers, watermarks, scale bars.',
     'overall: weighted mean; pass=true only if overall>=7 AND taxon_match>=6 AND anatomy>=6.',
-    'suggestions: 1–2 short fixes if not passing.',
+    'suggestions: 1-2 short fixes if not passing. Phrase each as what the plate',
+    'should show, never as something to remove — these are pasted into the image',
+    'prompt, and naming a thing there is what puts it in the picture.',
   ].join(' ');
 }
 
