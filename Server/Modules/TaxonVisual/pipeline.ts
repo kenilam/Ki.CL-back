@@ -47,6 +47,7 @@ function formatScore(score: ImageScore): string {
     `overall=${score.overall}`,
     `taxon_match=${score.taxon_match}`,
     `morphology=${score.morphology}`,
+    `anatomy=${score.anatomy}`,
     `style_plate=${score.style_plate}`,
     `single_subject=${score.single_subject}`,
     `no_text=${score.no_text}`,

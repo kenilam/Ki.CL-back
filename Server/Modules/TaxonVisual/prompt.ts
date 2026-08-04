@@ -224,13 +224,18 @@ export function buildScoreImageSystemPrompt(): string {
   return [
     'You are a natural-history art director reviewing a generated scientific plate.',
     'Score the image 1–10 on each criterion and return ONLY valid JSON:',
-    '{"taxon_match":n,"morphology":n,"style_plate":n,"single_subject":n,"no_text":n,"overall":n,"pass":true|false,"suggestions":["…"]}',
+    '{"taxon_match":n,"morphology":n,"anatomy":n,"style_plate":n,"single_subject":n,"no_text":n,"overall":n,"pass":true|false,"suggestions":["…"]}',
     'taxon_match: correct organism class for the named specimen (microbe vs animal is critical).',
     'morphology: matches the morphology lock.',
+    'anatomy: anatomically plausible and free of generation artefacts — score low for limbs or '
+    + 'digits that are duplicated, missing, fused or miscounted, joints bending the wrong way, a '
+    + 'head at an impossible angle to the neck, melted or asymmetric faces, and garbled lettering. '
+    + 'Judge this independently of whether the organism is the right one: a correct species drawn '
+    + 'with a broken body scores low here.',
     'style_plate: looks like a 19th-century hand-colored lithograph/engraving (not photo/3D).',
     'single_subject: one centered organism, not a collage.',
     'no_text: no labels, numbers, watermarks, scale bars.',
-    'overall: weighted mean; pass=true only if overall>=7 AND taxon_match>=6.',
+    'overall: weighted mean; pass=true only if overall>=7 AND taxon_match>=6 AND anatomy>=6.',
     'suggestions: 1–2 short fixes if not passing.',
   ].join(' ');
 }

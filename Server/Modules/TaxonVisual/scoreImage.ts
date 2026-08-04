@@ -9,6 +9,16 @@ import {
 export type ImageScore = {
   taxon_match: number;
   morphology: number;
+  /**
+   * Anatomical plausibility, scored apart from whether the organism is right.
+   *
+   * `morphology` only asks whether the subject matches its lock — a human plate
+   * is bipedal and upright whether or not the head sits at a possible angle to
+   * the neck. So the rubric had no way to say "this is the right creature,
+   * drawn broken", and the distortions that make a plate unsettling went
+   * unmeasured while it scored a comfortable pass.
+   */
+  anatomy: number;
   style_plate: number;
   single_subject: number;
   no_text: number;
@@ -35,6 +45,7 @@ export type ImageScore = {
 const UNSCORED: ImageScore = {
   taxon_match: 0,
   morphology: 0,
+  anatomy: 0,
   style_plate: 0,
   single_subject: 0,
   no_text: 0,
@@ -67,13 +78,17 @@ function parseScore(raw: string): ImageScore | null {
       : [];
     const taxon_match = num('taxon_match');
     const overall = num('overall');
+    // Absent on a reply from before the criterion existed; treat as unjudged
+    // rather than as a zero that would fail every such image.
+    const anatomy = num('anatomy', 10);
     const pass = typeof parsed.pass === 'boolean'
       ? parsed.pass
-      : overall >= 7 && taxon_match >= 6;
+      : overall >= 7 && taxon_match >= 6 && anatomy >= 6;
 
     return {
       taxon_match,
       morphology: num('morphology'),
+      anatomy,
       style_plate: num('style_plate'),
       single_subject: num('single_subject'),
       no_text: num('no_text'),
