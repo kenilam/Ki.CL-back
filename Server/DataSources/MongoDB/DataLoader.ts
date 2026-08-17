@@ -8,7 +8,7 @@ const UsersTC = composeMongoose(Users, {
   removeFields: IGNORED_FIELDS,
 });
 
-// No public user queries — all user access is via the Me module
+// No public user queries - all user access is via the Me module
 // Keep TC exported for potential future relations
 
 export const dataLoaderSchema = schemaComposer.buildSchema();

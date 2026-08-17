@@ -8,7 +8,7 @@ alwaysApply: true
 
 **Hard rule:** never use `../` (or deeper) relative imports in `Server/`. Same-folder `./` only. Keep the `.js` extension on local ESM imports.
 
-This applies inside a feature too — e.g. `providers/image/foo.ts` must not `../../prompt.js`; use `server/Modules/.../prompt.js`.
+This applies inside a feature too - e.g. `providers/image/foo.ts` must not `../../prompt.js`; use `server/Modules/.../prompt.js`.
 
 | Alias | Maps to | Use for |
 |-------|---------|---------|
@@ -32,4 +32,4 @@ import { TaxonVisualSchema } from './validation.js'; // same folder OK
 
 When editing a file, rewrite every reachable `../` import to `server/...` (or `^/...` outside Server) in the same change. Do not leave parent-relative imports “for consistency with neighbors.”
 
-**Exception:** Codegen-emitted files follow `Codegen/codegen.ts` scalar maps — keep those maps on aliases (`^/Codegen/...`, `server/...`) so regenerations stay correct.
+**Exception:** Codegen-emitted files follow `Codegen/codegen.ts` scalar maps - keep those maps on aliases (`^/Codegen/...`, `server/...`) so regenerations stay correct.

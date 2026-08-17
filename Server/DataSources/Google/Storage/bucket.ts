@@ -19,7 +19,7 @@ function ensureServiceAccountFile(serviceAccount: string) {
 }
 
 /**
- * Lazy client — server can boot without GCS; the callers throw when used.
+ * Lazy client - server can boot without GCS; the callers throw when used.
  *
  * Credentials come from the environment the server is running in whenever it
  * can supply them: on Cloud Run that is the service account the service runs
@@ -28,7 +28,7 @@ function ensureServiceAccountFile(serviceAccount: string) {
  *
  * An explicit key is still honoured, because somewhere without a Google
  * identity has no other way in. It is the fallback rather than the requirement
- * it used to be — a private key in an environment variable, rewritten to disk
+ * it used to be - a private key in an environment variable, rewritten to disk
  * on every boot, is a durable credential in two more places than it needs to
  * be, and this repository has already had one such key leak into its history.
  */
@@ -53,7 +53,7 @@ function getStorage(): Storage {
  *
  * The segment is deliberately not the bucket name. Bucket names are unique
  * across the whole of Google Cloud, so the one you want is rarely the one you
- * can have — `static` was already taken — and a URL that has been written into
+ * can have - `static` was already taken - and a URL that has been written into
  * the database should not have to change because of that. Keeping the mapping
  * here means the public path stays `/assets/static/…` whatever the bucket
  * underneath ends up being called.
@@ -95,7 +95,7 @@ export function getBucketForSegment(segment: string): Bucket | null {
   return bucket;
 }
 
-/** The pipeline's bucket — the one it writes generated plates into. */
+/** The pipeline's bucket - the one it writes generated plates into. */
 export function getBucket(): Bucket {
   const bucket = getBucketForSegment('taxon-visual');
 

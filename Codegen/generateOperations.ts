@@ -14,10 +14,10 @@ import appRoot from 'app-root-path';
 
 const PREFIX = 'kicl_';
 const MAX_DEPTH = 2;
-/** Nested children depth — matches server heightLimit max (3). */
+/** Nested children depth - matches server heightLimit max (3). */
 const TREE_OF_LIFE_DEPTH = 3;
 /**
- * Nested ancestor depth — lets the client resolve a fresh/deep-linked node's
+ * Nested ancestor depth - lets the client resolve a fresh/deep-linked node's
  * lineage in one round trip (each level is DataLoader-batched server-side,
  * so this stays cheap). Fallback for lineages deeper than this is a client-
  * side repeat query rooted at the deepest-still-unknown ancestor.
@@ -37,14 +37,14 @@ const TREE_NODE_FIELDS = [
 
 /**
  * Each ancestor level needs its own basic fields, plus one shallow level of
- * its `descendants` (the child we came from, plus its siblings) — sibling
+ * its `descendants` (the child we came from, plus its siblings) - sibling
  * index/count among a parent's children is required client-side to compute
  * a stable position, and that only comes from the parent's own descendants
  * list, not from the child's `ancestor` field. Siblings are not recursed
  * further (no grandchildren-of-siblings) to keep this bounded.
  *
  * Only ever nested under the *root* selection of a subtree operation (see
- * `buildTreeOfLifeRootFields`) — descendant nodes reuse the cheap shallow
+ * `buildTreeOfLifeRootFields`) - descendant nodes reuse the cheap shallow
  * `ancestor` snippet in `buildTreeOfLifeNodeFields`, since their parent is
  * already implicit (it's whichever node's `descendants` they came from).
  * Nesting this per descendant too would duplicate the same chain hundreds
@@ -70,7 +70,7 @@ ${siblingFields}
 ${indent}}${ancestorBlock}`;
 }
 
-/** Shallow single-level ancestor — used on every descendant node (cheap). */
+/** Shallow single-level ancestor - used on every descendant node (cheap). */
 function buildTreeOfLifeNodeFields(indent: string): string {
   const fieldLines = TREE_NODE_FIELDS.map((field) => `${indent}${field}`).join('\n');
   return `${fieldLines}
@@ -92,7 +92,7 @@ ${indent}  generator
 ${indent}}`;
 }
 
-/** Full fields for the query's own root node — includes the deep ancestor chain. */
+/** Full fields for the query's own root node - includes the deep ancestor chain. */
 function buildTreeOfLifeRootFields(indent: string): string {
   const fieldLines = TREE_NODE_FIELDS.map((field) => `${indent}${field}`).join('\n');
   const ancestorChain = buildTreeOfLifeAncestorSelection(

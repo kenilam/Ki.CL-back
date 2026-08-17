@@ -2,7 +2,7 @@
 #
 # Codegen and the client bundle are built here rather than at boot. The
 # `production` script does all three in sequence, which would repeat a minute of
-# work on every cold start and — worse — make the container's first request wait
+# work on every cold start and - worse - make the container's first request wait
 # on a build that could fail after the service reports healthy.
 
 FROM node:24-slim
@@ -16,7 +16,7 @@ RUN corepack enable
 COPY package.json yarn.lock .yarnrc.yml ./
 # `.yarn/` is not copied here: `.gitignore` keeps everything in it out of the
 # repository, so the directory is absent from a clean checkout and the COPY
-# fails. It exists locally — install state and an empty patches folder — which
+# fails. It exists locally - install state and an empty patches folder - which
 # is why a deploy from local sources built and the first build from git did
 # not. Should patches ever be committed, `COPY . .` below picks them up.
 COPY Server/package.json ./Server/

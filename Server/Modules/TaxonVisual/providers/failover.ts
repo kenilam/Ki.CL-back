@@ -11,7 +11,7 @@ export type ProviderAttempt<T> = {
 
 /** Transient / network-style failures before moving to the next agent. */
 const DEFAULT_MAX_RETRIES = 3;
-/** Rate-limit (retryable) — one short retry, then next agent’s quota. */
+/** Rate-limit (retryable) - one short retry, then next agent’s quota. */
 const RATE_LIMIT_MAX_RETRIES = 2;
 
 /** Skip agents that already hit non-retryable budget this process. */
@@ -21,7 +21,7 @@ const BUDGET_COOLDOWN_MS = 30 * 60 * 1000;
 /**
  * How long a spent account is left alone.
  *
- * Long, because nothing this process does can end it — an empty balance lifts
+ * Long, because nothing this process does can end it - an empty balance lifts
  * when someone tops it up, not when a timer expires. Half an hour is the right
  * patience for a refilling quota and the wrong patience for this.
  */

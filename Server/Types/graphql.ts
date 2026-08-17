@@ -34,7 +34,7 @@ export type Asset = {
   __typename?: 'Asset';
   /**
    * How the asset was produced (e.g. openai:gpt-image-1).
-   * Null means manually created / uploaded — not AI-generated.
+   * Null means manually created / uploaded - not AI-generated.
    */
   generator?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -97,7 +97,7 @@ export type Query = {
    *
    * Stored nodes are searched first, since they are the ones already placed in
    * the tree and can be navigated to immediately. Only when nothing is stored
-   * does this fall through to Open Tree's name index — so exploring somewhere new
+   * does this fall through to Open Tree's name index - so exploring somewhere new
    * still works, and the cost of the remote call is paid only when it buys
    * something.
    */
@@ -183,7 +183,7 @@ export type SubscriptionTaxonVisualUpdatedArgs = {
  *
  * Both sources yield a `nodeId`, so a result navigates the same way wherever it
  * came from. A stored node has one recorded; a name matched against Open Tree's
- * taxonomy has it derived from the ott id, which is the same thing — the
+ * taxonomy has it derived from the ott id, which is the same thing - the
  * synthetic tree names taxon nodes `ott` followed by their ott id.
  */
 export type TaxonSearchResult = {
@@ -197,7 +197,7 @@ export type TaxonSearchResult = {
 };
 
 export enum TaxonSearchSource {
-  /** Already known — matched against stored nodes. */
+  /** Already known - matched against stored nodes. */
   Database = 'DATABASE',
   /** Matched against Open Tree's taxonomy because nothing was stored. */
   OpenTree = 'OPEN_TREE'
@@ -222,8 +222,8 @@ export type TaxonVisual = {
 /**
  * Why generation is out of quota, when status is EXHAUSTED.
  *
- * `REFILLS` — at least one provider's allowance returns on a timer, so waiting
- * works. `BILLING` — every provider is out of credit, and only paying changes
+ * `REFILLS` - at least one provider's allowance returns on a timer, so waiting
+ * works. `BILLING` - every provider is out of credit, and only paying changes
  * that. The difference decides whether telling someone to try again later is
  * true.
  */
@@ -268,7 +268,7 @@ export type TreeOfLifeNode = {
    * At height cutoffs, children may be omitted while numTips stays > 0.
    */
   numTips?: Maybe<Scalars['Int']['output']>;
-  /** OTOL taxonomy id — an attribute/lookup key, not a relationship. Missing on some unnamed / synthetic nodes. */
+  /** OTOL taxonomy id - an attribute/lookup key, not a relationship. Missing on some unnamed / synthetic nodes. */
   ottId?: Maybe<Scalars['Int']['output']>;
   rank?: Maybe<Scalars['String']['output']>;
   /** Studio vision QA for the current asset, when generated. */

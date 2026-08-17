@@ -1,4 +1,4 @@
-/** Quota / rate-limit — maps to GraphQL status EXHAUSTED. */
+/** Quota / rate-limit - maps to GraphQL status EXHAUSTED. */
 export class ProviderLimitError extends Error {
   readonly retryable: boolean;
   readonly provider: string;
@@ -6,7 +6,7 @@ export class ProviderLimitError extends Error {
    * Whether this can only be resolved by paying.
    *
    * A daily allowance and an empty balance both stop the work, but only one of
-   * them ends on its own — and telling a reader to "try again shortly" when it
+   * them ends on its own - and telling a reader to "try again shortly" when it
    * does not is how the failure message came to be untrue.
    */
   readonly needsBilling: boolean;
@@ -45,7 +45,7 @@ export function isBudgetOrRateLimitError(message: string): boolean {
  * very differently: a daily allocation returns tomorrow, while an empty balance
  * returns only when someone pays. Cooling an exhausted account for the same
  * half hour as a rate limit means retrying it forever, twice an hour, against a
- * wall — which is what a whole library of failover renders was quietly doing.
+ * wall - which is what a whole library of failover renders was quietly doing.
  */
 export function isCreditExhaustedError(message: string): boolean {
   const lower = message.toLowerCase();
@@ -67,7 +67,7 @@ export function isBudgetError(message: string): boolean {
      * A spent account is a budget error by definition. Kept in step
      * deliberately: these two lists disagreeing meant OpenAI's actual wording,
      * "You have no credits remaining", was recognised by one and not the other
-     * — so no limit error was raised at all, and every call spent three full
+     * - so no limit error was raised at all, and every call spent three full
      * retries against an empty account before failing over.
      */
     isCreditExhaustedError(message)

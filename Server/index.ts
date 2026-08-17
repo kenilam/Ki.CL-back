@@ -107,7 +107,7 @@ async function start() {
     res.sendFile(appRoot.resolve('Client/dist/types.zip'));
   });
 
-  // GCS assets — stream via service account (bucket is private; anonymous proxy 403s)
+  // GCS assets - stream via service account (bucket is private; anonymous proxy 403s)
   if (GOOGLE_STORAGE_PROXY) {
     app.use(
       GOOGLE_STORAGE_PROXY,
@@ -146,7 +146,7 @@ async function start() {
     }),
   ] as const;
 
-  // Public BFF — injects x-api-key server-side; never exposes it to the browser
+  // Public BFF - injects x-api-key server-side; never exposes it to the browser
   app.use('/api', ...apiMiddleware);
   // Playground / introspection (may still issue x-api-key cookie for local debugging)
   app.use('/graphql', ...graphqlMiddleware);

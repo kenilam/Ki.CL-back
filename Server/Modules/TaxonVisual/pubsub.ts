@@ -2,7 +2,7 @@ import { PubSub } from 'graphql-subscriptions';
 
 import type { TaxonVisualResult } from './types.js';
 
-/** In-process bus — fine for single-instance; swap for Redis if you scale out. */
+/** In-process bus - fine for single-instance; swap for Redis if you scale out. */
 export const taxonVisualPubSub = new PubSub<{
   TAXON_VISUAL_UPDATED: { TaxonVisualUpdated: TaxonVisualResult };
 }>();

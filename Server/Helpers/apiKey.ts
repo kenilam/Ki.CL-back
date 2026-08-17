@@ -38,7 +38,7 @@ export function generateApiKey(): string | null {
 
 /**
  * Set the x-api-key cookie with expiry at next midnight.
- * Used by playground/introspection on `/graphql` only — never on `/api`.
+ * Used by playground/introspection on `/graphql` only - never on `/api`.
  */
 export function setApiKeyCookie(res: Response, apiKey: string): void {
   res.cookie('x-api-key', apiKey, {

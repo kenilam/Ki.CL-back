@@ -33,7 +33,7 @@ export type SocialSignInInput = {
 };
 
 export type TaxonSearchSource =
-  /** Already known — matched against stored nodes. */
+  /** Already known - matched against stored nodes. */
   | 'DATABASE'
   /** Matched against Open Tree's taxonomy because nothing was stored. */
   | 'OPEN_TREE';
@@ -41,8 +41,8 @@ export type TaxonSearchSource =
 /**
  * Why generation is out of quota, when status is EXHAUSTED.
  *
- * `REFILLS` — at least one provider's allowance returns on a timer, so waiting
- * works. `BILLING` — every provider is out of credit, and only paying changes
+ * `REFILLS` - at least one provider's allowance returns on a timer, so waiting
+ * works. `BILLING` - every provider is out of credit, and only paying changes
  * that. The difference decides whether telling someone to try again later is
  * true.
  */

@@ -109,12 +109,12 @@ export type OtolLineageResult =
   | { ok: false; status: number; message?: string };
 
 /**
- * A node's rootward spine in the synthetic tree — parent first, ending at the
+ * A node's rootward spine in the synthetic tree - parent first, ending at the
  * origin of life.
  *
  * `subtree` only ever describes what hangs *below* the node it was asked for,
  * so persisting one leaves its top with no known parent. That is
- * indistinguishable, once stored, from the one node that genuinely has none —
+ * indistinguishable, once stored, from the one node that genuinely has none -
  * and a genus was being served to clients as the root of all life. This is what
  * closes the gap.
  *
@@ -264,7 +264,7 @@ export type OtolNameMatch = {
   ottId: number;
   name: string;
   /**
-   * Whether OTOL considers this a higher taxon — above species level.
+   * Whether OTOL considers this a higher taxon - above species level.
    *
    * The endpoint returns no rank and no score, only this flag, so a result's
    * rank has to come from the taxon record once it is fetched. Order is as

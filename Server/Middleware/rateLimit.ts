@@ -11,7 +11,7 @@ const MAX_REQUESTS = Number(process.env.RATE_LIMIT_PER_DAY) || 100;
 
 export function rateLimitMiddleware(req: Request, res: Response, next: NextFunction): void {
   // Rate limit is applied at the GraphQL context level (after JWT is decoded)
-  // This middleware just sets standard headers — actual enforcement is in context
+  // This middleware just sets standard headers - actual enforcement is in context
   next();
 }
 
@@ -25,7 +25,7 @@ export function checkRateLimit(userGUID: string): { allowed: boolean; remaining:
   let entry = rateLimitStore.get(userGUID);
 
   if (!entry) {
-    // First request for this token — initialize
+    // First request for this token - initialize
     entry = { remaining: limit };
     rateLimitStore.set(userGUID, entry);
   }

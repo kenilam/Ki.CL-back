@@ -33,7 +33,7 @@ function flattenArguson(
   const ottId = node.taxon?.ott_id ?? null;
   const children = node.children ?? [];
   const numTips = typeof node.num_tips === 'number' ? node.num_tips : null;
-  // Preserve null rank — never invent a placeholder.
+  // Preserve null rank - never invent a placeholder.
   const rank = node.taxon?.rank ?? null;
 
   out.push({
@@ -53,7 +53,7 @@ function flattenArguson(
 /**
  * Collapse repeats of one node into a single entry, keeping whatever is known.
  *
- * A batch can name the same node twice — a spine starts at its subject, and
+ * A batch can name the same node twice - a spine starts at its subject, and
  * two lineages in one response share every ancestor above their split. Two
  * inserts for one id is a duplicate-key error, so they are merged before any
  * of it reaches Mongo.
@@ -90,7 +90,7 @@ function mergeByNodeId(flat: FlatNode[]): FlatNode[] {
  * its own ancestorNodeId; descendants are reverse-looked-up by query.
  *
  * Reading which nodes exist and then inserting the rest is not one operation,
- * and lineage spines are written concurrently for taxa that share ancestors —
+ * and lineage spines are written concurrently for taxa that share ancestors -
  * so two writers routinely decided the same node was missing and both inserted
  * it. Upserting makes the write idempotent, which is what it always needed to
  * be: the second writer fills the row the first created instead of colliding
@@ -107,7 +107,7 @@ async function writeFlatNodes(input: FlatNode[]): Promise<void> {
   /*
    * Every field the fill-only rules below consult has to be selected. A field
    * left out reads as `undefined`, which those rules cannot tell from "not set
-   * yet" — so an unselected `name` or `rank` would be overwritten on every
+   * yet" - so an unselected `name` or `rank` would be overwritten on every
    * pass rather than filled once.
    */
   const existing = await TreeOfLifeNodes.find({ nodeId: { $in: nodeIds } })
@@ -145,7 +145,7 @@ async function writeFlatNodes(input: FlatNode[]): Promise<void> {
                 : {}),
               numTips: node.numTips,
             },
-            // Only when this write is the one that creates the row — a plate
+            // Only when this write is the one that creates the row - a plate
             // and its review belong to the pipeline, not to the OTOL import,
             // and must not be reset by a later pass over the same node.
             $setOnInsert: {
@@ -186,7 +186,7 @@ async function writeFlatNodes(input: FlatNode[]): Promise<void> {
      * A lineage row has no `descendant_name_list`, so an unnamed `mrcaott…`
      * node arrives from the spine with nothing to call it. The subtree that
      * covers it later does know a name, and without this it would have no way
-     * to say so — the node would stay nameless, and a nameless node draws no
+     * to say so - the node would stay nameless, and a nameless node draws no
      * label at all.
      */
     if (node.name != null && prev.name == null) {
@@ -243,7 +243,7 @@ function isDuplicateKeyError(error: unknown): boolean {
  * Upserting is what stopped this happening on every request, but it is not a
  * guarantee: matching and inserting are not one atomic step against a unique
  * index, so two upserts for the same node can still collide. The loser's work
- * is not lost — by the time it retries the row exists, so the same operation
+ * is not lost - by the time it retries the row exists, so the same operation
  * becomes an ordinary update and succeeds.
  *
  * Only duplicate-key failures are retried. Anything else is a real error and
@@ -278,7 +278,7 @@ export async function persistArgusonTree(
  * Persist a node's rootward spine, so the chain from it reaches the origin.
  *
  * `lineage` runs parent first → root, so each entry's ancestor is the one after
- * it and the last entry — the origin of life — has none. That final null is the
+ * it and the last entry - the origin of life - has none. That final null is the
  * only one this writes: every other node comes out with a real parent, which is
  * what makes a stored null mean "root" again instead of "this is as far as some
  * earlier fetch happened to reach".

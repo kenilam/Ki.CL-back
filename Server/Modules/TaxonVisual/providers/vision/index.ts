@@ -16,7 +16,7 @@ import {
  *
  * Scoring used to be a single call to OpenAI with no fallback, while text and
  * images each had three providers. When that one account ran out of credit the
- * scorer failed on every image and the pipeline waved each one through — so
+ * scorer failed on every image and the pipeline waved each one through - so
  * every stored score was a fabricated pass. A chain is what makes the review
  * survive one provider going dark.
  *

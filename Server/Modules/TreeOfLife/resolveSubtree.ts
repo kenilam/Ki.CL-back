@@ -152,7 +152,7 @@ export async function resolveSubtreeRoots(
      * A subtree describes only what hangs below its root, so the root itself
      * comes out of the fetch with no known parent. Left there it is stored as
      * `ancestorNodeId: null`, which is the same thing the origin of life
-     * stores — and clients walking rootward stop at it, believing they have
+     * stores - and clients walking rootward stop at it, believing they have
      * arrived. Fetching the spine is what keeps that null meaning one thing.
      *
      * Only for roots that actually lack a parent: a node reached by walking

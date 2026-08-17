@@ -7,7 +7,7 @@ import { federation } from '@module-federation/vite';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
-// Served by Express at /client/* — base must match so chunk URLs resolve.
+// Served by Express at /client/* - base must match so chunk URLs resolve.
 export default defineConfig({
   root,
   base: '/client/',
@@ -43,7 +43,7 @@ export default defineConfig({
     outDir: 'dist',
     modulePreload: false,
     cssCodeSplit: false,
-    // Do NOT set lib/external — MF shared handles react; externals leave bare
+    // Do NOT set lib/external - MF shared handles react; externals leave bare
     // "react" imports that the browser cannot resolve.
   },
   server: {

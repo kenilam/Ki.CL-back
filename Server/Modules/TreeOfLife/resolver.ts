@@ -30,7 +30,7 @@ function throwOtolMiss(miss: {
 /**
  * One OTOL subtree call (heightLimit deep) → persist flat rows → return root doc.
  * GraphQL `descendants` then DataLoader-stitches children via a live reverse
- * lookup (`{ ancestorNodeId: nodeId }`, batched `$in`) — parent-pointer model,
+ * lookup (`{ ancestorNodeId: nodeId }`, batched `$in`) - parent-pointer model,
  * nothing stored forward on the parent.
  * Batch variant shares Mongo warm-path + DataLoader `$in` loads.
  */

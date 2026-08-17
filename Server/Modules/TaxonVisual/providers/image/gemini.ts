@@ -52,7 +52,7 @@ export function resolveGeminiImageModels(): string[] {
 }
 
 /**
- * Paid last resort — Gemini Developer API image models have no free tier.
+ * Paid last resort - Gemini Developer API image models have no free tier.
  * Only runs when GEMINI_API_KEY is set.
  */
 export function isGeminiImageConfigured(): boolean {

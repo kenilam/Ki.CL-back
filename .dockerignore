@@ -1,4 +1,4 @@
-# Secrets never enter the image — Cloud Run supplies them from Secret Manager,
+# Secrets never enter the image - Cloud Run supplies them from Secret Manager,
 # and a baked-in `.env` would ship credentials inside a layer that anyone with
 # pull access can read.
 .env

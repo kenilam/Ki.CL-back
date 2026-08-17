@@ -79,7 +79,7 @@ export function inferDomainFromLineage(
 function defaultMorphology(domain: SpecimenDomain, specimenName: string): string {
   switch (domain) {
     case 'microbe':
-      return 'Unicellular cells or small colonies as under a light microscope — not a macroscopic animal';
+      return 'Unicellular cells or small colonies as under a light microscope - not a macroscopic animal';
     case 'plant':
       return `Recognizable living plant form of ${specimenName}`;
     case 'fungus':
@@ -135,7 +135,7 @@ export function applyLineageDomainGate(
     return specimen;
   }
 
-  // Hard kingdom hint — always win on domain.
+  // Hard kingdom hint - always win on domain.
   if (sameDomain) {
     if (hint.domain === 'microbe' && !specimen.isMicroscopic) {
       return {

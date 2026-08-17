@@ -1,6 +1,6 @@
 import * as v from 'valibot';
 
-/** Cellular organisms — Open Tree of Life synthetic root. */
+/** Cellular organisms - Open Tree of Life synthetic root. */
 export const ROOT_OTT_ID = 93302;
 
 const MAX_HEIGHT_LIMIT = 3;

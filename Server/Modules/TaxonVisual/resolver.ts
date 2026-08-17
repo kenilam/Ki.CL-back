@@ -27,8 +27,8 @@ import type {
 /**
  * How many plates a taxon gets before the best one stands.
  *
- * Some taxa the generator cannot draw — a rod-shaped bacterium keeps returning
- * as an insect however the prompt is tightened — and without a ceiling those
+ * Some taxa the generator cannot draw - a rod-shaped bacterium keeps returning
+ * as an insect however the prompt is tightened - and without a ceiling those
  * retry on every view for as long as the score stays low.
  */
 const MAX_VISUAL_ATTEMPTS = 3;
@@ -44,7 +44,7 @@ const SETTLED: TaxonVisualStatus[] = [
 /**
  * Whether waiting will help, when generation ran out of quota.
  *
- * Only `BILLING` when every provider is out of credit — one allowance that
+ * Only `BILLING` when every provider is out of credit - one allowance that
  * refills tomorrow is reason enough to wait, and saying otherwise would send
  * someone to a billing page they do not need.
  */
@@ -196,7 +196,7 @@ async function runGeneration(
     /*
      * Only a real review is stored. `scored: false` means no provider ever
      * looked at the image, and writing numbers for that would put an
-     * unreviewed plate on record as a reviewed one — which is exactly how a
+     * unreviewed plate on record as a reviewed one - which is exactly how a
      * whole library of them came to look approved.
      */
     const visualScore = toVisualScore(
@@ -301,7 +301,7 @@ async function runDescriptionOnly(
       status: TaxonVisualStatus.Ready,
     }));
   } catch {
-    // Image already READY — keep it; description stays null.
+    // Image already READY - keep it; description stays null.
   } finally {
     generatingOttIds.delete(ottId);
   }
@@ -316,7 +316,7 @@ async function runDescriptionOnly(
  *
  * Was gated on the generator's name: anything not from OpenAI counted as
  * provisional and was re-rendered on every view, forever. That was a stand-in
- * for quality, chosen when the only score available was a fabricated 7 — and a
+ * for quality, chosen when the only score available was a fabricated 7 - and a
  * poor one, since it retried good renders as hard as bad ones and stopped
  * retrying a bad OpenAI render entirely. The review score says the thing the
  * vendor name was guessing at, so it is what decides now.
@@ -349,7 +349,7 @@ async function runRegeneration(
     /*
      * Only a real review is stored. `scored: false` means no provider ever
      * looked at the image, and writing numbers for that would put an
-     * unreviewed plate on record as a reviewed one — which is exactly how a
+     * unreviewed plate on record as a reviewed one - which is exactly how a
      * whole library of them came to look approved.
      */
     const visualScore = toVisualScore(
@@ -394,7 +394,7 @@ async function runRegeneration(
      * A failed attempt counts only if something was actually drawn.
      *
      * The ceiling exists to stop retrying a taxon the generator cannot render
-     * well — it is a statement about the subject, not about the weather. When
+     * well - it is a statement about the subject, not about the weather. When
      * every provider is out of quota nothing was attempted at all, and counting
      * that would retire taxa for the duration of an outage and never let them
      * back. Measured: two of one taxon's three attempts were spent this way
@@ -410,7 +410,7 @@ async function runRegeneration(
 
     console.warn(
       `[TaxonVisual] regeneration failed for ottId ${ottId}`
-      + `${nothingRendered ? ' (providers unavailable — attempt not counted)' : ''};`
+      + `${nothingRendered ? ' (providers unavailable - attempt not counted)' : ''};`
       + ` keeping existing asset:`,
       message,
     );
@@ -464,7 +464,7 @@ export default {
 
           /*
            * A plate the reviewer passed is finished, whoever drew it. One that
-           * failed — or that no reviewer ever saw — is worth another attempt,
+           * failed - or that no reviewer ever saw - is worth another attempt,
            * up to a ceiling.
            */
           const reviewed = existing.visualScore ?? null;
@@ -503,7 +503,7 @@ export default {
           /*
            * `READY`, not `PENDING`: there is a usable plate on screen right
            * now, and calling it pending told the client to show a spinner over
-           * an image it already had — usually for a replacement that never
+           * an image it already had - usually for a replacement that never
            * arrived. If the attempt does produce something better, the
            * subscription pushes it.
            */

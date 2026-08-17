@@ -5,7 +5,7 @@ import {
 } from 'server/Modules/TaxonVisual/prompt.js';
 
 const MODEL = '@cf/black-forest-labs/flux-1-schnell';
-/** Schnell max is 8 — use the ceiling; 4 was too soft for taxon fidelity. */
+/** Schnell max is 8 - use the ceiling; 4 was too soft for taxon fidelity. */
 const STEPS = 8;
 const MAX_PROMPT = 2048;
 const PROVIDER = 'cloudflare';

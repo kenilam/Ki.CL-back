@@ -21,7 +21,7 @@ export function taxonVisualObjectPrefix(ottId: number): string {
  * Object name from the bytes themselves.
  *
  * The name used to be `${ottId}.png`, so every regeneration of a taxon wrote a
- * different picture to the same URL — while the proxy served it with
+ * different picture to the same URL - while the proxy served it with
  * `immutable, max-age=31536000`. Anyone who had seen the old plate kept seeing
  * it forever, and a regenerated image simply never reached them.
  *
@@ -34,8 +34,8 @@ export function taxonVisualObjectName(ottId: number, buffer: Buffer): string {
   const digest = createHash('sha256').update(buffer).digest('hex').slice(0, 12);
   /*
    * Extension from the same reading of the bytes that sets the content type.
-   * It was hardcoded `.png` while the type was sniffed, so a JPEG — which is
-   * what these providers mostly return — was stored under a name claiming to
+   * It was hardcoded `.png` while the type was sniffed, so a JPEG - which is
+   * what these providers mostly return - was stored under a name claiming to
    * be a PNG. Browsers were unaffected, since the proxy serves the stored
    * `Content-Type`, but anyone saving the file got a mislabelled one.
    */

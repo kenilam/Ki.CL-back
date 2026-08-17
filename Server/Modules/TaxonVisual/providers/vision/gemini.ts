@@ -81,7 +81,7 @@ export async function chatGeminiVision(
          * Far larger than the reply needs.
          *
          * These models spend reasoning tokens from the same budget as the
-         * answer, and thinking runs first — so a budget sized for the JSON is
+         * answer, and thinking runs first - so a budget sized for the JSON is
          * eaten before the JSON starts, and it arrives cut off mid-object. That
          * truncation is what used to be silently converted into a passing
          * score. `thinkingConfig` would be the direct way to switch reasoning

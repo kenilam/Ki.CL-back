@@ -1,5 +1,5 @@
 /**
- * Vintage natural-history plate — hand-colored lithograph / engraving feel
+ * Vintage natural-history plate - hand-colored lithograph / engraving feel
  * (19th-century scientific print), never photoreal or 3D studio.
  * Pipeline: resolve extant specimen → image prompt → vision QA → capped retry.
  */
@@ -25,7 +25,7 @@ export type ResolvedSpecimen = {
  *
  * A natural-history plate of an animal is a whole unclothed body, and for a
  * furred or scaled creature that is simply what it looks like. For a human it
- * is a nude, which is not what this site is illustrating — and the image
+ * is a nude, which is not what this site is illustrating - and the image
  * providers agree: the whole-body human prompt is rejected outright by
  * Cloudflare's content filter, so every human plate silently failed over to a
  * provider with no filter at all.
@@ -83,7 +83,7 @@ export function buildResolveSpecimenPrompt(
        * image prompt, and naming a thing to exclude it is what puts it in the
        * picture.
        */
-      'morphology: 20-40 words a painter could follow — overall shape and proportions,',
+      'morphology: 20-40 words a painter could follow - overall shape and proportions,',
       'colour, surface texture, and the one or two features that make it recognisable.',
       'Describe only what is present; never phrase it as what the organism is not.',
       'domain=microbe for bacteria, archaea, unicellular protists, and other non-metazoan microbial eukaryotes.',
@@ -97,8 +97,8 @@ export function buildResolveSpecimenPrompt(
 /**
  * What a microbe looks like, for a painter, when no model was available to say.
  *
- * Said as what to draw. It used to end "— not a macroscopic animal", and this
- * string is pasted straight into the image prompt — so every microbe plate was
+ * Said as what to draw. It used to end "- not a macroscopic animal", and this
+ * string is pasted straight into the image prompt - so every microbe plate was
  * conditioned on the words "macroscopic animal", which is the same trap the ban
  * list fell into and is documented under `adaptImagePromptForFlux`. It runs
  * whenever no text model is available to resolve a specimen, which is the norm
@@ -106,7 +106,7 @@ export function buildResolveSpecimenPrompt(
  * back drawn as animals.
  */
 const MICROBE_MORPHOLOGY = 'Colonies of tiny single cells at high magnification'
-  + ' — smooth translucent rods and spheres with faint granular interiors,'
+  + ' - smooth translucent rods and spheres with faint granular interiors,'
   + ' drawn in pale grey-green and ochre washes';
 
 export function fallbackSpecimen(
@@ -173,7 +173,7 @@ export function buildTaxonVisualPromptFromSpecimen(
       /*
        * Head and shoulders, and clothed. Described as what to draw rather than
        * as a restriction: naming anatomy in order to exclude it is what puts it
-       * in the picture. A bust also happens to be the safer subject to draw —
+       * in the picture. A bust also happens to be the safer subject to draw -
        * fewer limbs and joints to get wrong.
        */
       ? 'A head-and-shoulders portrait study in three-quarter view, the figure'
@@ -205,8 +205,8 @@ export function buildTaxonVisualPrompt(name: string, rank?: string | null): stri
  * Flux follows short, front-loaded, positive description; long policy text is
  * ignored at best and obeyed backwards at worst.
  *
- * The prompt used to carry a ban list — "hard ban: insect, fly, moth, beetle,
- * mite, spider" — and microbes came back drawn as insect larvae and mites. A
+ * The prompt used to carry a ban list - "hard ban: insect, fly, moth, beetle,
+ * mite, spider" - and microbes came back drawn as insect larvae and mites. A
  * diffusion model conditions on the tokens it is given; naming a thing to
  * forbid it puts that thing in the conditioning. Measured on one taxon, same
  * model and steps: with the ban list, a spiked mass ringed by a dozen
@@ -246,8 +246,8 @@ export function adaptImagePromptForFlux(
  * Second attempt, with the reviewer's corrections folded in.
  *
  * Kept as positive description like the first attempt. This used to append
- * "never an insect or animal" and paste the reviewer's notes verbatim — notes
- * that read "remove the text labels" — so the retry reintroduced exactly the
+ * "never an insect or animal" and paste the reviewer's notes verbatim - notes
+ * that read "remove the text labels" - so the retry reintroduced exactly the
  * naming that makes a diffusion model draw the thing. The rubric now asks for
  * fixes phrased as what the plate should show, so they can be passed straight
  * through.
@@ -288,7 +288,7 @@ export function buildTaxonDescriptionPrompt(
 
   return [
     `Write a short natural-history description of ${taxon}${rankClause}.${specimenClause}${lineageClause}`,
-    `1–2 sentences, about 25–45 words.`,
+    `1-2 sentences, about 25-45 words.`,
     `Cover what it is (or the best-known living representative if this is a higher taxon), where it lives or how it is known, and one distinctive trait.`,
     `Plain prose for a general audience. No markdown, bullets, quotes, or leading labels.`,
   ].join(' ');
@@ -297,11 +297,11 @@ export function buildTaxonDescriptionPrompt(
 export function buildScoreImageSystemPrompt(): string {
   return [
     'You are a natural-history art director reviewing a generated scientific plate.',
-    'Score the image 1–10 on each criterion and return ONLY valid JSON:',
+    'Score the image 1-10 on each criterion and return ONLY valid JSON:',
     '{"taxon_match":n,"morphology":n,"anatomy":n,"style_plate":n,"single_subject":n,"no_text":n,"overall":n,"pass":true|false,"suggestions":["…"]}',
     'taxon_match: correct organism class for the named specimen (microbe vs animal is critical).',
     'morphology: matches the morphology lock.',
-    'anatomy: anatomically plausible and free of generation artefacts — score low for limbs or '
+    'anatomy: anatomically plausible and free of generation artefacts - score low for limbs or '
     + 'digits that are duplicated, missing, fused or miscounted, joints bending the wrong way, a '
     + 'head at an impossible angle to the neck, melted or asymmetric faces, and garbled lettering. '
     + 'Judge this independently of whether the organism is the right one: a correct species drawn '
@@ -311,7 +311,7 @@ export function buildScoreImageSystemPrompt(): string {
     'no_text: no labels, numbers, watermarks, scale bars.',
     'overall: weighted mean; pass=true only if overall>=7 AND taxon_match>=6 AND anatomy>=6.',
     'suggestions: 1-2 short fixes if not passing. Phrase each as what the plate',
-    'should show, never as something to remove — these are pasted into the image',
+    'should show, never as something to remove - these are pasted into the image',
     'prompt, and naming a thing there is what puts it in the picture.',
   ].join(' ');
 }

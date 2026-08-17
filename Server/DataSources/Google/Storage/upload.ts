@@ -33,7 +33,7 @@ export async function objectExists(objectName: string): Promise<boolean> {
   return exists;
 }
 
-/** Object names under a prefix — object names are content-addressed, so the
+/** Object names under a prefix - object names are content-addressed, so the
  *  prefix is what identifies "every render of this taxon". */
 export async function listObjects(prefix: string): Promise<string[]> {
   const [files] = await getBucket().getFiles({ prefix });

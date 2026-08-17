@@ -6,7 +6,7 @@ import {
 
 /** Legacy OpenAI-compatible path (can mis-bill Flux when pollen is 0). */
 const POLLINATIONS_OPENAI_URL = 'https://gen.pollinations.ai/v1/images/generations';
-/** Documented free Flux path — always 0 Pollen. */
+/** Documented free Flux path - always 0 Pollen. */
 const POLLINATIONS_FREE_BASE = 'https://image.pollinations.ai/prompt';
 const MODEL = 'flux';
 const SIZE = 1024;
@@ -21,7 +21,7 @@ interface PollinationsImageResponse {
 }
 
 /**
- * Flux is free (0 Pollen). Key optional — registered keys raise limits
+ * Flux is free (0 Pollen). Key optional - registered keys raise limits
  * and reduce watermark risk.
  */
 export function isPollinationsImageConfigured(): boolean {
@@ -64,7 +64,7 @@ async function bufferFromImage(
   throw new Error('Pollinations image missing b64_json and url');
 }
 
-/** Free GET endpoint — Flux does not consume Pollen. */
+/** Free GET endpoint - Flux does not consume Pollen. */
 async function generateViaFreeGet(
   prompt: string,
   specimen?: ResolvedSpecimen | null,
@@ -105,7 +105,7 @@ async function generateViaFreeGet(
   return Buffer.from(await response.arrayBuffer());
 }
 
-/** OpenAI-compatible POST — used when a key is present; may require Pollen. */
+/** OpenAI-compatible POST - used when a key is present; may require Pollen. */
 async function generateViaOpenAiCompat(
   prompt: string,
   specimen?: ResolvedSpecimen | null,

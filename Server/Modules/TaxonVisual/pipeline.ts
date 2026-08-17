@@ -69,7 +69,7 @@ export async function runTaxonVisualPipeline(
   const startedAt = Date.now();
   const mode = options.openaiOnly ? 'openai-only' : 'pipeline';
   console.log(
-    `${LOG} pipeline start ottId=${ottId} name="${name}" rank=${rank ?? '—'} mode=${mode}`,
+    `${LOG} pipeline start ottId=${ottId} name="${name}" rank=${rank ?? '-'} mode=${mode}`,
   );
 
   const taxonInfo = await fetchOtolTaxonInfo(ottId);
@@ -83,7 +83,7 @@ export async function runTaxonVisualPipeline(
       `${LOG} lineage ottId=${ottId} path="${lineagePath}"`
       + (domainHintFull
         ? ` hint=${domainHintFull.domain}/${domainHintFull.strength} via=${domainHintFull.matchedBy}`
-        : ' hint=—'),
+        : ' hint=-'),
     );
   } else {
     console.warn(`${LOG} lineage ottId=${ottId} unavailable; resolve without OTOL ground truth`);
@@ -163,7 +163,7 @@ export async function runTaxonVisualPipeline(
       );
       /*
        * Vision is down, so this render goes out unreviewed rather than not at
-       * all — but it is recorded as unreviewed.
+       * all - but it is recorded as unreviewed.
        *
        * This used to substitute a passing 7 across the board, which is how 123
        * plates came to be stored as reviewed when not one of them had ever been

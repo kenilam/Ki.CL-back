@@ -12,7 +12,7 @@ export type ImageScore = {
   /**
    * Anatomical plausibility, scored apart from whether the organism is right.
    *
-   * `morphology` only asks whether the subject matches its lock — a human plate
+   * `morphology` only asks whether the subject matches its lock - a human plate
    * is bipedal and upright whether or not the head sits at a possible angle to
    * the neck. So the rubric had no way to say "this is the right creature,
    * drawn broken", and the distortions that make a plate unsettling went
@@ -39,7 +39,7 @@ export type ImageScore = {
  * The stand-in used when no provider could look at the image.
  *
  * It passes, because a review that did not happen is not grounds for throwing
- * away a render — but it is marked `scored: false`, and nothing marked that way
+ * away a render - but it is marked `scored: false`, and nothing marked that way
  * is persisted as a score.
  */
 const UNSCORED: ImageScore = {
@@ -123,7 +123,7 @@ function mimeForBuffer(buffer: Buffer): string {
  *
  * Throws when no provider could produce a usable score, rather than returning
  * an invented one. The caller decides what to do with a render that could not
- * be reviewed — it is not this function's place to call it a pass.
+ * be reviewed - it is not this function's place to call it a pass.
  */
 export async function scoreTaxonImage(
   buffer: Buffer,
@@ -139,7 +139,7 @@ export async function scoreTaxonImage(
       mime: mimeForBuffer(buffer),
       /*
        * The reply itself is ~100 tokens, but reasoning is spent from the same
-       * budget and runs first — measured at ~450 tokens before a single
+       * budget and runs first - measured at ~450 tokens before a single
        * character of JSON. The old ceiling of 280 was therefore consumed
        * before the answer started, and the half-written object that came back
        * did not parse, which used to be converted into a passing score.

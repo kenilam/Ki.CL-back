@@ -7,7 +7,7 @@ import { getBucketForSegment, getBucketId } from './bucket.js';
  * Maps `/assets/{segment}/{object}` → GCS object via the service account
  * (anonymous googleapis fetches fail on private buckets).
  *
- * The first path segment selects the bucket rather than naming it — see
+ * The first path segment selects the bucket rather than naming it - see
  * `bucket.ts` for why the two are kept apart. Today that is `taxon-visual`
  * for generated plates and `static` for the site's own imagery.
  */
@@ -17,8 +17,8 @@ import { getBucketForSegment, getBucketId } from './bucket.js';
  *
  * The two buckets want opposite answers. A generated plate is named after its
  * contents, so its bytes never change and it can be cached forever. A file in
- * `static` is named after what it is — `banner.dark.webp` stays that whatever
- * is re-encoded into it — so the same URL has to be able to return something
+ * `static` is named after what it is - `banner.dark.webp` stays that whatever
+ * is re-encoded into it - so the same URL has to be able to return something
  * new. Freezing it for a year would strand a replacement behind every cache
  * that had already seen it.
  *

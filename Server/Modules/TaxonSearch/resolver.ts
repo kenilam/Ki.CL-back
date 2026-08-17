@@ -29,7 +29,7 @@ export default {
 
       /*
        * Anchored prefix match, case-insensitive. Anchoring is what lets the
-       * index on `name` be used — a leading wildcard would force a collection
+       * index on `name` be used - a leading wildcard would force a collection
        * scan, and this collection grows with every subtree ever fetched.
        */
       const stored = await TreeOfLifeNodes.find({
@@ -58,7 +58,7 @@ export default {
 
       return matches.map((match) => ({
         /*
-         * A taxon's synthetic-tree node id is `ott` followed by its ott id —
+         * A taxon's synthetic-tree node id is `ott` followed by its ott id -
          * verified against the live API, where `ott563154` resolves to the same
          * Panthera that autocomplete returned as ott id 563154. Deriving it
          * here means a caller never has to know that, and a result from Open

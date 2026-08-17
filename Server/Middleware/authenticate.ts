@@ -61,7 +61,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   }
 
   // Whitelisted operations (ExchangeToken) and auth operations (Register, SignIn, etc.)
-  // require x-api-key instead of JWT — accept from header or cookie
+  // require x-api-key instead of JWT - accept from header or cookie
   if (isWhitelistedRequest(req.body) || isAuthOperation(req.body)) {
     const apiKey = (req.headers['x-api-key'] as string) || req.cookies?.['x-api-key'];
 

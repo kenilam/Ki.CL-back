@@ -82,7 +82,7 @@ async function batchNodesByNodeId(
 /**
  * Reverse lookup: children of each ancestorNodeId. Parent-pointer model has
  * no stored descendant list, so this is a live `$in` query, grouped back per
- * key — the one-to-many counterpart to the one-to-one loaders above.
+ * key - the one-to-many counterpart to the one-to-one loaders above.
  */
 async function batchChildrenByAncestorNodeId(
   ancestorNodeIds: readonly string[],
