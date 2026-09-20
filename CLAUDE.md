@@ -57,3 +57,7 @@ Static assets (TaxonVisual images) live in Google Cloud Storage; `Server/DataSou
 
 ### Environment
 Config is entirely env-driven (`dotenv`, see `.env.template` for the full list - Mongo Atlas URI, JWT signing keys, CORS origins, rate limit, OAuth client secrets, GCS service account, per-provider API keys for TaxonVisual). `CORS_ORIGINS` is bypassed entirely when `NODE_ENV=development` (all origins allowed). `GRAPHQL_INTROSPECTION` and `APOLLO_PLAYGROUND` independently gate introspection and the Playground UI/GET-route availability - both should be `false` in production.
+
+## Writing
+
+Comments, commit messages and docs are read by people. Keep them plain: say what and why in normal sentences, no flourishes, no rhythm tricks, no narrating what the code already shows. If it would sound odd said out loud to a teammate, rewrite it.
