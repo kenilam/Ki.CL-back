@@ -12,6 +12,7 @@ import {
   type TreeOfLifeLoaders,
 } from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
 import { parseCookies, verifyAccessToken, type TokenPayload } from 'server/Helpers/auth.js';
+import { clientAddress } from 'server/Helpers/clientAddress.js';
 
 export interface AuthenticatedUser {
   UserGUID: string;
@@ -21,6 +22,7 @@ export interface AuthenticatedUser {
 
 export interface Context {
   headers: Record<string, string | string[] | undefined>;
+  /** The caller's address, when it can be trusted. See `clientAddress`. */
   ip: string | undefined;
   /** Present for HTTP; absent for WebSocket (subscriptions cannot set cookies). */
   res: Response | null;
@@ -65,7 +67,7 @@ async function resolveUser(
 
 export async function createContext({ req, res }: ExpressContextFunctionArgument): Promise<Context> {
   const headers = req.headers as Record<string, string | string[] | undefined>;
-  const ip = req.ip;
+  const ip = clientAddress(req.headers, req.ip);
   const operationName = req.body?.operationName;
 
   /*
@@ -131,10 +133,7 @@ export async function createWsContext(args: {
     headers.cookie = headerCookie || paramCookie;
   }
 
-  const ip =
-    typeof request?.headers['x-forwarded-for'] === 'string'
-      ? request.headers['x-forwarded-for'].split(',')[0]?.trim()
-      : request?.socket?.remoteAddress;
+  const ip = request ? clientAddress(request.headers, request.socket?.remoteAddress) : undefined;
 
   return {
     headers,

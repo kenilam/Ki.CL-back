@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import type { IncomingHttpHeaders } from 'node:http';
 import { isIPv6 } from 'node:net';
 import type { Express } from 'express';
 
@@ -23,6 +24,27 @@ function addressIsTrusted(): boolean {
 }
 
 /**
+ * Set by the Ki.CL web server to the visitor's address. It reaches us through
+ * the VPC, so `req.ip` is the web server's egress, shared by every visitor,
+ * however many hops `TRUST_PROXY` counts. Only the web server can call this
+ * service, and it overwrites whatever the browser sent.
+ */
+const CLIENT_ADDRESS_HEADER = 'x-kicl-client-address';
+
+/**
+ * The caller's address: the web server's header when present, otherwise the
+ * address Express saw, when it can be trusted.
+ */
+export function clientAddress(
+  headers: IncomingHttpHeaders,
+  ip: string | undefined,
+): string | undefined {
+  const forwarded = headers[CLIENT_ADDRESS_HEADER];
+  if (typeof forwarded === 'string' && forwarded.trim()) return forwarded.trim();
+  return addressIsTrusted() ? ip : undefined;
+}
+
+/**
  * IPv6 hands one subscriber a whole /64, so a single address inside it is
  * free to change. Count the /64 instead; IPv4-mapped addresses count as IPv4.
  */
@@ -41,11 +63,12 @@ function normalise(ip: string): string {
 }
 
 /**
- * A stable key for the caller's address, or null when it cannot be trusted.
+ * A stable key for the caller's address, from `clientAddress`, or null when
+ * there is none.
  * Stored as an HMAC so the collections never hold raw addresses.
  */
 export function addressKey(ip: string | undefined): string | null {
   const secret = process.env.ADDRESS_HASH_SECRET || process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY;
-  if (!ip || !secret || !addressIsTrusted()) return null;
+  if (!ip || !secret) return null;
   return createHmac('sha256', secret).update(normalise(ip)).digest('base64url');
 }
