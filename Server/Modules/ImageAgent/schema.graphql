@@ -1,0 +1,156 @@
+enum ImageAgentRole {
+  USER
+  AGENT
+}
+
+enum ImageAgentMessageKind {
+  TEXT
+  """The agent needs one more thing before it draws."""
+  QUESTION
+  """Turned away by the governor. See `rejection`; `text` says why."""
+  REFUSAL
+  """The agent is drawing; `text` says what it is doing right now."""
+  PROGRESS
+  """A finished picture: `asset` and `score`."""
+  IMAGE
+  """The drawing did not finish. `text` says why; see `exhaustion`."""
+  FAILURE
+}
+
+enum ImageAgentThreadStatus {
+  """Waiting on the person."""
+  IDLE
+  """Reading the last message."""
+  THINKING
+  DRAWING
+}
+
+"""Why the governor turned a request away."""
+enum ImageAgentRejection {
+  UNSAFE_SEXUAL
+  UNSAFE_VIOLENT
+  UNSAFE_OTHER
+  """Not about a picture: gibberish, tests, or instructions aimed at the model."""
+  SPAM
+}
+
+"""
+Whether waiting helps, after a FAILURE for quota. `REFILLS` means at least
+one provider's allowance comes back on a timer; `BILLING` means every one is
+out of credit.
+"""
+enum ImageAgentExhaustion {
+  REFILLS
+  BILLING
+}
+
+enum ImageAgentStyle {
+  PHOTOGRAPHY
+  ILLUSTRATION
+  MINIMAL
+  RENDER_3D
+}
+
+"""Vision review of a delivered image, 1-10 per criterion."""
+type ImageAgentScore {
+  relevance: Float!
+  quality: Float!
+  styleMatch: Float!
+  composition: Float!
+  overall: Float!
+  pass: Boolean!
+  suggestions: [String!]!
+}
+
+type ImageAgentMessage {
+  id: ID!
+  role: ImageAgentRole!
+  kind: ImageAgentMessageKind!
+  text: String
+  assetId: ID
+  asset: Asset
+  score: ImageAgentScore
+  rejection: ImageAgentRejection
+  exhaustion: ImageAgentExhaustion
+  """
+  Short replies the person can pick instead of typing, on a QUESTION. Picking
+  one sends its text as the next message. Empty when none fit.
+  """
+  choices: [String!]!
+  at: DateTime!
+}
+
+"""One conversation with the agent, newest message last."""
+type ImageAgentThread {
+  id: ID!
+  status: ImageAgentThreadStatus!
+  """The agent's current understanding of the picture, once it has one."""
+  brief: String
+  style: ImageAgentStyle
+  """
+  What the agent is doing while THINKING, in a few words, updated as it goes.
+  Null at any other time; while DRAWING the PROGRESS message says it.
+  """
+  activity: String
+  messages: [ImageAgentMessage!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""What the caller may still draw today."""
+type ImageAgentAllowance {
+  remaining: Int!
+  limit: Int!
+  """Set while the caller has to wait before the next message."""
+  nextAllowedAt: DateTime
+  """
+  A turn is running in one of the caller's conversations. A new message is
+  refused until it ends.
+  """
+  busy: Boolean!
+  """
+  The caller's own conversations with a turn running, most recent first. Can
+  be empty while `busy` is set, when the running one belongs to the same
+  address under another session.
+  """
+  running: [ImageAgentThread!]!
+}
+
+type Query {
+  ImageAgentThread(id: ID!): ImageAgentThread
+  """The caller's conversations, most recently active first."""
+  ImageAgentThreads(limit: Int): [ImageAgentThread!]!
+  ImageAgentAllowance: ImageAgentAllowance!
+  """
+  The caller's conversations that already cover most of what `text` asks for,
+  closest first, at most three. For offering to continue one instead of
+  starting over.
+  """
+  ImageAgentSimilar(text: String!): [ImageAgentThread!]!
+  """
+  The best-scored pictures from anyone's conversations, highest first.
+  Answered without a token. Only the asset: no text, owner or conversation.
+  At most 24; 12 when `limit` is not given.
+  """
+  ImageAgentGallery(limit: Int): [Asset!]!
+}
+
+type Mutation {
+  """
+  Say something to the agent. Starts a conversation when `threadId` is not
+  given. Returns as soon as the message is recorded; the reply arrives on
+  ImageAgentThreadUpdated.
+  """
+  ImageAgentSend(threadId: ID, text: String!): ImageAgentThread!
+  """
+  Go back to one of the person's messages and ask it again. Everything from
+  that message on leaves the conversation, and the message is sent again.
+  Without `messageId`, the person's last message.
+  """
+  ImageAgentRetry(threadId: ID!, messageId: ID): ImageAgentThread!
+}
+
+type Subscription {
+  """Pushes the whole conversation on every change."""
+  ImageAgentThreadUpdated(id: ID!): ImageAgentThread!
+}

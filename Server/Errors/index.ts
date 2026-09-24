@@ -29,3 +29,12 @@ export function NotFound(message: string = 'Record not found'): GraphQLError {
     extensions: { code: 'NOT_FOUND' },
   });
 }
+
+export function TooManyRequests(
+  message: string = 'Too many requests',
+  extensions: Record<string, unknown> = {},
+): GraphQLError {
+  return new GraphQLError(message, {
+    extensions: { code: 'TOO_MANY_REQUESTS', ...extensions },
+  });
+}

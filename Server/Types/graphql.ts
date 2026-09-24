@@ -41,6 +41,128 @@ export type Asset = {
   url: Scalars['String']['output'];
 };
 
+/** What the caller may still draw today. */
+export type ImageAgentAllowance = {
+  __typename?: 'ImageAgentAllowance';
+  /**
+   * A turn is running in one of the caller's conversations. A new message is
+   * refused until it ends.
+   */
+  busy: Scalars['Boolean']['output'];
+  limit: Scalars['Int']['output'];
+  /** Set while the caller has to wait before the next message. */
+  nextAllowedAt?: Maybe<Scalars['DateTime']['output']>;
+  remaining: Scalars['Int']['output'];
+  /**
+   * The caller's own conversations with a turn running, most recent first. Can
+   * be empty while `busy` is set, when the running one belongs to the same
+   * address under another session.
+   */
+  running: Array<ImageAgentThread>;
+};
+
+/**
+ * Whether waiting helps, after a FAILURE for quota. `REFILLS` means at least
+ * one provider's allowance comes back on a timer; `BILLING` means every one is
+ * out of credit.
+ */
+export enum ImageAgentExhaustion {
+  Billing = 'BILLING',
+  Refills = 'REFILLS'
+}
+
+export type ImageAgentMessage = {
+  __typename?: 'ImageAgentMessage';
+  asset?: Maybe<Asset>;
+  assetId?: Maybe<Scalars['ID']['output']>;
+  at: Scalars['DateTime']['output'];
+  /**
+   * Short replies the person can pick instead of typing, on a QUESTION. Picking
+   * one sends its text as the next message. Empty when none fit.
+   */
+  choices: Array<Scalars['String']['output']>;
+  exhaustion?: Maybe<ImageAgentExhaustion>;
+  id: Scalars['ID']['output'];
+  kind: ImageAgentMessageKind;
+  rejection?: Maybe<ImageAgentRejection>;
+  role: ImageAgentRole;
+  score?: Maybe<ImageAgentScore>;
+  text?: Maybe<Scalars['String']['output']>;
+};
+
+export enum ImageAgentMessageKind {
+  /** The drawing did not finish. `text` says why; see `exhaustion`. */
+  Failure = 'FAILURE',
+  /** A finished picture: `asset` and `score`. */
+  Image = 'IMAGE',
+  /** The agent is drawing; `text` says what it is doing right now. */
+  Progress = 'PROGRESS',
+  /** The agent needs one more thing before it draws. */
+  Question = 'QUESTION',
+  /** Turned away by the governor. See `rejection`; `text` says why. */
+  Refusal = 'REFUSAL',
+  Text = 'TEXT'
+}
+
+/** Why the governor turned a request away. */
+export enum ImageAgentRejection {
+  /** Not about a picture: gibberish, tests, or instructions aimed at the model. */
+  Spam = 'SPAM',
+  UnsafeOther = 'UNSAFE_OTHER',
+  UnsafeSexual = 'UNSAFE_SEXUAL',
+  UnsafeViolent = 'UNSAFE_VIOLENT'
+}
+
+export enum ImageAgentRole {
+  Agent = 'AGENT',
+  User = 'USER'
+}
+
+/** Vision review of a delivered image, 1-10 per criterion. */
+export type ImageAgentScore = {
+  __typename?: 'ImageAgentScore';
+  composition: Scalars['Float']['output'];
+  overall: Scalars['Float']['output'];
+  pass: Scalars['Boolean']['output'];
+  quality: Scalars['Float']['output'];
+  relevance: Scalars['Float']['output'];
+  styleMatch: Scalars['Float']['output'];
+  suggestions: Array<Scalars['String']['output']>;
+};
+
+export enum ImageAgentStyle {
+  Illustration = 'ILLUSTRATION',
+  Minimal = 'MINIMAL',
+  Photography = 'PHOTOGRAPHY',
+  Render_3D = 'RENDER_3D'
+}
+
+/** One conversation with the agent, newest message last. */
+export type ImageAgentThread = {
+  __typename?: 'ImageAgentThread';
+  /**
+   * What the agent is doing while THINKING, in a few words, updated as it goes.
+   * Null at any other time; while DRAWING the PROGRESS message says it.
+   */
+  activity?: Maybe<Scalars['String']['output']>;
+  /** The agent's current understanding of the picture, once it has one. */
+  brief?: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  messages: Array<ImageAgentMessage>;
+  status: ImageAgentThreadStatus;
+  style?: Maybe<ImageAgentStyle>;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export enum ImageAgentThreadStatus {
+  Drawing = 'DRAWING',
+  /** Waiting on the person. */
+  Idle = 'IDLE',
+  /** Reading the last message. */
+  Thinking = 'THINKING'
+}
+
 export type MePayload = {
   __typename?: 'MePayload';
   Active?: Maybe<Scalars['Boolean']['output']>;
@@ -56,6 +178,18 @@ export type Mutation = {
   __typename?: 'Mutation';
   Activate?: Maybe<Scalars['Boolean']['output']>;
   ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Go back to one of the person's messages and ask it again. Everything from
+   * that message on leaves the conversation, and the message is sent again.
+   * Without `messageId`, the person's last message.
+   */
+  ImageAgentRetry: ImageAgentThread;
+  /**
+   * Say something to the agent. Starts a conversation when `threadId` is not
+   * given. Returns as soon as the message is recorded; the reply arrives on
+   * ImageAgentThreadUpdated.
+   */
+  ImageAgentSend: ImageAgentThread;
   RefreshToken?: Maybe<Scalars['Boolean']['output']>;
   Register?: Maybe<Scalars['Boolean']['output']>;
   SignIn?: Maybe<Scalars['Boolean']['output']>;
@@ -66,6 +200,18 @@ export type Mutation = {
 
 export type MutationActivateArgs = {
   Activate: ActivateInput;
+};
+
+
+export type MutationImageAgentRetryArgs = {
+  messageId?: InputMaybe<Scalars['ID']['input']>;
+  threadId: Scalars['ID']['input'];
+};
+
+
+export type MutationImageAgentSendArgs = {
+  text: Scalars['String']['input'];
+  threadId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -91,6 +237,22 @@ export enum Provider {
 export type Query = {
   __typename?: 'Query';
   Asset?: Maybe<Asset>;
+  ImageAgentAllowance: ImageAgentAllowance;
+  /**
+   * Pictures the reviewer passed, from anyone's conversations, in random order.
+   * Answered without a token. Only the asset: no text, owner or conversation.
+   * At most 24; 12 when `limit` is not given.
+   */
+  ImageAgentGallery: Array<Asset>;
+  /**
+   * The caller's conversations that already cover most of what `text` asks for,
+   * closest first, at most three. For offering to continue one instead of
+   * starting over.
+   */
+  ImageAgentSimilar: Array<ImageAgentThread>;
+  ImageAgentThread?: Maybe<ImageAgentThread>;
+  /** The caller's conversations, most recently active first. */
+  ImageAgentThreads: Array<ImageAgentThread>;
   Me?: Maybe<MePayload>;
   /**
    * Find taxa by name.
@@ -121,6 +283,26 @@ export type Query = {
 
 export type QueryAssetArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryImageAgentGalleryArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryImageAgentSimilarArgs = {
+  text: Scalars['String']['input'];
+};
+
+
+export type QueryImageAgentThreadArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryImageAgentThreadsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -169,8 +351,15 @@ export type SocialSignInInput = {
 
 export type Subscription = {
   __typename?: 'Subscription';
+  /** Pushes the whole conversation on every change. */
+  ImageAgentThreadUpdated: ImageAgentThread;
   /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
   TaxonVisualUpdated: TaxonVisual;
+};
+
+
+export type SubscriptionImageAgentThreadUpdatedArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -357,6 +546,16 @@ export type ResolversTypes = ResolversObject<{
   EmailAddress: ResolverTypeWrapper<Scalars['EmailAddress']['output']>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  ImageAgentAllowance: ResolverTypeWrapper<ImageAgentAllowance>;
+  ImageAgentExhaustion: ImageAgentExhaustion;
+  ImageAgentMessage: ResolverTypeWrapper<ImageAgentMessage>;
+  ImageAgentMessageKind: ImageAgentMessageKind;
+  ImageAgentRejection: ImageAgentRejection;
+  ImageAgentRole: ImageAgentRole;
+  ImageAgentScore: ResolverTypeWrapper<ImageAgentScore>;
+  ImageAgentStyle: ImageAgentStyle;
+  ImageAgentThread: ResolverTypeWrapper<ImageAgentThread>;
+  ImageAgentThreadStatus: ImageAgentThreadStatus;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
   MePayload: ResolverTypeWrapper<MePayload>;
@@ -389,6 +588,10 @@ export type ResolversParentTypes = ResolversObject<{
   EmailAddress: Scalars['EmailAddress']['output'];
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
+  ImageAgentAllowance: ImageAgentAllowance;
+  ImageAgentMessage: ImageAgentMessage;
+  ImageAgentScore: ImageAgentScore;
+  ImageAgentThread: ImageAgentThread;
   Int: Scalars['Int']['output'];
   JWT: Scalars['JWT']['output'];
   MePayload: MePayload;
@@ -422,6 +625,49 @@ export interface EmailAddressScalarConfig extends GraphQLScalarTypeConfig<Resolv
   name: 'EmailAddress';
 }
 
+export type ImageAgentAllowanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ImageAgentAllowance'] = ResolversParentTypes['ImageAgentAllowance']> = ResolversObject<{
+  busy?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  limit?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  nextAllowedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  remaining?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  running?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType>;
+}>;
+
+export type ImageAgentMessageResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ImageAgentMessage'] = ResolversParentTypes['ImageAgentMessage']> = ResolversObject<{
+  asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType>;
+  assetId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  at?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  choices?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  exhaustion?: Resolver<Maybe<ResolversTypes['ImageAgentExhaustion']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  kind?: Resolver<ResolversTypes['ImageAgentMessageKind'], ParentType, ContextType>;
+  rejection?: Resolver<Maybe<ResolversTypes['ImageAgentRejection']>, ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['ImageAgentRole'], ParentType, ContextType>;
+  score?: Resolver<Maybe<ResolversTypes['ImageAgentScore']>, ParentType, ContextType>;
+  text?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
+export type ImageAgentScoreResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ImageAgentScore'] = ResolversParentTypes['ImageAgentScore']> = ResolversObject<{
+  composition?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  overall?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  pass?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  quality?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  relevance?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  styleMatch?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  suggestions?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
+export type ImageAgentThreadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ImageAgentThread'] = ResolversParentTypes['ImageAgentThread']> = ResolversObject<{
+  activity?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  brief?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  messages?: Resolver<Array<ResolversTypes['ImageAgentMessage']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['ImageAgentThreadStatus'], ParentType, ContextType>;
+  style?: Resolver<Maybe<ResolversTypes['ImageAgentStyle']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+}>;
+
 export interface JwtScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JWT'], any> {
   name: 'JWT';
 }
@@ -439,6 +685,8 @@ export type MePayloadResolvers<ContextType = Context, ParentType extends Resolve
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   Activate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationActivateArgs, 'Activate'>>;
   ExchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  ImageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
+  ImageAgentSend?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentSendArgs, 'text'>>;
   RefreshToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   Register?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'Register'>>;
   SignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSignInArgs, 'SignIn'>>;
@@ -452,6 +700,11 @@ export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<Reso
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   Asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
+  ImageAgentAllowance?: Resolver<ResolversTypes['ImageAgentAllowance'], ParentType, ContextType>;
+  ImageAgentGallery?: Resolver<Array<ResolversTypes['Asset']>, ParentType, ContextType, Partial<QueryImageAgentGalleryArgs>>;
+  ImageAgentSimilar?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentSimilarArgs, 'text'>>;
+  ImageAgentThread?: Resolver<Maybe<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentThreadArgs, 'id'>>;
+  ImageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
   Me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
   TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
@@ -460,6 +713,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
+  ImageAgentThreadUpdated?: SubscriptionResolver<ResolversTypes['ImageAgentThread'], "ImageAgentThreadUpdated", ParentType, ContextType, RequireFields<SubscriptionImageAgentThreadUpdatedArgs, 'id'>>;
   TaxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "TaxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
 }>;
 
@@ -514,6 +768,10 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Asset?: AssetResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
   EmailAddress?: GraphQLScalarType;
+  ImageAgentAllowance?: ImageAgentAllowanceResolvers<ContextType>;
+  ImageAgentMessage?: ImageAgentMessageResolvers<ContextType>;
+  ImageAgentScore?: ImageAgentScoreResolvers<ContextType>;
+  ImageAgentThread?: ImageAgentThreadResolvers<ContextType>;
   JWT?: GraphQLScalarType;
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

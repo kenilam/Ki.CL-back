@@ -21,12 +21,14 @@ import { apiProxy } from './Middleware/apiProxy.js';
 import { connectDatabase } from './DataSources/MongoDB/index.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
+import { configureTrustProxy } from './Helpers/clientAddress.js';
 import type { IncomingMessage } from 'node:http';
 
 const PORT = Number(process.env.PORT) || 3100;
 const GOOGLE_STORAGE_PROXY = process.env.GOOGLE_STORAGE_PROXY || '/assets';
 
 const app = express();
+configureTrustProxy(app);
 const httpServer = createServer(app);
 
 const wsContext = async (ctx: {
