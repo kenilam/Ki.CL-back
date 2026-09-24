@@ -5,6 +5,14 @@ const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const PROVIDER = 'groq';
 
 /*
+ * GPT OSS reasons before it answers, and the reasoning counts towards
+ * max_tokens. Without room for it a short answer comes back empty.
+ */
+const REASONING_HEADROOM = 1024;
+
+const isReasoningModel = (model: string) => model.startsWith('openai/gpt-oss');
+
+/*
  * No default: Groq retires models, and a retired default made every call
  * fail and retry before moving on. Name one in GROQ_TEXT_MODEL to use Groq.
  */
@@ -30,6 +38,7 @@ export async function chatGroq(options: TextChatOptions): Promise<string> {
   }
 
   const model = resolveGroqTextModel();
+  const reasoning = isReasoningModel(model);
 
   const response = await fetch(GROQ_CHAT_URL, {
     method: 'POST',
@@ -40,7 +49,8 @@ export async function chatGroq(options: TextChatOptions): Promise<string> {
     body: JSON.stringify({
       model,
       temperature: options.temperature ?? 0.4,
-      max_tokens: options.maxTokens ?? 120,
+      max_tokens: (options.maxTokens ?? 120) + (reasoning ? REASONING_HEADROOM : 0),
+      ...(reasoning ? { include_reasoning: false, reasoning_effort: 'low' } : {}),
       messages: [
         { role: 'system', content: options.system },
         { role: 'user', content: options.user },
