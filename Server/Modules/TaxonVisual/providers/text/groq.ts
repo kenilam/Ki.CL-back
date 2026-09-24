@@ -2,11 +2,14 @@ import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLi
 import type { TextChatOptions } from './types.js';
 
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
-export const DEFAULT_GROQ_TEXT_MODEL = 'llama-3.3-70b-versatile';
 const PROVIDER = 'groq';
 
+/*
+ * No default: Groq retires models, and a retired default made every call
+ * fail and retry before moving on. Name one in GROQ_TEXT_MODEL to use Groq.
+ */
 export function resolveGroqTextModel(): string {
-  return process.env.GROQ_TEXT_MODEL?.trim() || DEFAULT_GROQ_TEXT_MODEL;
+  return process.env.GROQ_TEXT_MODEL?.trim() ?? '';
 }
 
 interface GroqChatResponse {
@@ -17,7 +20,7 @@ interface GroqChatResponse {
 }
 
 export function isGroqTextConfigured(): boolean {
-  return Boolean(process.env.GROQ_API_KEY?.trim());
+  return Boolean(process.env.GROQ_API_KEY?.trim() && resolveGroqTextModel());
 }
 
 export async function chatGroq(options: TextChatOptions): Promise<string> {
