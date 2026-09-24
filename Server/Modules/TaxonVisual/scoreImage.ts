@@ -1,3 +1,4 @@
+import { imageContentType } from 'server/Helpers/imageFormat.js';
 import { runProviderFailover } from './providers/failover.js';
 import { buildVisionProviders } from './providers/vision/index.js';
 import {
@@ -102,22 +103,6 @@ function parseScore(raw: string): ImageScore | null {
   }
 }
 
-function mimeForBuffer(buffer: Buffer): string {
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'image/jpeg';
-  }
-  if (
-    buffer.length >= 12
-    && buffer[0] === 0x52
-    && buffer[1] === 0x49
-    && buffer[2] === 0x46
-    && buffer[3] === 0x46
-  ) {
-    return 'image/webp';
-  }
-  return 'image/png';
-}
-
 /**
  * Vision QA across the provider chain.
  *
@@ -136,7 +121,7 @@ export async function scoreTaxonImage(
       system: buildScoreImageSystemPrompt(),
       user: buildScoreImageUserPrompt(taxonName, specimen, lineagePath),
       image: buffer,
-      mime: mimeForBuffer(buffer),
+      mime: imageContentType(buffer),
       /*
        * The reply itself is ~100 tokens, but reasoning is spent from the same
        * budget and runs first - measured at ~450 tokens before a single

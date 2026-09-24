@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
 import { Storage } from 'server/DataSources/Google/index.js';
+import { imageContentType, imageExtension } from 'server/Helpers/imageFormat.js';
 import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { runProviderFailover } from './providers/failover.js';
 import {
@@ -45,32 +46,6 @@ export function taxonVisualObjectName(ottId: number, buffer: Buffer): string {
 export async function taxonVisualObjectExists(ottId: number): Promise<boolean> {
   const names = await Storage.listObjects(taxonVisualObjectPrefix(ottId));
   return names.length > 0;
-}
-
-/** The format the bytes actually are, whatever the provider called it. */
-function imageFormat(buffer: Buffer): 'jpeg' | 'png' | 'webp' {
-  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'jpeg';
-  }
-  if (
-    buffer.length >= 12
-    && buffer[0] === 0x52
-    && buffer[1] === 0x49
-    && buffer[2] === 0x46
-    && buffer[3] === 0x46
-  ) {
-    return 'webp';
-  }
-  return 'png';
-}
-
-function imageContentType(buffer: Buffer): string {
-  return `image/${imageFormat(buffer)}`;
-}
-
-function imageExtension(buffer: Buffer): string {
-  const format = imageFormat(buffer);
-  return format === 'jpeg' ? 'jpg' : format;
 }
 
 export type CreatedTaxonAsset = {

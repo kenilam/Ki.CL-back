@@ -9,6 +9,35 @@ export type ProviderAttempt<T> = {
   run: () => Promise<T>;
 };
 
+/**
+ * How long one call may take before it counts as hung. Without this a
+ * provider that accepts the request and never answers holds the whole turn
+ * open - the platform's own fetch limits are minutes long. A timeout moves
+ * straight to the next provider: one that hung once tends to hang again.
+ */
+const TIMEOUT_MS: Record<'image' | 'description' | 'vision', number> = {
+  description: 30_000,
+  vision: 45_000,
+  image: 90_000,
+};
+
+class ProviderTimeoutError extends Error {}
+
+/**
+ * Stops waiting on `promise` after `ms`. The request itself is not cancelled,
+ * since the providers do not take a signal; its answer is ignored if it comes.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, provider: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new ProviderTimeoutError(`${provider} did not answer within ${ms / 1000}s`)),
+      ms,
+    );
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 /** Transient / network-style failures before moving to the next agent. */
 const DEFAULT_MAX_RETRIES = 3;
 /** Rate-limit (retryable) - one short retry, then next agent’s quota. */
@@ -71,6 +100,7 @@ function retryAfterMsFromMessage(message: string): number | null {
 async function withRetries<T>(
   provider: string,
   run: () => Promise<T>,
+  timeoutMs: number,
 ): Promise<T> {
   let lastError: Error | null = null;
   let attempt = 0;
@@ -78,9 +108,13 @@ async function withRetries<T>(
   while (attempt < DEFAULT_MAX_RETRIES) {
     attempt += 1;
     try {
-      return await run();
+      return await withTimeout(run(), timeoutMs, provider);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (lastError instanceof ProviderTimeoutError) {
+        throw lastError;
+      }
 
       if (lastError.message.toLowerCase().includes('content_policy')) {
         throw lastError;
@@ -190,7 +224,7 @@ export async function runProviderFailover<T>(
   for (const provider of available) {
     console.log(`[TaxonVisual] ${kind} trying "${provider.name}"…`);
     try {
-      const result = await withRetries(provider.name, provider.run);
+      const result = await withRetries(provider.name, provider.run, TIMEOUT_MS[kind]);
       console.log(`[TaxonVisual] ${kind} using "${provider.name}"`);
       return result;
     } catch (error) {

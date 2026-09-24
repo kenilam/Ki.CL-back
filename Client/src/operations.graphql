@@ -6,6 +6,140 @@ query kicl_Asset($id: ID!) {
   }
 }
 
+query kicl_ImageAgentThread($id: ID!) {
+  ImageAgentThread(id: $id) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      asset {
+        id
+        url
+        generator
+      }
+      score {
+        relevance
+        quality
+        styleMatch
+        composition
+        overall
+        pass
+        suggestions
+      }
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_ImageAgentThreads($limit: Int) {
+  ImageAgentThreads(limit: $limit) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      asset {
+        id
+        url
+        generator
+      }
+      score {
+        relevance
+        quality
+        styleMatch
+        composition
+        overall
+        pass
+        suggestions
+      }
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_ImageAgentAllowance {
+  ImageAgentAllowance {
+    remaining
+    limit
+    nextAllowedAt
+    busy
+    running {
+      id
+      status
+      brief
+      style
+      activity
+      messages {
+        id
+        role
+        kind
+        text
+        assetId
+        rejection
+        exhaustion
+        choices
+        at
+      }
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query kicl_ImageAgentSimilar($text: String!) {
+  ImageAgentSimilar(text: $text) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_ImageAgentGallery($limit: Int) {
+  ImageAgentGallery(limit: $limit) {
+    id
+    url
+    generator
+  }
+}
+
 query kicl_Me {
   Me {
     UserGUID
@@ -734,6 +868,80 @@ mutation kicl_ExchangeToken {
   ExchangeToken
 }
 
+mutation kicl_ImageAgentSend($threadId: ID, $text: String!) {
+  ImageAgentSend(threadId: $threadId, text: $text) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      asset {
+        id
+        url
+        generator
+      }
+      score {
+        relevance
+        quality
+        styleMatch
+        composition
+        overall
+        pass
+        suggestions
+      }
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+mutation kicl_ImageAgentRetry($threadId: ID!, $messageId: ID) {
+  ImageAgentRetry(threadId: $threadId, messageId: $messageId) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      asset {
+        id
+        url
+        generator
+      }
+      score {
+        relevance
+        quality
+        styleMatch
+        composition
+        overall
+        pass
+        suggestions
+      }
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
 mutation kicl_RefreshToken {
   RefreshToken
 }
@@ -752,6 +960,43 @@ mutation kicl_SignOut {
 
 mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
   SocialSignIn(SocialSignIn: $SocialSignIn)
+}
+
+subscription kicl_ImageAgentThreadUpdated($id: ID!) {
+  ImageAgentThreadUpdated(id: $id) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      asset {
+        id
+        url
+        generator
+      }
+      score {
+        relevance
+        quality
+        styleMatch
+        composition
+        overall
+        pass
+        suggestions
+      }
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
 }
 
 subscription kicl_TaxonVisualUpdated($ottId: Int!) {

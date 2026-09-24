@@ -14,6 +14,21 @@ import appRoot from 'app-root-path';
 
 const PREFIX = 'kicl_';
 const MAX_DEPTH = 2;
+/**
+ * Fields that need more than two levels. A conversation holds messages, and a
+ * message holds its picture one level further down, so the default depth would
+ * stop just before the picture.
+ */
+const DEPTH_BY_FIELD: Record<string, number> = {
+  ImageAgentAllowance: 3,
+  ImageAgentRetry: 3,
+  ImageAgentSend: 3,
+  ImageAgentThread: 3,
+  ImageAgentThreadUpdated: 3,
+  ImageAgentThreads: 3,
+};
+
+const depthFor = (fieldName: string): number => DEPTH_BY_FIELD[fieldName] ?? MAX_DEPTH;
 /** Nested children depth - matches server heightLimit max (3). */
 const TREE_OF_LIFE_DEPTH = 3;
 /**
@@ -185,7 +200,7 @@ if (queryType) {
       schema,
       kind: OperationTypeNode.QUERY,
       field: fieldName,
-      depthLimit: MAX_DEPTH,
+      depthLimit: depthFor(fieldName),
     });
 
     // Replace the auto-generated operation name with our prefixed one
@@ -208,7 +223,7 @@ if (mutationType) {
       schema,
       kind: OperationTypeNode.MUTATION,
       field: fieldName,
-      depthLimit: MAX_DEPTH,
+      depthLimit: depthFor(fieldName),
     });
 
     const printed = print(node);
@@ -230,7 +245,7 @@ if (subscriptionType) {
       schema,
       kind: OperationTypeNode.SUBSCRIPTION,
       field: fieldName,
-      depthLimit: MAX_DEPTH,
+      depthLimit: depthFor(fieldName),
     });
 
     const printed = print(node);
