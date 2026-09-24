@@ -68,8 +68,15 @@ export async function createContext({ req, res }: ExpressContextFunctionArgument
   const ip = req.ip;
   const operationName = req.body?.operationName;
 
-  // Token payload is attached by the authenticate middleware
-  const tokenPayload = req.tokenPayload || null;
+  /*
+   * The middleware only attaches the payload on the path that requires a token.
+   * Every client operation includes `__typename`, which the introspection check
+   * matches as `__type`, so on `/api` that path is never taken. Resolvers then
+   * couldn't tell who was calling, even with a valid cookie. Read the cookie
+   * here too, the way the WebSocket context already does.
+   */
+  const tokenPayload =
+    req.tokenPayload || verifyAccessToken(req.cookies?.access_token) || null;
 
   const isWhitelisted = !tokenPayload;
 
