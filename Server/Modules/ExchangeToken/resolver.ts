@@ -4,10 +4,14 @@ import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generate
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
 import { AnonymousSessions } from 'server/DataSources/MongoDB/AnonymousSessions/Model.js';
-import { TooManyRequests } from 'server/Errors/index.js';
+import { CaptchaRequired, TooManyRequests } from 'server/Errors/index.js';
 import { addressKey } from 'server/Helpers/clientAddress.js';
+import { turnstileToken, verifyTurnstile } from 'server/Helpers/turnstile.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Must match the `action` the client renders the widget with. */
+const TURNSTILE_ACTION = 'exchange-token';
 
 /** Anonymous identities one address may be given in a rolling day. */
 function perAddressDailyLimit(): number {
@@ -43,13 +47,13 @@ export default {
 
       if (refreshToken) {
         try {
-          const { UserGUID, aud } = jwt.verify(
+          const { UserGUID, aud, human } = jwt.verify(
             refreshToken,
             process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!,
-          ) as { UserGUID: string; aud: 'anon' | 'user' };
+          ) as { UserGUID: string; aud: 'anon' | 'user'; human?: boolean };
 
           if (aud === 'anon') {
-            const renewed = await generateUserToken({ UserGUID, aud });
+            const renewed = await generateUserToken({ UserGUID, aud, human });
 
             setAccessTokenCookie(context.res, renewed.AccessToken);
             setRefreshTokenCookie(context.res, renewed.RefreshToken);
@@ -75,6 +79,27 @@ export default {
         }
       }
 
+      /*
+       * Checked after the address limit, which costs no outside call and
+       * leaves the token unspent when it refuses.
+       *
+       * When Cloudflare cannot answer, or no secret is set, the visitor still
+       * gets a session, without `human`. Every request needs a token, so
+       * refusing here would take the whole site down for new visitors. Costly
+       * operations can ask for the check again when `human` is missing.
+       */
+      const turnstile = await verifyTurnstile({
+        token: turnstileToken(context.headers),
+        action: TURNSTILE_ACTION,
+        address: context.ip,
+      });
+      if (!turnstile.ok && turnstile.reason === 'rejected') {
+        throw CaptchaRequired();
+      }
+      if (!turnstile.ok) {
+        console.warn(`[ExchangeToken] Turnstile unavailable: ${turnstile.codes.join(',')}`);
+      }
+
       const UserGUID = uuid();
       if (address) {
         await AnonymousSessions.create({ addressKey: address, UserGUID });
@@ -83,6 +108,7 @@ export default {
       const { AccessToken, RefreshToken } = await generateUserToken({
         UserGUID,
         aud: 'anon',
+        human: turnstile.ok && !turnstile.skipped,
       });
 
       setAccessTokenCookie(context.res, AccessToken);

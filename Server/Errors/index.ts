@@ -30,6 +30,13 @@ export function NotFound(message: string = 'Record not found'): GraphQLError {
   });
 }
 
+/** The client should show the Turnstile widget and retry with its token. */
+export function CaptchaRequired(message: string = 'Confirm you are human to continue.'): GraphQLError {
+  return new GraphQLError(message, {
+    extensions: { code: 'CAPTCHA_REQUIRED' },
+  });
+}
+
 export function TooManyRequests(
   message: string = 'Too many requests',
   extensions: Record<string, unknown> = {},

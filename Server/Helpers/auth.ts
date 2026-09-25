@@ -4,6 +4,8 @@ import { validateApiToken } from 'server/Middleware/apiToken.js';
 export interface TokenPayload {
   UserGUID: string;
   aud: 'anon' | 'user';
+  /** Passed a Turnstile check when the identity was issued. */
+  human?: boolean;
   iat: number;
   exp: number;
 }

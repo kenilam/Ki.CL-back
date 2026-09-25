@@ -18,6 +18,11 @@ interface KiclProviderProps {
   uri?: string;
   /** WebSocket URL. Defaults to uri with http→ws. */
   wsUri?: string;
+  /**
+   * Start an anonymous session on mount. The host turns this off when it
+   * starts sessions itself, for example after a Turnstile check.
+   */
+  autoExchange?: boolean;
   children: React.ReactNode;
 }
 
@@ -110,10 +115,11 @@ export function getKiclClient(
 export function KiclProvider({
   uri = '/api',
   wsUri,
+  autoExchange = true,
   children,
 }: KiclProviderProps) {
   const client = getKiclClient(uri, wsUri);
-  const [ready, setReady] = useState(() => hasSession());
+  const [ready, setReady] = useState(() => !autoExchange || hasSession());
 
   useEffect(() => {
     if (ready) return;
