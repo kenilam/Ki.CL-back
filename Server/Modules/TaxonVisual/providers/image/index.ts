@@ -18,6 +18,12 @@ import {
   generateImagePollinations,
   isPollinationsImageConfigured,
 } from './pollinations.js';
+import {
+  generateImageSelfHosted,
+  isSelfHostedImageConfigured,
+  isSelfHostedImageFirst,
+  selfHostedImageTimeoutMs,
+} from './self-hosted.js';
 
 export type BuildImageProviderOptions = {
   openaiOnly?: boolean;
@@ -26,22 +32,34 @@ export type BuildImageProviderOptions = {
 
 /**
  * Quality-first image pipeline; Google last (paid):
- * OpenAI → Cloudflare Flux → Pollinations Flux → Gemini image model(s)
+ * OpenAI → self-hosted (ImageServer/) → Cloudflare Flux → Pollinations Flux →
+ * Gemini image model(s). IMAGE_SERVER_FIRST=true moves self-hosted ahead of
+ * OpenAI.
  */
 export function buildImageProviders(
   prompt: string,
   options: BuildImageProviderOptions = {},
 ): ProviderAttempt<GeneratedImage>[] {
   const specimen = options.specimen ?? null;
-  const providers: ProviderAttempt<GeneratedImage>[] = [
-    {
-      name: 'openai:gpt-image-1',
-      isConfigured: isOpenAiImageConfigured,
-      run: async () => ({
-        buffer: await generateImageOpenAi(prompt),
-        generator: 'openai:gpt-image-1',
-      }),
+  const openai: ProviderAttempt<GeneratedImage> = {
+    name: 'openai:gpt-image-1',
+    isConfigured: isOpenAiImageConfigured,
+    run: async () => ({
+      buffer: await generateImageOpenAi(prompt),
+      generator: 'openai:gpt-image-1',
+    }),
+  };
+  const selfHosted: ProviderAttempt<GeneratedImage> = {
+    name: 'self-hosted',
+    isConfigured: isSelfHostedImageConfigured,
+    timeoutMs: selfHostedImageTimeoutMs(),
+    run: async () => {
+      const { buffer, model } = await generateImageSelfHosted(prompt);
+      return { buffer, generator: `self-hosted:${model}` };
     },
+  };
+  const providers: ProviderAttempt<GeneratedImage>[] = [
+    ...(isSelfHostedImageFirst() ? [selfHosted, openai] : [openai, selfHosted]),
     {
       name: 'cloudflare:flux-1-schnell',
       isConfigured: isCloudflareImageConfigured,
