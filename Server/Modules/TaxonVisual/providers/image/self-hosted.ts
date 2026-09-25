@@ -1,18 +1,13 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-
-const PROVIDER = 'self-hosted';
-/**
- * A cold Cloud Run GPU instance loads its weights before it answers, and the
- * platform holds the request while that happens. Four minutes covers a load
- * plus one render for every model the service documents.
- */
-const DEFAULT_TIMEOUT_MS = 240_000;
-const METADATA_IDENTITY_URL = 'http://metadata.google.internal/computeMetadata/v1'
-  + '/instance/service-accounts/default/identity';
+import {
+  normaliseServerUrl,
+  SELF_HOSTED,
+  selfHostedBearer,
+  timeoutMsFrom,
+} from 'server/Modules/TaxonVisual/providers/self-hosted.js';
 
 function baseUrl(): string | null {
-  const raw = process.env.IMAGE_SERVER_URL?.trim();
-  return raw ? raw.replace(/\/+$/, '') : null;
+  return normaliseServerUrl(process.env.IMAGE_SERVER_URL);
 }
 
 export function isSelfHostedImageConfigured(): boolean {
@@ -20,38 +15,7 @@ export function isSelfHostedImageConfigured(): boolean {
 }
 
 export function selfHostedImageTimeoutMs(): number {
-  const raw = Number(process.env.IMAGE_SERVER_TIMEOUT_MS);
-  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_TIMEOUT_MS;
-}
-
-/** True when the service should be tried before OpenAI. */
-export function isSelfHostedImageFirst(): boolean {
-  return process.env.IMAGE_SERVER_FIRST === 'true';
-}
-
-/**
- * Bearer for the request. A shared token wins when set; otherwise, on Google
- * Cloud, an ID token for the service from the metadata server, which is what
- * Cloud Run's IAM check expects. Anywhere else the request goes out bare.
- */
-async function authorization(url: string): Promise<string | null> {
-  const token = process.env.IMAGE_SERVER_TOKEN?.trim();
-  if (token) {
-    return `Bearer ${token}`;
-  }
-
-  try {
-    const response = await fetch(
-      `${METADATA_IDENTITY_URL}?audience=${encodeURIComponent(url)}`,
-      { headers: { 'Metadata-Flavor': 'Google' }, signal: AbortSignal.timeout(2_000) },
-    );
-    if (!response.ok) {
-      return null;
-    }
-    return `Bearer ${await response.text()}`;
-  } catch {
-    return null;
-  }
+  return timeoutMsFrom(process.env.IMAGE_SERVER_TIMEOUT_MS);
 }
 
 export type SelfHostedImage = {
@@ -60,6 +24,7 @@ export type SelfHostedImage = {
   model: string;
 };
 
+/** POST /generate on ImageServer/. */
 export async function generateImageSelfHosted(prompt: string): Promise<SelfHostedImage> {
   const url = baseUrl();
   if (!url) {
@@ -67,7 +32,7 @@ export async function generateImageSelfHosted(prompt: string): Promise<SelfHoste
   }
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const bearer = await authorization(url);
+  const bearer = await selfHostedBearer(url, process.env.IMAGE_SERVER_TOKEN);
   if (bearer) {
     headers.Authorization = bearer;
   }
@@ -91,9 +56,9 @@ export async function generateImageSelfHosted(prompt: string): Promise<SelfHoste
     // 429 and 503 are the service saying "not now": a busy GPU or a reload.
     // Treated as a rate limit so the chain waits briefly, then moves on.
     if (response.status === 429 || response.status === 503) {
-      throwIfProviderLimitError(`rate limit: ${detail}`, PROVIDER);
+      throwIfProviderLimitError(`rate limit: ${detail}`, SELF_HOSTED);
     }
-    throwIfProviderLimitError(detail, PROVIDER);
+    throwIfProviderLimitError(detail, SELF_HOSTED);
     throw new Error(detail);
   }
 

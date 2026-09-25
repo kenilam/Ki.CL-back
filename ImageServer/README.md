@@ -7,7 +7,8 @@ provider in `Server/Modules/TaxonVisual/providers/image/`, which sits in the
 same failover chain as OpenAI, Cloudflare and Pollinations.
 
 This folder is self-contained (its own Dockerfile, dependencies and deploy
-script) so it can move to its own repository unchanged.
+script) so it can move to its own repository unchanged. Its sibling
+`LanguageServer/` does the same for the text and vision model.
 
 ## API
 
@@ -76,9 +77,12 @@ Then in the backend's environment:
 
 ```
 IMAGE_SERVER_URL=https://image-server-xxxx.a.run.app
-# IMAGE_SERVER_FIRST=true        put it ahead of OpenAI
 # IMAGE_SERVER_TIMEOUT_MS=240000 cold start plus one render
+# SELF_HOSTED_ONLY=true          never fall back to an external provider
 ```
+
+The provider goes first in the image chain as soon as the URL is set. The
+external providers stay behind it as fallbacks unless `SELF_HOSTED_ONLY` is on.
 
 The backend fetches an ID token for that URL from the metadata server when it
 runs on Cloud Run. Elsewhere, set the same `IMAGE_SERVER_TOKEN` on both sides.
