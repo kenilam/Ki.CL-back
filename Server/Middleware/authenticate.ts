@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { checkRateLimit, setRateLimitHeaders } from './rateLimit.js';
+import { checkAddressRateLimit, checkRateLimit, setRateLimitHeaders } from './rateLimit.js';
+import { addressKey, clientAddress } from 'server/Helpers/clientAddress.js';
 import { generateApiKey, setApiKeyCookie } from 'server/Helpers/apiKey.js';
 import {
   isAuthOperation,
@@ -79,16 +80,17 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     return;
   }
 
-  // Check for access_token cookie
-  const accessToken = req.cookies?.access_token;
+  const decoded = verifyAccessToken(req.cookies?.access_token);
 
-  if (!accessToken) {
-    res.status(401).json({ error: 'Unauthorized' });
-    return;
-  }
-
-  const decoded = verifyAccessToken(accessToken);
   if (!decoded) {
+    // Pages like the gallery read `/api` before any session exists. Those
+    // requests run without one, and each resolver decides what it allows,
+    // but they count against the caller's address instead of a token.
+    if (req.baseUrl === '/api') {
+      limitByAddress(req, res, next);
+      return;
+    }
+
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -104,5 +106,27 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
 
   // Attach decoded payload to request for Context to read
   req.tokenPayload = decoded;
+  next();
+}
+
+/**
+ * With no trusted address there is nothing to count by, the same as the
+ * other per-address limits, so the request goes through.
+ */
+function limitByAddress(req: Request, res: Response, next: NextFunction): void {
+  const address = addressKey(clientAddress(req.headers, req.ip));
+  if (!address) {
+    next();
+    return;
+  }
+
+  const { allowed, remaining, limit } = checkAddressRateLimit(address);
+  setRateLimitHeaders(res, remaining, limit);
+
+  if (!allowed) {
+    res.status(429).json({ error: 'Too Many Requests' });
+    return;
+  }
+
   next();
 }

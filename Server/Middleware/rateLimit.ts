@@ -39,6 +39,54 @@ export function checkRateLimit(userGUID: string): { allowed: boolean; remaining:
   return { allowed: true, remaining: entry.remaining, limit };
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Past this many entries, expired ones are cleared before adding more. */
+const SWEEP_AT = 10_000;
+
+interface AddressEntry {
+  count: number;
+  resetAt: number;
+}
+
+/**
+ * Requests without a session, keyed by `addressKey`. A token's allowance
+ * resets when a token is issued; an address has no such moment, so it
+ * resets a day after its first request instead. In memory like the token
+ * store, so each instance counts on its own and a restart clears it.
+ */
+const addressStore = new Map<string, AddressEntry>();
+
+function perAddressDailyLimit(): number {
+  const value = Number(process.env.RATE_LIMIT_PER_ADDRESS_PER_DAY);
+  return Number.isFinite(value) && value > 0 ? value : 2000;
+}
+
+export function checkAddressRateLimit(address: string): { allowed: boolean; remaining: number; limit: number } {
+  const limit = perAddressDailyLimit();
+  const now = Date.now();
+
+  if (addressStore.size > SWEEP_AT) {
+    for (const [key, { resetAt }] of addressStore) {
+      if (resetAt <= now) addressStore.delete(key);
+    }
+  }
+
+  let entry = addressStore.get(address);
+  if (!entry || entry.resetAt <= now) {
+    entry = { count: 0, resetAt: now + DAY_MS };
+    addressStore.set(address, entry);
+  }
+
+  if (entry.count >= limit) {
+    return { allowed: false, remaining: 0, limit };
+  }
+
+  entry.count += 1;
+
+  return { allowed: true, remaining: limit - entry.count, limit };
+}
+
 /**
  * Set rate limit headers on the response.
  */
