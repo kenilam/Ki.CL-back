@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
 import { getAccessTokenExpiry, getRefreshTokenExpiry, secondsUntil } from 'server/Helpers/tokenExpiry.js';
-import { rateLimitStore } from 'server/Middleware/rateLimit.js';
 
 interface GenerateUserTokenProps {
   UserGUID: string;
@@ -57,10 +56,6 @@ export async function generateUserToken(
       LastSignedInAt: now,
     });
   }
-
-  // Reset rate limit on token issuance/refresh
-  const maxRequests = Number(process.env.RATE_LIMIT_PER_DAY) || 100;
-  rateLimitStore.set(props.UserGUID, { remaining: maxRequests });
 
   return {
     AccessToken,

@@ -1,5 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
-import { checkAddressRateLimit, checkRateLimit, setRateLimitHeaders } from './rateLimit.js';
+import {
+  checkAddressRateLimit,
+  checkRateLimit,
+  refuseTooManyRequests,
+  setRateLimitHeaders,
+  type RateLimitVerdict,
+} from './rateLimit.js';
 import { addressKey, clientAddress } from 'server/Helpers/clientAddress.js';
 import { generateApiKey, setApiKeyCookie } from 'server/Helpers/apiKey.js';
 import {
@@ -22,7 +28,7 @@ declare global {
   }
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction): void {
+export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
   // Allow GET requests through (Playground HTML page)
   if (req.method === 'GET') {
     next();
@@ -87,7 +93,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     // requests run without one, and each resolver decides what it allows,
     // but they count against the caller's address instead of a token.
     if (req.baseUrl === '/api') {
-      limitByAddress(req, res, next);
+      await limitByAddress(req, res, next);
       return;
     }
 
@@ -95,17 +101,19 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     return;
   }
 
-  // Rate limit check
-  const { allowed, remaining, limit } = checkRateLimit(decoded.UserGUID);
+  // Attach decoded payload to request for Context to read
+  req.tokenPayload = decoded;
+  applyLimit(await checkRateLimit(decoded.UserGUID), res, next);
+}
+
+function applyLimit({ allowed, remaining, limit }: RateLimitVerdict, res: Response, next: NextFunction): void {
   setRateLimitHeaders(res, remaining, limit);
 
   if (!allowed) {
-    res.status(429).json({ error: 'Too Many Requests' });
+    refuseTooManyRequests(res);
     return;
   }
 
-  // Attach decoded payload to request for Context to read
-  req.tokenPayload = decoded;
   next();
 }
 
@@ -113,20 +121,12 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
  * With no trusted address there is nothing to count by, the same as the
  * other per-address limits, so the request goes through.
  */
-function limitByAddress(req: Request, res: Response, next: NextFunction): void {
+async function limitByAddress(req: Request, res: Response, next: NextFunction): Promise<void> {
   const address = addressKey(clientAddress(req.headers, req.ip));
   if (!address) {
     next();
     return;
   }
 
-  const { allowed, remaining, limit } = checkAddressRateLimit(address);
-  setRateLimitHeaders(res, remaining, limit);
-
-  if (!allowed) {
-    res.status(429).json({ error: 'Too Many Requests' });
-    return;
-  }
-
-  next();
+  applyLimit(await checkAddressRateLimit(address), res, next);
 }
