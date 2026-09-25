@@ -22,6 +22,7 @@ interface SiteverifyResponse {
   'error-codes'?: string[];
   hostname?: string;
   action?: string;
+  metadata?: { result_with_testing_key?: boolean };
 }
 
 export type TurnstileVerdict =
@@ -106,6 +107,15 @@ export async function verifyTurnstile({
   if (!payload.success) {
     const reason = codes.some((code) => OUR_FAULT.has(code)) ? 'unavailable' : 'rejected';
     return { ok: false, reason, codes };
+  }
+
+  /*
+   * Cloudflare's test secrets answer without an action and with
+   * `example.com` as the hostname, so the checks below would reject every
+   * test token. Only a test secret sets this flag.
+   */
+  if (payload.metadata?.result_with_testing_key) {
+    return { ok: true, skipped: false };
   }
 
   if (payload.action !== action) {

@@ -94,6 +94,7 @@ export default {
         address: context.ip,
       });
       if (!turnstile.ok && turnstile.reason === 'rejected') {
+        console.log(`[ExchangeToken] Turnstile rejected: ${turnstile.codes.join(',')}`);
         throw CaptchaRequired();
       }
       if (!turnstile.ok) {
