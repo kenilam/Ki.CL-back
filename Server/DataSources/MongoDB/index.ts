@@ -8,12 +8,14 @@ export async function connectDatabase(): Promise<typeof mongoose> {
   }
 
   try {
+    // Without a name Mongo uses `test`, which development already holds.
     const connection = await mongoose.connect(uri, {
+      dbName: process.env.MONGODB_DATABASE || 'test',
       retryWrites: true,
       w: 'majority',
     });
 
-    console.log('✅ MongoDB connected');
+    console.log(`✅ MongoDB connected to ${connection.connection.name}`);
     return connection;
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error);

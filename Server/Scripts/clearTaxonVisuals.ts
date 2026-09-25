@@ -8,7 +8,7 @@
  */
 import 'dotenv/config';
 
-import mongoose from 'mongoose';
+import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 
 import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
@@ -17,13 +17,7 @@ import { getBucket } from 'server/DataSources/Google/Storage/bucket.js';
 const wipeTree = process.argv.includes('--wipe-tree');
 
 async function clear() {
-  const uri = process.env.MONGODB_ATLAS_URI;
-  if (!uri) {
-    throw new Error('MONGODB_ATLAS_URI is required');
-  }
-
-  await mongoose.connect(uri);
-  console.log('✅ Connected to MongoDB');
+  await connectDatabase();
 
   const bucket = getBucket();
   const [files] = await bucket.getFiles();
