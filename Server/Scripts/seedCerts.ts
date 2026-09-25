@@ -4,16 +4,12 @@
  */
 import 'dotenv/config';
 import { generateKeyPairSync } from 'node:crypto';
-import mongoose from 'mongoose';
+import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 import { CERT_KEYS } from 'server/Helpers/certs.js';
 import { Secrets } from 'server/DataSources/MongoDB/Secrets/Model.js';
 
 async function seed() {
-  const uri = process.env.MONGODB_ATLAS_URI;
-  if (!uri) throw new Error('MONGODB_ATLAS_URI is required');
-
-  await mongoose.connect(uri);
-  console.log('✅ Connected to MongoDB');
+  await connectDatabase();
 
   // Generate Ed25519 keypair
   const { publicKey, privateKey } = generateKeyPairSync('ed25519', {

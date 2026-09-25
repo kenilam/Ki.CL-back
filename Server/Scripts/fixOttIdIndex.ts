@@ -6,15 +6,10 @@
  */
 import 'dotenv/config';
 
-import mongoose from 'mongoose';
+import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 
 async function main() {
-  const uri = process.env.MONGODB_ATLAS_URI;
-  if (!uri) {
-    throw new Error('MONGODB_ATLAS_URI required');
-  }
-
-  await mongoose.connect(uri);
+  await connectDatabase();
   const col = mongoose.connection.db!.collection('tree-of-life');
 
   const indexes = await col.indexes();
