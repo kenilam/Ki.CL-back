@@ -6,6 +6,8 @@ import { rateLimitStore } from 'server/Middleware/rateLimit.js';
 interface GenerateUserTokenProps {
   UserGUID: string;
   aud?: 'anon' | 'user';
+  /** Carried into both tokens, so a refresh keeps it. */
+  human?: boolean;
 }
 
 export interface UserTokenPayload {
@@ -27,7 +29,11 @@ export async function generateUserToken(
   const accessExpiresIn = secondsUntil(accessExpiry, now);
   const refreshExpiresIn = secondsUntil(refreshExpiry, now);
 
-  const payload = { UserGUID: props.UserGUID, aud };
+  const payload = {
+    UserGUID: props.UserGUID,
+    aud,
+    ...(props.human ? { human: true } : {}),
+  };
 
   const AccessToken = jwt.sign(
     payload,

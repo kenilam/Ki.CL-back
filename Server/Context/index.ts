@@ -29,7 +29,7 @@ export interface Context {
   user: AuthenticatedUser | null;
   operationName: string | undefined;
   isWhitelisted: boolean;
-  tokenPayload: { UserGUID: string; aud: 'anon' | 'user' } | null;
+  tokenPayload: Pick<TokenPayload, 'UserGUID' | 'aud' | 'human'> | null;
   loaders: {
     treeOfLife: TreeOfLifeLoaders;
     asset: AssetLoaders;

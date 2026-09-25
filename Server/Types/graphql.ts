@@ -239,7 +239,7 @@ export type Query = {
   Asset?: Maybe<Asset>;
   ImageAgentAllowance: ImageAgentAllowance;
   /**
-   * Pictures the reviewer passed, from anyone's conversations, in random order.
+   * The best-scored pictures from anyone's conversations, highest first.
    * Answered without a token. Only the asset: no text, owner or conversation.
    * At most 24; 12 when `limit` is not given.
    */
