@@ -48,24 +48,13 @@ const COPY = {
  */
 export async function recoverStalled(scope: {
   ownerGUID: string;
-  /**
-   * The caller's address. Its threads count as the caller's when the quota
-   * asks whether they are busy, so they are recovered alongside - otherwise a
-   * thread stuck under a cleared cookie would lock its address for good.
-   */
-  address?: string | null;
   /** One thread; all of the caller's when left out. */
   id?: string;
 }): Promise<void> {
   const now = Date.now();
   const caller = scope.id
     ? { _id: scope.id, ownerGUID: scope.ownerGUID }
-    : {
-      $or: [
-        { ownerGUID: scope.ownerGUID },
-        ...(scope.address ? [{ 'messages.addressKey': scope.address }] : []),
-      ],
-    };
+    : { ownerGUID: scope.ownerGUID };
 
   const stalled = await ImageAgentThreads.find({
     $and: [

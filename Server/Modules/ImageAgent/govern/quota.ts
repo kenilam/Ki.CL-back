@@ -63,61 +63,17 @@ export type Allowance = {
 };
 
 /**
- * Who is asking: the token's owner, the address they asked from, or both.
- * Either one may be missing - no cookie yet, or an address that cannot be
- * trusted.
+ * A caller is the owner of the session token, and nothing else. Clearing
+ * cookies or changing device starts a new session with its own allowance; the
+ * Turnstile check on ExchangeToken is what keeps that from being scripted.
  */
-export type Caller = {
-  ownerGUID: string | null;
-  address: string | null;
-};
-
-/**
- * One allowance per person, whether they are known by their cookie or by
- * their address. Usage under either counts, so clearing cookies starts a new
- * session but not a new allowance. The cost is that people sharing an
- * address share it too.
- */
-type Filter = Record<string, unknown>;
-
-function either(
-  caller: Caller,
-  byOwner: (ownerGUID: string) => Filter,
-  byAddress: (address: string) => Filter,
-): { $or: Filter[] } | null {
-  const clauses = [
-    ...(caller.ownerGUID ? [byOwner(caller.ownerGUID)] : []),
-    ...(caller.address ? [byAddress(caller.address)] : []),
-  ];
-  return clauses.length ? { $or: clauses } : null;
-}
-
-/**
- * Before `$unwind`, a thread the caller owns or wrote in from their address.
- * After it, the same filter picks the caller's messages out of those threads.
- */
-const threadOf = (caller: Caller) => either(
-  caller,
-  (ownerGUID) => ({ ownerGUID }),
-  (address) => ({ 'messages.addressKey': address }),
-);
-
-const jobOf = (caller: Caller) => either(
-  caller,
-  (ownerGUID) => ({ ownerGUID }),
-  (address) => ({ addressKey: address }),
-);
 
 /** When the caller last said anything, across every conversation. */
-async function lastMessageAt(caller: Caller): Promise<Date | null> {
-  const threads = threadOf(caller);
-  const messages = threadOf(caller);
-  if (!threads || !messages) return null;
-
+async function lastMessageAt(ownerGUID: string): Promise<Date | null> {
   const [row] = await ImageAgentThreads.aggregate<{ at: Date }>([
-    { $match: threads },
+    { $match: { ownerGUID } },
     { $unwind: '$messages' },
-    { $match: { ...messages, 'messages.role': ImageAgentRole.User } },
+    { $match: { 'messages.role': ImageAgentRole.User } },
     { $sort: { 'messages.at': -1 } },
     { $limit: 1 },
     { $project: { _id: 0, at: '$messages.at' } },
@@ -125,18 +81,15 @@ async function lastMessageAt(caller: Caller): Promise<Date | null> {
   return row?.at ?? null;
 }
 
-/** Messages people have sent since `since`: the caller's when given, everyone's when not. */
-async function messagesSince(since: Date, caller: Caller | null = null): Promise<number> {
-  const threads = caller ? threadOf(caller) : {};
-  const messages = caller ? threadOf(caller) : {};
-  if (!threads || !messages) return 0;
+/** Messages sent since `since`: the caller's when given, everyone's when not. */
+async function messagesSince(since: Date, ownerGUID: string | null = null): Promise<number> {
+  const owner = ownerGUID ? { ownerGUID } : {};
 
   const [row] = await ImageAgentThreads.aggregate<{ count: number }>([
-    { $match: { ...threads, updatedAt: { $gte: since } } },
+    { $match: { ...owner, updatedAt: { $gte: since } } },
     { $unwind: '$messages' },
     {
       $match: {
-        ...messages,
         'messages.role': ImageAgentRole.User,
         'messages.at': { $gte: since },
       },
@@ -146,17 +99,13 @@ async function messagesSince(since: Date, caller: Caller | null = null): Promise
   return row?.count ?? 0;
 }
 
-/**
- * Who has sent a message since `since`, one key per person: their address
- * when it is known, so clearing cookies does not take a second place, and
- * their cookie's owner when it is not.
- */
+/** Who has sent a message since `since`, one entry per session owner. */
 async function callersSince(since: Date): Promise<string[]> {
   const rows = await ImageAgentThreads.aggregate<{ _id: string }>([
     { $match: { updatedAt: { $gte: since } } },
     { $unwind: '$messages' },
     { $match: { 'messages.role': ImageAgentRole.User, 'messages.at': { $gte: since } } },
-    { $group: { _id: { $ifNull: ['$messages.addressKey', '$ownerGUID'] } } },
+    { $group: { _id: '$ownerGUID' } },
   ]);
   return rows.map((row) => row._id);
 }
@@ -169,18 +118,14 @@ async function callersSince(since: Date): Promise<string[]> {
  * never became drawings, so they do not count here; the messages that asked
  * for them count against the message allowance instead.
  */
-export async function allowanceFor(caller: Caller): Promise<Allowance> {
+export async function allowanceFor(ownerGUID: string): Promise<Allowance> {
   const limit = perUserDailyLimit();
   const since = new Date(Date.now() - DAY_MS);
-  const jobs = jobOf(caller);
-  const threads = threadOf(caller);
 
   const [drawn, spokeAt, busy] = await Promise.all([
-    jobs ? ImageAgentJobs.countDocuments({ ...jobs, createdAt: { $gte: since } }) : 0,
-    lastMessageAt(caller),
-    threads
-      ? ImageAgentThreads.exists({ ...threads, status: { $ne: ImageAgentThreadStatus.Idle } })
-      : null,
+    ImageAgentJobs.countDocuments({ ownerGUID, createdAt: { $gte: since } }),
+    lastMessageAt(ownerGUID),
+    ImageAgentThreads.exists({ ownerGUID, status: { $ne: ImageAgentThreadStatus.Idle } }),
   ]);
 
   let nextAllowedAt: Date | null = null;
@@ -201,13 +146,13 @@ export async function allowanceFor(caller: Caller): Promise<Allowance> {
  * count against the very allowance it enforces and restart the cooldown it
  * was enforcing, so a double-click would lock its owner out for good.
  */
-export async function assertWithinQuota(caller: Caller): Promise<void> {
+export async function assertWithinQuota(ownerGUID: string): Promise<void> {
   const since = new Date(Date.now() - DAY_MS);
   const hourAgo = new Date(Date.now() - HOUR_MS);
 
   const [allowance, spoken, spokenEverywhere, globalDrawn, recent] = await Promise.all([
-    allowanceFor(caller),
-    messagesSince(since, caller),
+    allowanceFor(ownerGUID),
+    messagesSince(since, ownerGUID),
     messagesSince(since),
     ImageAgentJobs.countDocuments({ createdAt: { $gte: since } }),
     callersSince(hourAgo),
@@ -234,8 +179,7 @@ export async function assertWithinQuota(caller: Caller): Promise<void> {
     throw TooManyRequests(UNAVAILABLE, extensions);
   }
 
-  const known = recent.includes(caller.address ?? '') || recent.includes(caller.ownerGUID ?? '');
-  if (!known && recent.length >= hourlyCallers()) {
+  if (!recent.includes(ownerGUID) && recent.length >= hourlyCallers()) {
     throw TooManyRequests(UNAVAILABLE, extensions);
   }
 

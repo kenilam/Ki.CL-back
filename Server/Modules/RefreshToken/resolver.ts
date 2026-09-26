@@ -8,6 +8,8 @@ import type { Context } from 'server/Context/index.js';
 interface RefreshPayload {
   UserGUID: string;
   aud: 'anon' | 'user';
+  /** Carried over, so a refresh does not send the visitor back to the check. */
+  human?: boolean;
   iat: number;
   exp: number;
 }
@@ -50,6 +52,7 @@ export default {
       const { AccessToken, RefreshToken: NewRefreshToken } = await generateUserToken({
         UserGUID: decoded.UserGUID,
         aud: decoded.aud,
+        human: decoded.human,
       });
 
       setAccessTokenCookie(context.res, AccessToken);

@@ -1,9 +1,8 @@
 import mongoose, { Schema, type Document } from 'mongoose';
 
 /**
- * Requests counted in one window for one caller: `token:<UserGUID>` or
- * `address:<addressKey>`. Stored so every instance shares the count and a
- * restart doesn't reset it. Mongo removes each row once its window ends.
+ * Requests counted in one window for one session, keyed `token:<UserGUID>`.
+ * Stored so every instance shares the count and a restart doesn't reset it. Mongo removes each row once its window ends.
  */
 export interface IRateLimit extends Document {
   key: string;

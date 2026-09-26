@@ -31,8 +31,6 @@ export type ImageAgentThreadMessage = {
    * what was sent and answered, not what is still on screen.
    */
   removedAt?: Date | null;
-  /** The sender's address key, on the person's messages, for per-address quotas. */
-  addressKey?: string | null;
   at: Date;
 };
 
@@ -71,7 +69,6 @@ const MessageSchema = new Schema<ImageAgentThreadMessage>(
     exhaustion: { type: String, default: null },
     choices: { type: [String], default: [] },
     removedAt: { type: Date, default: null },
-    addressKey: { type: String, default: null },
     at: { type: Date, required: true },
   },
   { _id: false },
@@ -94,8 +91,7 @@ const ImageAgentThreadSchema = new Schema<IImageAgentThread>(
 );
 
 ImageAgentThreadSchema.index({ ownerGUID: 1, updatedAt: -1 });
-// The per-address and global message quotas.
-ImageAgentThreadSchema.index({ 'messages.addressKey': 1, updatedAt: -1 });
+// The global message quota.
 ImageAgentThreadSchema.index({ updatedAt: -1 });
 
 export const ImageAgentThreads =

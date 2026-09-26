@@ -37,6 +37,13 @@ export function CaptchaRequired(message: string = 'Confirm you are human to cont
   });
 }
 
+/** Something we depend on could not answer. The client can only try again later. */
+export function Unavailable(message: string = 'Service unavailable. Try again later.'): GraphQLError {
+  return new GraphQLError(message, {
+    extensions: { code: 'SERVICE_UNAVAILABLE' },
+  });
+}
+
 export function TooManyRequests(
   message: string = 'Too many requests',
   extensions: Record<string, unknown> = {},
