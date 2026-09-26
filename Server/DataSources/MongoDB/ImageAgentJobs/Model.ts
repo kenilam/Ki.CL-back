@@ -53,8 +53,6 @@ export type ImageAgentJobStep = {
 export interface IImageAgentJob extends Document {
   _id: Types.ObjectId;
   ownerGUID: string;
-  /** The address key of the message that asked for it, for per-address quotas. */
-  addressKey: string | null;
   threadId: Types.ObjectId;
   prompt: string;
   style: ImageAgentStyle;
@@ -95,7 +93,6 @@ const StepSchema = new Schema<ImageAgentJobStep>(
 const ImageAgentJobSchema = new Schema<IImageAgentJob>(
   {
     ownerGUID: { type: String, required: true, index: true },
-    addressKey: { type: String, default: null },
     threadId: { type: Schema.Types.ObjectId, required: true, index: true },
     prompt: { type: String, required: true },
     style: { type: String, required: true },
@@ -115,7 +112,6 @@ const ImageAgentJobSchema = new Schema<IImageAgentJob>(
 
 // The quota query: a caller's drawings over the last day.
 ImageAgentJobSchema.index({ ownerGUID: 1, createdAt: -1 });
-ImageAgentJobSchema.index({ addressKey: 1, createdAt: -1 });
 
 export const ImageAgentJobs =
   (mongoose.models.ImageAgentJobs as mongoose.Model<IImageAgentJob>)

@@ -3,37 +3,87 @@ import jwt from 'jsonwebtoken';
 import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
-import { AnonymousSessions } from 'server/DataSources/MongoDB/AnonymousSessions/Model.js';
-import { CaptchaRequired, TooManyRequests } from 'server/Errors/index.js';
-import { addressKey } from 'server/Helpers/clientAddress.js';
+import { CaptchaRequired, Unavailable } from 'server/Errors/index.js';
+import { parseCookies } from 'server/Helpers/auth.js';
 import { turnstileToken, verifyTurnstile } from 'server/Helpers/turnstile.js';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Must match the `action` the client renders the widget with. */
 const TURNSTILE_ACTION = 'exchange-token';
 
-/** Anonymous identities one address may be given in a rolling day. */
-function perAddressDailyLimit(): number {
-  const value = Number(process.env.ANONYMOUS_SESSIONS_PER_ADDRESS_PER_DAY);
-  return Number.isFinite(value) && value > 0 ? value : 10;
+const LOG = '[ExchangeToken]';
+
+type Identity = {
+  UserGUID: string;
+  aud: 'anon' | 'user';
+  /** Passed the Turnstile check. Paid operations require it. */
+  human?: boolean;
+};
+
+function verify(token: string | undefined, key: string): Identity | null {
+  if (!token) return null;
+  try {
+    const { UserGUID, aud, human } = jwt.verify(token, key) as Identity;
+    return { UserGUID, aud, human };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether the visitor passed the check. A forged, spent or missing token
+ * throws. When Cloudflare cannot answer, or no secret is set in production,
+ * this is false and the caller decides what that means.
+ */
+async function passedTurnstile(context: Context): Promise<boolean> {
+  const verdict = await verifyTurnstile({
+    token: turnstileToken(context.headers),
+    action: TURNSTILE_ACTION,
+  });
+
+  if (verdict.ok) return true;
+
+  if (verdict.reason === 'rejected') {
+    console.log(`${LOG} Turnstile rejected: ${verdict.codes.join(',')}`);
+    throw CaptchaRequired();
+  }
+
+  console.warn(`${LOG} Turnstile unavailable: ${verdict.codes.join(',')}`);
+  return false;
+}
+
+async function issue(context: Context, identity: Identity): Promise<void> {
+  const { AccessToken, RefreshToken } = await generateUserToken(identity);
+
+  setAccessTokenCookie(context.res, AccessToken);
+  setRefreshTokenCookie(context.res, RefreshToken);
+  setAudCookie(context.res, identity.aud);
 }
 
 export default {
   Mutation: {
+    /*
+     * x-api-key was already validated by the authenticate middleware. The
+     * Turnstile check is the only gate on a new identity: it is what stops a
+     * script from minting sessions to get round the per-session limits.
+     */
     ExchangeToken: async (_: unknown, __: unknown, context: Context) => {
-      // If user already has a valid JWT, no-op
-      const existingToken = context.headers['cookie']
-        ? (context.headers['cookie'] as string).match(/access_token=([^;]+)/)?.[1]
-        : undefined;
+      const cookies = parseCookies(context.headers['cookie'] as string | undefined);
 
-      if (existingToken) {
-        try {
-          jwt.verify(existingToken, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
-          return false; // Already authenticated, nothing to do
-        } catch {
-          // Token invalid/expired, proceed to issue a new one
+      const current = verify(cookies.access_token, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
+      if (current) {
+        /*
+         * The session stands. The one thing left to do is mark it human when
+         * a Turnstile token came along: a paid operation refused with
+         * CAPTCHA_REQUIRED sends the visitor back here with one.
+         */
+        if (current.human || !turnstileToken(context.headers)) {
+          return false;
         }
+        if (!(await passedTurnstile(context))) {
+          throw Unavailable('Could not confirm you are human right now. Try again later.');
+        }
+        await issue(context, { ...current, human: true });
+        return true;
       }
 
       /*
@@ -41,81 +91,20 @@ export default {
        * is still valid keeps their identity, so their conversations and
        * allowance stay theirs, instead of being handed a new one.
        */
-      const refreshToken = context.headers['cookie']
-        ? (context.headers['cookie'] as string).match(/refresh_token=([^;]+)/)?.[1]
-        : undefined;
-
-      if (refreshToken) {
-        try {
-          const { UserGUID, aud, human } = jwt.verify(
-            refreshToken,
-            process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!,
-          ) as { UserGUID: string; aud: 'anon' | 'user'; human?: boolean };
-
-          if (aud === 'anon') {
-            const renewed = await generateUserToken({ UserGUID, aud, human });
-
-            setAccessTokenCookie(context.res, renewed.AccessToken);
-            setRefreshTokenCookie(context.res, renewed.RefreshToken);
-            setAudCookie(context.res, aud);
-
-            return true;
-          }
-        } catch {
-          // Expired or invalid too: start a new identity below.
-        }
-      }
-
-      // x-api-key already validated by authenticate middleware
-      const address = addressKey(context.ip);
-      if (address) {
-        const issued = await AnonymousSessions.countDocuments({
-          addressKey: address,
-          createdAt: { $gte: new Date(Date.now() - DAY_MS) },
-        });
-        if (issued >= perAddressDailyLimit()) {
-          // Vague on purpose: naming the limit says how to get round it.
-          throw TooManyRequests('Could not start a session right now. Try again later.');
-        }
+      const refreshed = verify(cookies.refresh_token, process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!);
+      if (refreshed?.aud === 'anon') {
+        await issue(context, refreshed);
+        return true;
       }
 
       /*
-       * Checked after the address limit, which costs no outside call and
-       * leaves the token unspent when it refuses.
-       *
-       * When Cloudflare cannot answer, or no secret is set, the visitor still
-       * gets a session, without `human`. Every request needs a token, so
-       * refusing here would take the whole site down for new visitors. Costly
-       * operations can ask for the check again when `human` is missing.
+       * When the check cannot run, the visitor still gets a session, without
+       * `human`. Every request needs a token, so refusing here would take the
+       * whole site down for new visitors. Paid operations refuse a session
+       * without `human`, and the visitor comes back here to earn it.
        */
-      const turnstile = await verifyTurnstile({
-        token: turnstileToken(context.headers),
-        action: TURNSTILE_ACTION,
-        address: context.ip,
-      });
-      if (!turnstile.ok && turnstile.reason === 'rejected') {
-        console.log(`[ExchangeToken] Turnstile rejected: ${turnstile.codes.join(',')}`);
-        throw CaptchaRequired();
-      }
-      if (!turnstile.ok) {
-        console.warn(`[ExchangeToken] Turnstile unavailable: ${turnstile.codes.join(',')}`);
-      }
-
-      const UserGUID = uuid();
-      if (address) {
-        await AnonymousSessions.create({ addressKey: address, UserGUID });
-      }
-
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID,
-        aud: 'anon',
-        human: turnstile.ok && !turnstile.skipped,
-      });
-
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
-      setAudCookie(context.res, 'anon');
-
+      const human = await passedTurnstile(context);
+      await issue(context, { UserGUID: uuid(), aud: 'anon', human });
       return true;
     },
   },

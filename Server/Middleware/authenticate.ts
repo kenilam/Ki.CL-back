@@ -1,12 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import {
-  checkAddressRateLimit,
   checkRateLimit,
   refuseTooManyRequests,
   setRateLimitHeaders,
   type RateLimitVerdict,
 } from './rateLimit.js';
-import { addressKey, clientAddress } from 'server/Helpers/clientAddress.js';
 import { generateApiKey, setApiKeyCookie } from 'server/Helpers/apiKey.js';
 import {
   isAuthOperation,
@@ -88,15 +86,8 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
   const decoded = verifyAccessToken(req.cookies?.access_token);
 
+  // Every request is counted per session, so one is required to run anything.
   if (!decoded) {
-    // Pages like the gallery read `/api` before any session exists. Those
-    // requests run without one, and each resolver decides what it allows,
-    // but they count against the caller's address instead of a token.
-    if (req.baseUrl === '/api') {
-      await limitByAddress(req, res, next);
-      return;
-    }
-
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
@@ -117,16 +108,3 @@ function applyLimit({ allowed, remaining, limit }: RateLimitVerdict, res: Respon
   next();
 }
 
-/**
- * With no trusted address there is nothing to count by, the same as the
- * other per-address limits, so the request goes through.
- */
-async function limitByAddress(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const address = addressKey(clientAddress(req.headers, req.ip));
-  if (!address) {
-    next();
-    return;
-  }
-
-  applyLimit(await checkAddressRateLimit(address), res, next);
-}

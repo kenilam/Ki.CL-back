@@ -108,11 +108,7 @@ type ImageAgentAllowance {
   refused until it ends.
   """
   busy: Boolean!
-  """
-  The caller's own conversations with a turn running, most recent first. Can
-  be empty while `busy` is set, when the running one belongs to the same
-  address under another session.
-  """
+  """The caller's conversations with a turn running, most recent first."""
   running: [ImageAgentThread!]!
 }
 
@@ -129,7 +125,7 @@ type Query {
   ImageAgentSimilar(text: String!): [ImageAgentThread!]!
   """
   The best-scored pictures from anyone's conversations, highest first.
-  Answered without a token. Only the asset: no text, owner or conversation.
+  Only the asset: no text, owner or conversation.
   At most 24; 12 when `limit` is not given.
   """
   ImageAgentGallery(limit: Int): [Asset!]!

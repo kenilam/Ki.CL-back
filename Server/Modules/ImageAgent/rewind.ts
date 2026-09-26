@@ -25,7 +25,6 @@ import { visible, type LeanImageAgentThread } from './types.js';
 export async function rewindTo(
   thread: LeanImageAgentThread,
   messageId: string,
-  address: string | null,
 ): Promise<string | null> {
   const shown = visible(thread.messages);
   const at = shown.findIndex((entry) => entry.id === messageId);
@@ -52,7 +51,7 @@ export async function rewindTo(
 
   const messages = [
     ...thread.messages.map((entry) => (gone.has(entry.id) ? { ...entry, removedAt: now } : entry)),
-    { ...target, id: new Types.ObjectId().toString(), addressKey: address, at: now, removedAt: null },
+    { ...target, id: new Types.ObjectId().toString(), at: now, removedAt: null },
   ];
 
   // Guarded on the thread being as it was read, so two clicks go back once.
