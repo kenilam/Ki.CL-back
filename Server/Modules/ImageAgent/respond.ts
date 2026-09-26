@@ -174,13 +174,11 @@ function deliveryLine(score: ImageAgentJobScore | null): string {
 async function draw(
   threadId: string,
   ownerGUID: string,
-  address: string | null,
   brief: string,
   style: ImageAgentStyle,
 ): Promise<void> {
   const job = await ImageAgentJobs.create({
     ownerGUID,
-    addressKey: address,
     threadId: new Types.ObjectId(threadId),
     prompt: brief,
     style,
@@ -288,7 +286,6 @@ async function draw(
 export async function respond(
   threadId: string,
   ownerGUID: string,
-  address: string | null,
   text: string,
 ): Promise<void> {
   try {
@@ -371,7 +368,7 @@ export async function respond(
       return;
     }
 
-    await draw(threadId, ownerGUID, address, decision.brief, decision.style);
+    await draw(threadId, ownerGUID, decision.brief, decision.style);
   } catch (error) {
     await failure(threadId, null, error);
   }

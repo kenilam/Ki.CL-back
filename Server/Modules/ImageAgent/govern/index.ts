@@ -4,7 +4,7 @@ import { classifyPrompt } from './classify.js';
 import { moderatePrompt, reasonForModeration } from './moderation.js';
 
 export { checkRules, normalisePrompt } from './rules.js';
-export { allowanceFor, assertWithinQuota, type Caller } from './quota.js';
+export { allowanceFor, assertWithinQuota, type Allowance } from './quota.js';
 
 export type GovernVerdict = {
   rejection: ImageAgentRejection | null;

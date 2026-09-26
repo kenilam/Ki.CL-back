@@ -53,11 +53,7 @@ export type ImageAgentAllowance = {
   /** Set while the caller has to wait before the next message. */
   nextAllowedAt?: Maybe<Scalars['DateTime']['output']>;
   remaining: Scalars['Int']['output'];
-  /**
-   * The caller's own conversations with a turn running, most recent first. Can
-   * be empty while `busy` is set, when the running one belongs to the same
-   * address under another session.
-   */
+  /** The caller's conversations with a turn running, most recent first. */
   running: Array<ImageAgentThread>;
 };
 
@@ -240,7 +236,7 @@ export type Query = {
   ImageAgentAllowance: ImageAgentAllowance;
   /**
    * The best-scored pictures from anyone's conversations, highest first.
-   * Answered without a token. Only the asset: no text, owner or conversation.
+   * Only the asset: no text, owner or conversation.
    * At most 24; 12 when `limit` is not given.
    */
   ImageAgentGallery: Array<Asset>;

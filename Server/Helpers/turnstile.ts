@@ -58,8 +58,8 @@ function allowedHostnames(): string[] {
  * Remember the pass instead, on the session or the caller.
  *
  * `action` must match the one the widget was rendered with, so a token solved
- * on one form cannot be spent on another. `address` is the visitor's raw IP,
- * not the hashed key, and is optional.
+ * on one form cannot be spent on another. The visitor's address is not sent:
+ * this service does not read it.
  *
  * With no secret set outside production it lets everyone through, so local
  * development works without a widget.
@@ -67,11 +67,9 @@ function allowedHostnames(): string[] {
 export async function verifyTurnstile({
   token,
   action,
-  address,
 }: {
   token: string | null;
   action: string;
-  address?: string;
 }): Promise<TurnstileVerdict> {
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret) {
@@ -85,7 +83,6 @@ export async function verifyTurnstile({
   }
 
   const body = new URLSearchParams({ secret, response: token });
-  if (address) body.set('remoteip', address);
 
   let payload: SiteverifyResponse;
   try {

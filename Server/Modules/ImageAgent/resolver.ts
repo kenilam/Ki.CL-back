@@ -3,8 +3,7 @@ import { Types } from 'mongoose';
 
 import type { Context } from 'server/Context/index.js';
 import { ImageAgentThreads } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
-import { BadUserInput, NotFound, Unauthenticated } from 'server/Errors/index.js';
-import { addressKey } from 'server/Helpers/clientAddress.js';
+import { BadUserInput, CaptchaRequired, NotFound, Unauthenticated } from 'server/Errors/index.js';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import {
   ImageAgentMessageKind,
@@ -41,6 +40,19 @@ function requireOwner(context: Context): string {
   const owner = context.tokenPayload?.UserGUID;
   if (!owner) {
     throw Unauthenticated('Authentication required');
+  }
+  return owner;
+}
+
+/**
+ * The owner of a session that passed the Turnstile check. Sending costs
+ * money, so a session issued while the check could not run is sent back to
+ * ExchangeToken to pass it.
+ */
+function requireHuman(context: Context): string {
+  const owner = requireOwner(context);
+  if (!context.tokenPayload?.human) {
+    throw CaptchaRequired();
   }
   return owner;
 }
@@ -90,25 +102,15 @@ export default {
       return galleryAssets(limit ?? 12);
     },
 
-    /*
-     * Answered without a token as well: the allowance follows the address, so
-     * it reads the same before and after cookies are cleared.
-     */
     ImageAgentAllowance: async (_: unknown, __: unknown, context: Context) => {
-      const owner = context.tokenPayload?.UserGUID ?? null;
-      const address = addressKey(context.ip);
+      const owner = requireOwner(context);
       // A dead turn would otherwise read as busy.
-      if (owner) {
-        await recoverStalled({ ownerGUID: owner, address });
-      }
+      await recoverStalled({ ownerGUID: owner });
       const [allowance, running] = await Promise.all([
-        allowanceFor({ ownerGUID: owner, address }),
-        // Only the caller's own: threads matched by address may be someone else's.
-        owner
-          ? ImageAgentThreads.find({ ownerGUID: owner, status: { $ne: ImageAgentThreadStatus.Idle } })
-            .sort({ updatedAt: -1 })
-            .lean<LeanImageAgentThread[]>()
-          : [],
+        allowanceFor(owner),
+        ImageAgentThreads.find({ ownerGUID: owner, status: { $ne: ImageAgentThreadStatus.Idle } })
+          .sort({ updatedAt: -1 })
+          .lean<LeanImageAgentThread[]>(),
       ]);
       return { ...allowance, running: running.map(toResult) };
     },
@@ -120,7 +122,7 @@ export default {
       args: { threadId?: string | null; text: string },
       context: Context,
     ): Promise<ImageAgentThreadResult> => {
-      const owner = requireOwner(context);
+      const owner = requireHuman(context);
       const input = validate(SendSchema, args);
       const text = normalisePrompt(input.text);
 
@@ -131,10 +133,9 @@ export default {
         }
       }
 
-      const address = addressKey(context.ip);
       // A dead turn in any of the caller's threads would count as busy below.
-      await recoverStalled({ ownerGUID: owner, address });
-      await assertWithinQuota({ ownerGUID: owner, address });
+      await recoverStalled({ ownerGUID: owner });
+      await assertWithinQuota(owner);
 
       const said = {
         id: new Types.ObjectId().toString(),
@@ -146,7 +147,6 @@ export default {
         score: null,
         rejection: null,
         exhaustion: null,
-        addressKey: address,
         at: new Date(),
       };
 
@@ -174,7 +174,7 @@ export default {
         id = String(created._id);
       }
 
-      void respond(id, owner, address, text);
+      void respond(id, owner, text);
 
       const doc = await loadThread(id, owner);
       if (!doc) {
@@ -188,11 +188,10 @@ export default {
       args: { threadId: string; messageId?: string | null },
       context: Context,
     ): Promise<ImageAgentThreadResult> => {
-      const owner = requireOwner(context);
+      const owner = requireHuman(context);
       const { id } = validate(ThreadSchema, { id: args.threadId });
-      const address = addressKey(context.ip);
 
-      await recoverStalled({ ownerGUID: owner, address });
+      await recoverStalled({ ownerGUID: owner });
       const thread = await loadThread(id, owner);
       if (!thread) {
         throw NotFound('No conversation with that id');
@@ -210,14 +209,14 @@ export default {
       }
 
       // The message goes out again, so it meets the same limits as a new one.
-      await assertWithinQuota({ ownerGUID: owner, address });
+      await assertWithinQuota(owner);
 
-      const text = await rewindTo(thread, messageId, address);
+      const text = await rewindTo(thread, messageId);
       if (!text) {
         throw BadUserInput(COPY.nothingToRetry);
       }
 
-      void respond(id, owner, address, text);
+      void respond(id, owner, text);
 
       const doc = await loadThread(id, owner);
       if (!doc) {

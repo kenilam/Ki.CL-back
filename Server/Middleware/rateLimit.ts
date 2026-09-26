@@ -56,11 +56,6 @@ export function checkRateLimit(userGUID: string): Promise<RateLimitVerdict> {
   return consume(`token:${userGUID}`, envLimit('RATE_LIMIT_PER_DAY', 100));
 }
 
-/** `/api` requests without a session, per visitor address. */
-export function checkAddressRateLimit(address: string): Promise<RateLimitVerdict> {
-  return consume(`address:${address}`, envLimit('RATE_LIMIT_PER_ADDRESS_PER_DAY', 2000));
-}
-
 /**
  * Set rate limit headers on the response.
  */
