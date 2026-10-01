@@ -33,7 +33,7 @@ async function consume(key: string, limit: number, retried = false): Promise<Rat
           resetAt: { $cond: [open, '$resetAt', new Date(now.getTime() + DAY_MS)] },
         },
       }],
-      { upsert: true, new: true, lean: true, updatePipeline: true },
+      { upsert: true, returnDocument: 'after', lean: true, updatePipeline: true },
     );
     const count = row?.count ?? 1;
     return { allowed: count <= limit, remaining: Math.max(0, limit - count), limit };
