@@ -96,7 +96,7 @@ export async function recoverStalled(scope: {
         },
         $set: { status: ImageAgentThreadStatus.Idle, activity: null },
       },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean<LeanImageAgentThread | null>();
 
     if (!closed) {
@@ -107,7 +107,7 @@ export async function recoverStalled(scope: {
     const cleared = await ImageAgentThreads.findOneAndUpdate(
       { _id: String(thread._id) },
       { $pull: { messages: { kind: ImageAgentMessageKind.Progress } } },
-      { new: true },
+      { returnDocument: 'after' },
     ).lean<LeanImageAgentThread | null>();
 
     await ImageAgentJobs.updateMany(
