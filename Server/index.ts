@@ -18,7 +18,7 @@ import { corsMiddleware } from './Middleware/cors.js';
 import { securityHeaders } from './Middleware/securityHeaders.js';
 import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
-import { connectDatabase } from './DataSources/MongoDB/index.js';
+import { connectDatabase, mongoose } from './DataSources/MongoDB/index.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
 import type { IncomingMessage } from 'node:http';
@@ -163,6 +163,22 @@ async function start() {
     console.log(`🎮 Playground: ${process.env.APOLLO_PLAYGROUND === 'true' ? `http://localhost:${PORT}/graphql` : 'disabled'}`);
     console.log(`📊 Introspection: ${process.env.GRAPHQL_INTROSPECTION === 'true' ? 'enabled' : 'disabled'}`);
   });
+
+  // The open sockets and the database connection would keep the process alive past a stop signal, so
+  // tsx watch had to force-kill it on every restart. Close them and go.
+  const shutdown = (signal: NodeJS.Signals) => {
+    console.log(`${signal}: shutting down`);
+    for (const wss of [graphqlWss, apiWss]) {
+      wss.clients.forEach((client) => client.terminate());
+      wss.close();
+    }
+    httpServer.close();
+    httpServer.closeAllConnections();
+    mongoose.disconnect().finally(() => process.exit(0));
+  };
+
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }
 
 start().catch((error) => {
