@@ -9,6 +9,9 @@ Server/.secret/
 node_modules
 **/node_modules
 
+# Its own service with its own image; see ImageServer/Dockerfile.
+ImageServer
+
 .git
 .github
 .claude
