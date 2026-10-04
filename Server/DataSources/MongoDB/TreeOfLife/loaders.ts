@@ -30,6 +30,12 @@ export type LeanTreeOfLifeNode = {
   error?: string | null;
 };
 
+/**
+ * Browsing reads go to the nearest Atlas node, so London reads its own replica.
+ * After a write in the same request they go to the primary, which already has it.
+ */
+type ReadPreference = 'nearest' | 'primary';
+
 function toLean(doc: RawTreeOfLifeNode): LeanTreeOfLifeNode {
   const score = doc.visualScore as LeanTreeOfLifeNode['visualScore'] | undefined;
   return {
@@ -49,10 +55,11 @@ function toLean(doc: RawTreeOfLifeNode): LeanTreeOfLifeNode {
 
 async function batchNodesByOttId(
   ottIds: readonly number[],
+  read: ReadPreference,
 ): Promise<Array<LeanTreeOfLifeNode | null>> {
   const docs = await TreeOfLifeNodes.find({
     ottId: { $in: [...ottIds] },
-  }).lean();
+  }).read(read).lean();
 
   const byOttId = new Map<number, LeanTreeOfLifeNode>();
   for (const doc of docs) {
@@ -66,10 +73,11 @@ async function batchNodesByOttId(
 
 async function batchNodesByNodeId(
   nodeIds: readonly string[],
+  read: ReadPreference,
 ): Promise<Array<LeanTreeOfLifeNode | null>> {
   const docs = await TreeOfLifeNodes.find({
     nodeId: { $in: [...nodeIds] },
-  }).lean();
+  }).read(read).lean();
 
   const byNodeId = new Map<string, LeanTreeOfLifeNode>();
   for (const doc of docs) {
@@ -86,10 +94,11 @@ async function batchNodesByNodeId(
  */
 async function batchChildrenByAncestorNodeId(
   ancestorNodeIds: readonly string[],
+  read: ReadPreference,
 ): Promise<LeanTreeOfLifeNode[][]> {
   const docs = await TreeOfLifeNodes.find({
     ancestorNodeId: { $in: [...ancestorNodeIds] },
-  }).lean();
+  }).read(read).lean();
 
   const byAncestor = new Map<string, LeanTreeOfLifeNode[]>();
   for (const doc of docs) {
@@ -112,23 +121,29 @@ export type TreeOfLifeLoaders = {
   childrenByAncestorNodeId: DataLoader<string, LeanTreeOfLifeNode[]>;
 };
 
-export function createTreeOfLifeLoaders(): TreeOfLifeLoaders {
+function buildTreeOfLifeLoaders(read: ReadPreference): TreeOfLifeLoaders {
   return {
-    nodeByOttId: new DataLoader(batchNodesByOttId, {
+    nodeByOttId: new DataLoader((ids) => batchNodesByOttId(ids, read), {
       cache: true,
     }),
-    nodeByNodeId: new DataLoader(batchNodesByNodeId, {
+    nodeByNodeId: new DataLoader((ids) => batchNodesByNodeId(ids, read), {
       cache: true,
     }),
-    childrenByAncestorNodeId: new DataLoader(batchChildrenByAncestorNodeId, {
-      cache: true,
-    }),
+    childrenByAncestorNodeId: new DataLoader(
+      (ids) => batchChildrenByAncestorNodeId(ids, read),
+      { cache: true },
+    ),
   };
 }
 
-/** Drop cached rows after OTOL persist so the same request sees fresh edges. */
+export function createTreeOfLifeLoaders(): TreeOfLifeLoaders {
+  return buildTreeOfLifeLoaders('nearest');
+}
+
+/**
+ * Drop cached rows after OTOL persist so the same request sees fresh edges.
+ * The new loaders read the primary, since a replica may not have the write yet.
+ */
 export function clearTreeOfLifeLoaders(loaders: TreeOfLifeLoaders): void {
-  loaders.nodeByOttId.clearAll();
-  loaders.nodeByNodeId.clearAll();
-  loaders.childrenByAncestorNodeId.clearAll();
+  Object.assign(loaders, buildTreeOfLifeLoaders('primary'));
 }

@@ -37,6 +37,7 @@ export default {
       })
         .select({ nodeId: 1, ottId: 1, name: 1, rank: 1 })
         .limit(limit)
+        .read('nearest')
         .lean();
 
       if (stored.length > 0) {
