@@ -22,6 +22,15 @@ export default {
         };
       }
 
+      /*
+       * A signed JWT isn't enough for a user: `context.user` also needs their
+       * stored token, which signing out or revoking deletes. Without it the
+       * access token would keep working until it expires at midnight.
+       */
+      if (!context.user) {
+        throw Unauthenticated('Session ended');
+      }
+
       // Authenticated users get their own profile
       const user = await Users.findOne(
         { UserGUID: context.tokenPayload.UserGUID, Active: true },
