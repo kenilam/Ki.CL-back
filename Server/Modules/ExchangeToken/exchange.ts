@@ -1,5 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import jwt from 'jsonwebtoken';
+import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
 import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
@@ -72,7 +73,15 @@ async function issue(context: Pick<Context, 'headers' | 'res'>, identity: Identi
 export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): Promise<boolean> {
   const cookies = parseCookies(context.headers['cookie'] as string | undefined);
 
-  const current = verify(cookies.access_token, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
+  /*
+   * A user's session also needs its stored token, which signing out or
+   * revoking deletes. Without it the signed cookies don't count.
+   */
+  const verified = verify(cookies.access_token, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
+  const current =
+    verified?.aud === 'user' && !(await UserTokens.exists({ UserGUID: verified.UserGUID }))
+      ? null
+      : verified;
   if (current) {
     /*
      * The session stands. The one thing left to do is mark it human when
@@ -92,10 +101,15 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
   /*
    * The access token lapses every midnight. A visitor whose refresh token
    * is still valid keeps their identity, so their conversations and
-   * allowance stay theirs, instead of being handed a new one.
+   * allowance stay theirs, instead of being handed a new one. A signed-in
+   * user stays signed in, as long as their refresh token is the one stored
+   * for them; a revoked one falls through to a new anonymous session.
    */
   const refreshed = verify(cookies.refresh_token, process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!);
-  if (refreshed?.aud === 'anon') {
+  const renewable =
+    refreshed?.aud === 'anon' ||
+    (refreshed?.aud === 'user' && Boolean(await UserTokens.exists({ Token: cookies.refresh_token })));
+  if (refreshed && renewable) {
     await issue(context, refreshed);
     return true;
   }
