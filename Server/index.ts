@@ -18,6 +18,7 @@ import { corsMiddleware } from './Middleware/cors.js';
 import { securityHeaders } from './Middleware/securityHeaders.js';
 import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
+import { sessionRoute } from './Modules/ExchangeToken/route.js';
 import { connectDatabase, mongoose } from './DataSources/MongoDB/index.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
@@ -145,6 +146,12 @@ async function start() {
       context: createContext,
     }),
   ] as const;
+
+  /*
+   * ExchangeToken without GraphQL, ahead of the BFF so Apollo doesn't take the
+   * path. It needs no key: the BFF lets anyone run ExchangeToken too.
+   */
+  app.post('/api/session', securityHeaders, corsMiddleware, sessionRoute);
 
   // Public BFF - injects x-api-key server-side; never exposes it to the browser
   app.use('/api', ...apiMiddleware);
