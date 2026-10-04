@@ -1,0 +1,11 @@
+type Portfolio {
+  PortfolioGUID: UUID
+  Path: String
+}
+
+extend type MePayload {
+  """
+  The portfolio pieces this user may open. Empty for an anonymous session.
+  """
+  Portfolios: [Portfolio!]!
+}

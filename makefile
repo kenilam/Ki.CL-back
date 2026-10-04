@@ -35,3 +35,14 @@ start:
 	@echo ⌛ starting...
 	yarn install && yarn run start
 	@echo ✅ done
+
+# Portfolio access: make portfolio.grant PIECE=moonshot EMAIL=someone@example.com
+# MONGODB_DATABASE=production picks the production database.
+portfolio.grant:
+	@npx tsx Server/Scripts/portfolioAccess.ts grant "$(PIECE)" "$(EMAIL)"
+
+portfolio.revoke:
+	@npx tsx Server/Scripts/portfolioAccess.ts revoke "$(PIECE)" "$(EMAIL)"
+
+portfolio.list:
+	@npx tsx Server/Scripts/portfolioAccess.ts list "$(PIECE)"

@@ -166,6 +166,8 @@ export type MePayload = {
   Email?: Maybe<Scalars['EmailAddress']['output']>;
   FirstName?: Maybe<Scalars['String']['output']>;
   LastName?: Maybe<Scalars['String']['output']>;
+  /** The portfolio pieces this user may open. Empty for an anonymous session. */
+  Portfolios: Array<Portfolio>;
   UserGUID?: Maybe<Scalars['UUID']['output']>;
   aud?: Maybe<Scalars['String']['output']>;
 };
@@ -223,6 +225,12 @@ export type MutationSignInArgs = {
 
 export type MutationSocialSignInArgs = {
   SocialSignIn: SocialSignInInput;
+};
+
+export type Portfolio = {
+  __typename?: 'Portfolio';
+  Path?: Maybe<Scalars['String']['output']>;
+  PortfolioGUID?: Maybe<Scalars['UUID']['output']>;
 };
 
 export enum Provider {
@@ -557,6 +565,7 @@ export type ResolversTypes = ResolversObject<{
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   NonEmptyString: ResolverTypeWrapper<Scalars['NonEmptyString']['output']>;
+  Portfolio: ResolverTypeWrapper<Portfolio>;
   Provider: Provider;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RegisterInput: RegisterInput;
@@ -593,6 +602,7 @@ export type ResolversParentTypes = ResolversObject<{
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
   NonEmptyString: Scalars['NonEmptyString']['output'];
+  Portfolio: Portfolio;
   Query: Record<PropertyKey, never>;
   RegisterInput: RegisterInput;
   SignInInput: SignInInput;
@@ -674,6 +684,7 @@ export type MePayloadResolvers<ContextType = Context, ParentType extends Resolve
   Email?: Resolver<Maybe<ResolversTypes['EmailAddress']>, ParentType, ContextType>;
   FirstName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   LastName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  Portfolios?: Resolver<Array<ResolversTypes['Portfolio']>, ParentType, ContextType>;
   UserGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
   aud?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 }>;
@@ -693,6 +704,11 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {
   name: 'NonEmptyString';
 }
+
+export type PortfolioResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Portfolio'] = ResolversParentTypes['Portfolio']> = ResolversObject<{
+  Path?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  PortfolioGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
+}>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   Asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
@@ -772,6 +788,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   NonEmptyString?: GraphQLScalarType;
+  Portfolio?: PortfolioResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   TaxonSearchResult?: TaxonSearchResultResolvers<ContextType>;
