@@ -66,8 +66,17 @@ const UserSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   },
 );
+
+/** This user's portfolio access rows. `portfoliosOf()` follows them to the pieces. */
+UserSchema.virtual('Access', {
+  ref: 'PortfolioAccess',
+  localField: 'UserGUID',
+  foreignField: 'UserGUID',
+});
 
 UserSchema.pre('validate', async function () {
   if (!this.UserName) {

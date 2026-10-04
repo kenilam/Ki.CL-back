@@ -149,6 +149,10 @@ query kicl_Me {
     Avatar
     Active
     aud
+    Portfolios {
+      PortfolioGUID
+      Path
+    }
   }
 }
 
