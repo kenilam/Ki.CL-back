@@ -23,4 +23,30 @@ export async function connectDatabase(): Promise<typeof mongoose> {
   }
 }
 
+const PING_TIMEOUT_MS = 2000;
+
+/**
+ * Whether the primary answers. A driver that has lost the primary stays
+ * connected and fails every query after 30 seconds of server selection, so the
+ * connection state alone doesn't show it.
+ */
+export async function pingPrimary(): Promise<boolean> {
+  const { db } = mongoose.connection;
+
+  if (!db) {
+    return false;
+  }
+
+  try {
+    await db.command(
+      { ping: 1 },
+      { readPreference: 'primary', timeoutMS: PING_TIMEOUT_MS },
+    );
+    return true;
+  } catch (error) {
+    console.error('❌ MongoDB primary did not answer:', error);
+    return false;
+  }
+}
+
 export { mongoose };

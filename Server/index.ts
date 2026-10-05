@@ -19,7 +19,7 @@ import { securityHeaders } from './Middleware/securityHeaders.js';
 import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
 import { sessionRoute } from './Modules/ExchangeToken/route.js';
-import { connectDatabase, mongoose } from './DataSources/MongoDB/index.js';
+import { connectDatabase, mongoose, pingPrimary } from './DataSources/MongoDB/index.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
 import type { IncomingMessage } from 'node:http';
@@ -97,8 +97,13 @@ async function start() {
   await loadCerts();
   await server.start();
 
-  app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
+  app.get('/health', async (req, res) => {
+    if (await pingPrimary()) {
+      res.status(200).json({ status: 'ok' });
+      return;
+    }
+
+    res.status(503).json({ status: 'unavailable' });
   });
 
   // Serve federated Client at /client (CORS required for cross-origin ES module loads)
