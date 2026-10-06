@@ -1,0 +1,8 @@
+type Mutation {
+  UpdateMe(UpdateMe: UpdateMeInput!): Boolean
+}
+
+input UpdateMeInput {
+  FirstName: String
+  LastName: String
+}

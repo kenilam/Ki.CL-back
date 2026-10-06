@@ -1,0 +1,54 @@
+type Query {
+  """
+  The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up.
+  """
+  PasswordChange: PasswordChange
+}
+
+type Mutation {
+  """
+  Checks the current password, keeps the new one hashed, and emails the signed-in user a link to confirm the change.
+  """
+  PasswordChangeRequest(PasswordChangeRequest: PasswordChangeRequestInput!): PasswordChange!
+  """
+  Called from the emailed link. Any session may call it: the secret is the proof.
+  """
+  PasswordChangeConfirm(PasswordChangeConfirm: PasswordChangeConfirmInput!): Boolean
+  """
+  Sets the password kept with the request, once it has been confirmed.
+  """
+  PasswordChangeComplete(PasswordChangeComplete: PasswordChangeCompleteInput!): Boolean
+}
+
+type Subscription {
+  """
+  The request's status now and on every change, until it is confirmed or expires.
+  """
+  PasswordChangeUpdated(id: ID!): PasswordChange!
+}
+
+type PasswordChange {
+  id: ID!
+  status: PasswordChangeStatus!
+  expiresAt: DateTime!
+}
+
+enum PasswordChangeStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+}
+
+input PasswordChangeRequestInput {
+  CurrentPassword: String!
+  Password: String!
+}
+
+input PasswordChangeConfirmInput {
+  id: ID!
+  secret: String!
+}
+
+input PasswordChangeCompleteInput {
+  id: ID!
+}

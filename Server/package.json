@@ -29,11 +29,15 @@
     "graphql-ws": "^6.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.8.1",
+    "nodemailer": "^10.0.14",
+    "pug": "^3.0.4",
     "uuid": "^14.0.1",
     "valibot": "^1.4.2",
     "ws": "^8.21.1"
   },
   "devDependencies": {
-    "@types/express-http-proxy": "^1.6.7"
+    "@types/express-http-proxy": "^1.6.7",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pug": "^2.0.10"
   }
 }

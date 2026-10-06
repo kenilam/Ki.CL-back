@@ -41,6 +41,10 @@ export type Asset = {
   url: Scalars['String']['output'];
 };
 
+export type DeleteMeInput = {
+  CurrentPassword: Scalars['String']['input'];
+};
+
 /** What the caller may still draw today. */
 export type ImageAgentAllowance = {
   __typename?: 'ImageAgentAllowance';
@@ -175,6 +179,7 @@ export type MePayload = {
 export type Mutation = {
   __typename?: 'Mutation';
   Activate?: Maybe<Scalars['Boolean']['output']>;
+  DeleteMe?: Maybe<Scalars['Boolean']['output']>;
   ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
   /**
    * Go back to one of the person's messages and ask it again. Everything from
@@ -188,16 +193,28 @@ export type Mutation = {
    * ImageAgentThreadUpdated.
    */
   ImageAgentSend: ImageAgentThread;
+  /** Sets the password kept with the request, once it has been confirmed. */
+  PasswordChangeComplete?: Maybe<Scalars['Boolean']['output']>;
+  /** Called from the emailed link. Any session may call it: the secret is the proof. */
+  PasswordChangeConfirm?: Maybe<Scalars['Boolean']['output']>;
+  /** Checks the current password, keeps the new one hashed, and emails the signed-in user a link to confirm the change. */
+  PasswordChangeRequest: PasswordChange;
   RefreshToken?: Maybe<Scalars['Boolean']['output']>;
   Register?: Maybe<Scalars['Boolean']['output']>;
   SignIn?: Maybe<Scalars['Boolean']['output']>;
   SignOut?: Maybe<Scalars['Boolean']['output']>;
   SocialSignIn?: Maybe<Scalars['Boolean']['output']>;
+  UpdateMe?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
 export type MutationActivateArgs = {
   Activate: ActivateInput;
+};
+
+
+export type MutationDeleteMeArgs = {
+  DeleteMe: DeleteMeInput;
 };
 
 
@@ -210,6 +227,21 @@ export type MutationImageAgentRetryArgs = {
 export type MutationImageAgentSendArgs = {
   text: Scalars['String']['input'];
   threadId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationPasswordChangeCompleteArgs = {
+  PasswordChangeComplete: PasswordChangeCompleteInput;
+};
+
+
+export type MutationPasswordChangeConfirmArgs = {
+  PasswordChangeConfirm: PasswordChangeConfirmInput;
+};
+
+
+export type MutationPasswordChangeRequestArgs = {
+  PasswordChangeRequest: PasswordChangeRequestInput;
 };
 
 
@@ -226,6 +258,38 @@ export type MutationSignInArgs = {
 export type MutationSocialSignInArgs = {
   SocialSignIn: SocialSignInInput;
 };
+
+
+export type MutationUpdateMeArgs = {
+  UpdateMe: UpdateMeInput;
+};
+
+export type PasswordChange = {
+  __typename?: 'PasswordChange';
+  expiresAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  status: PasswordChangeStatus;
+};
+
+export type PasswordChangeCompleteInput = {
+  id: Scalars['ID']['input'];
+};
+
+export type PasswordChangeConfirmInput = {
+  id: Scalars['ID']['input'];
+  secret: Scalars['String']['input'];
+};
+
+export type PasswordChangeRequestInput = {
+  CurrentPassword: Scalars['String']['input'];
+  Password: Scalars['String']['input'];
+};
+
+export enum PasswordChangeStatus {
+  Confirmed = 'CONFIRMED',
+  Expired = 'EXPIRED',
+  Pending = 'PENDING'
+}
 
 export type Portfolio = {
   __typename?: 'Portfolio';
@@ -258,6 +322,8 @@ export type Query = {
   /** The caller's conversations, most recently active first. */
   ImageAgentThreads: Array<ImageAgentThread>;
   Me?: Maybe<MePayload>;
+  /** The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up. */
+  PasswordChange?: Maybe<PasswordChange>;
   /**
    * Find taxa by name.
    *
@@ -357,12 +423,19 @@ export type Subscription = {
   __typename?: 'Subscription';
   /** Pushes the whole conversation on every change. */
   ImageAgentThreadUpdated: ImageAgentThread;
+  /** The request's status now and on every change, until it is confirmed or expires. */
+  PasswordChangeUpdated: PasswordChange;
   /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
   TaxonVisualUpdated: TaxonVisual;
 };
 
 
 export type SubscriptionImageAgentThreadUpdatedArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type SubscriptionPasswordChangeUpdatedArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -469,6 +542,11 @@ export type TreeOfLifeNode = {
   visualStatus?: Maybe<TaxonVisualStatus>;
 };
 
+export type UpdateMeInput = {
+  FirstName?: InputMaybe<Scalars['String']['input']>;
+  LastName?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -547,6 +625,7 @@ export type ResolversTypes = ResolversObject<{
   Asset: ResolverTypeWrapper<Asset>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  DeleteMeInput: DeleteMeInput;
   EmailAddress: ResolverTypeWrapper<Scalars['EmailAddress']['output']>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
@@ -565,6 +644,11 @@ export type ResolversTypes = ResolversObject<{
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   NonEmptyString: ResolverTypeWrapper<Scalars['NonEmptyString']['output']>;
+  PasswordChange: ResolverTypeWrapper<PasswordChange>;
+  PasswordChangeCompleteInput: PasswordChangeCompleteInput;
+  PasswordChangeConfirmInput: PasswordChangeConfirmInput;
+  PasswordChangeRequestInput: PasswordChangeRequestInput;
+  PasswordChangeStatus: PasswordChangeStatus;
   Portfolio: ResolverTypeWrapper<Portfolio>;
   Provider: Provider;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -582,6 +666,7 @@ export type ResolversTypes = ResolversObject<{
   TreeOfLifeNode: ResolverTypeWrapper<TreeOfLifeNode>;
   URL: ResolverTypeWrapper<Scalars['URL']['output']>;
   UUID: ResolverTypeWrapper<Scalars['UUID']['output']>;
+  UpdateMeInput: UpdateMeInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -590,6 +675,7 @@ export type ResolversParentTypes = ResolversObject<{
   Asset: Asset;
   Boolean: Scalars['Boolean']['output'];
   DateTime: Scalars['DateTime']['output'];
+  DeleteMeInput: DeleteMeInput;
   EmailAddress: Scalars['EmailAddress']['output'];
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
@@ -602,6 +688,10 @@ export type ResolversParentTypes = ResolversObject<{
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
   NonEmptyString: Scalars['NonEmptyString']['output'];
+  PasswordChange: PasswordChange;
+  PasswordChangeCompleteInput: PasswordChangeCompleteInput;
+  PasswordChangeConfirmInput: PasswordChangeConfirmInput;
+  PasswordChangeRequestInput: PasswordChangeRequestInput;
   Portfolio: Portfolio;
   Query: Record<PropertyKey, never>;
   RegisterInput: RegisterInput;
@@ -615,6 +705,7 @@ export type ResolversParentTypes = ResolversObject<{
   TreeOfLifeNode: TreeOfLifeNode;
   URL: Scalars['URL']['output'];
   UUID: Scalars['UUID']['output'];
+  UpdateMeInput: UpdateMeInput;
 }>;
 
 export type AssetResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = ResolversObject<{
@@ -691,19 +782,30 @@ export type MePayloadResolvers<ContextType = Context, ParentType extends Resolve
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   Activate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationActivateArgs, 'Activate'>>;
+  DeleteMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMeArgs, 'DeleteMe'>>;
   ExchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   ImageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
   ImageAgentSend?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentSendArgs, 'text'>>;
+  PasswordChangeComplete?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeCompleteArgs, 'PasswordChangeComplete'>>;
+  PasswordChangeConfirm?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeConfirmArgs, 'PasswordChangeConfirm'>>;
+  PasswordChangeRequest?: Resolver<ResolversTypes['PasswordChange'], ParentType, ContextType, RequireFields<MutationPasswordChangeRequestArgs, 'PasswordChangeRequest'>>;
   RefreshToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   Register?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'Register'>>;
   SignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSignInArgs, 'SignIn'>>;
   SignOut?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   SocialSignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSocialSignInArgs, 'SocialSignIn'>>;
+  UpdateMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationUpdateMeArgs, 'UpdateMe'>>;
 }>;
 
 export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {
   name: 'NonEmptyString';
 }
+
+export type PasswordChangeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PasswordChange'] = ResolversParentTypes['PasswordChange']> = ResolversObject<{
+  expiresAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['PasswordChangeStatus'], ParentType, ContextType>;
+}>;
 
 export type PortfolioResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Portfolio'] = ResolversParentTypes['Portfolio']> = ResolversObject<{
   Path?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -718,6 +820,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   ImageAgentThread?: Resolver<Maybe<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentThreadArgs, 'id'>>;
   ImageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
   Me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
+  PasswordChange?: Resolver<Maybe<ResolversTypes['PasswordChange']>, ParentType, ContextType>;
   TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
   TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
@@ -726,6 +829,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
   ImageAgentThreadUpdated?: SubscriptionResolver<ResolversTypes['ImageAgentThread'], "ImageAgentThreadUpdated", ParentType, ContextType, RequireFields<SubscriptionImageAgentThreadUpdatedArgs, 'id'>>;
+  PasswordChangeUpdated?: SubscriptionResolver<ResolversTypes['PasswordChange'], "PasswordChangeUpdated", ParentType, ContextType, RequireFields<SubscriptionPasswordChangeUpdatedArgs, 'id'>>;
   TaxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "TaxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
 }>;
 
@@ -788,6 +892,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   NonEmptyString?: GraphQLScalarType;
+  PasswordChange?: PasswordChangeResolvers<ContextType>;
   Portfolio?: PortfolioResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
