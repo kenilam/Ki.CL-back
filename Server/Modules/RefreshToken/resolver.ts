@@ -48,7 +48,7 @@ export default {
         }
       }
 
-      // Issue new tokens (this also resets rate limit)
+      // Issue new tokens
       const { AccessToken, RefreshToken: NewRefreshToken } = await generateUserToken({
         UserGUID: decoded.UserGUID,
         aud: decoded.aud,
