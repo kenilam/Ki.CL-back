@@ -9,9 +9,9 @@ import {
 import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { createClient } from 'graphql-ws';
 
 import { Kicl_ExchangeTokenDocument } from 'api/generated/graphql';
+import { createSocketClient } from 'api/socket';
 import { hasSession } from 'api/utils';
 
 interface KiclProviderProps {
@@ -51,18 +51,7 @@ function createKiclClient(
 
   const wsLink =
     typeof window !== 'undefined'
-      ? new GraphQLWsLink(
-          createClient({
-            url: wsUri,
-            // Cookies on same-origin (Vite proxy) are sent on the upgrade request.
-            // connectionParams covers cross-origin cases where Cookie is not automatic.
-            connectionParams: () => {
-              const cookie = typeof document !== 'undefined' ? document.cookie : '';
-              return cookie ? { cookie } : {};
-            },
-            retryAttempts: 5,
-          }),
-        )
+      ? new GraphQLWsLink(createSocketClient(wsUri))
       : null;
 
   const link =
