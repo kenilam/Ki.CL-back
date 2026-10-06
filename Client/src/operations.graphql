@@ -164,6 +164,10 @@ query kicl_PasswordChange {
   }
 }
 
+query kicl_PasswordChangeLink($PasswordChangeLink: PasswordChangeConfirmInput!) {
+  PasswordChangeLink(PasswordChangeLink: $PasswordChangeLink)
+}
+
 query kicl_TaxonSearch($query: String!, $limit: Int = 10) {
   TaxonSearch(query: $query, limit: $limit) {
     nodeId
