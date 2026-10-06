@@ -156,6 +156,14 @@ query kicl_Me {
   }
 }
 
+query kicl_PasswordChange {
+  PasswordChange {
+    id
+    status
+    expiresAt
+  }
+}
+
 query kicl_TaxonSearch($query: String!, $limit: Int = 10) {
   TaxonSearch(query: $query, limit: $limit) {
     nodeId
@@ -868,6 +876,10 @@ mutation kicl_Activate($Activate: ActivateInput!) {
   Activate(Activate: $Activate)
 }
 
+mutation kicl_DeleteMe($DeleteMe: DeleteMeInput!) {
+  DeleteMe(DeleteMe: $DeleteMe)
+}
+
 mutation kicl_ExchangeToken {
   ExchangeToken
 }
@@ -946,6 +958,22 @@ mutation kicl_ImageAgentRetry($threadId: ID!, $messageId: ID) {
   }
 }
 
+mutation kicl_PasswordChangeRequest($PasswordChangeRequest: PasswordChangeRequestInput!) {
+  PasswordChangeRequest(PasswordChangeRequest: $PasswordChangeRequest) {
+    id
+    status
+    expiresAt
+  }
+}
+
+mutation kicl_PasswordChangeConfirm($PasswordChangeConfirm: PasswordChangeConfirmInput!) {
+  PasswordChangeConfirm(PasswordChangeConfirm: $PasswordChangeConfirm)
+}
+
+mutation kicl_PasswordChangeComplete($PasswordChangeComplete: PasswordChangeCompleteInput!) {
+  PasswordChangeComplete(PasswordChangeComplete: $PasswordChangeComplete)
+}
+
 mutation kicl_RefreshToken {
   RefreshToken
 }
@@ -964,6 +992,10 @@ mutation kicl_SignOut {
 
 mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
   SocialSignIn(SocialSignIn: $SocialSignIn)
+}
+
+mutation kicl_UpdateMe($UpdateMe: UpdateMeInput!) {
+  UpdateMe(UpdateMe: $UpdateMe)
 }
 
 subscription kicl_ImageAgentThreadUpdated($id: ID!) {
@@ -1000,6 +1032,14 @@ subscription kicl_ImageAgentThreadUpdated($id: ID!) {
     }
     createdAt
     updatedAt
+  }
+}
+
+subscription kicl_PasswordChangeUpdated($id: ID!) {
+  PasswordChangeUpdated(id: $id) {
+    id
+    status
+    expiresAt
   }
 }
 

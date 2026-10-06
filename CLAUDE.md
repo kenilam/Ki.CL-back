@@ -29,7 +29,7 @@ Codegen must be re-run (`yarn codegen`) after editing any `Server/Modules/**/*.g
 ### Module-per-feature schema
 Each GraphQL feature lives under `Server/Modules/<Name>/` with a co-located `schema.graphql` + `resolver.ts` (and often `validation.ts`). `Server/Schema.ts` globs every `Modules/**/*.graphql` and `Modules/**/resolver.{ts,js}`, merges them with `@graphql-tools/merge`, and merges the result with a separate DataLoader-driven schema (`DataSources/MongoDB/DataLoader.ts`) via `mergeSchemas`. To add a GraphQL feature, add a new `Modules/<Name>/` folder - no central registration is needed beyond that.
 
-Current modules: `Register`, `Activate`, `SignIn`, `SignOut`, `SocialSignIn` (Google/Apple), `RefreshToken`, `ExchangeToken`, `Me`, `Asset`, `TreeOfLife`, `TaxonVisual`, `ImageAgent`.
+Current modules: `Register`, `Activate`, `SignIn`, `SignOut`, `SocialSignIn` (Google/Apple), `RefreshToken`, `ExchangeToken`, `Me`, `UpdateMe`, `DeleteMe`, `PasswordChange`, `Asset`, `TreeOfLife`, `TaxonVisual`, `ImageAgent`.
 
 ### Path aliases (hard rule, enforced by `.cursor/rules/ts-path-aliases.mdc`)
 Never use `../`-style relative imports inside `Server/`. Use the `server/*` alias (maps to `Server/*`) for anything that would otherwise climb directories; `^/*` maps to the repo root for rare paths outside `Server`. Same-folder `./` imports are fine. Keep the `.js` extension on local ESM imports (this is ESM/NodeNext-style resolution even though `moduleResolution` is `bundler`). Codegen-emitted files are the one exception - they follow the scalar maps in `Codegen/codegen.ts` and should keep using `^/Codegen/...` / `server/...` aliases so regeneration stays consistent.
