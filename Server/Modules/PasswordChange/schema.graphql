@@ -3,6 +3,10 @@ type Query {
   The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up.
   """
   PasswordChange: PasswordChange
+  """
+  Whether the emailed link can still be confirmed. Any session may ask: the secret is the proof.
+  """
+  PasswordChangeLink(PasswordChangeLink: PasswordChangeConfirmInput!): Boolean!
 }
 
 type Mutation {

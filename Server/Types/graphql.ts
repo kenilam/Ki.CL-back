@@ -324,6 +324,8 @@ export type Query = {
   Me?: Maybe<MePayload>;
   /** The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up. */
   PasswordChange?: Maybe<PasswordChange>;
+  /** Whether the emailed link can still be confirmed. Any session may ask: the secret is the proof. */
+  PasswordChangeLink: Scalars['Boolean']['output'];
   /**
    * Find taxa by name.
    *
@@ -373,6 +375,11 @@ export type QueryImageAgentThreadArgs = {
 
 export type QueryImageAgentThreadsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryPasswordChangeLinkArgs = {
+  PasswordChangeLink: PasswordChangeConfirmInput;
 };
 
 
@@ -821,6 +828,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   ImageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
   Me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
   PasswordChange?: Resolver<Maybe<ResolversTypes['PasswordChange']>, ParentType, ContextType>;
+  PasswordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'PasswordChangeLink'>>;
   TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
   TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;

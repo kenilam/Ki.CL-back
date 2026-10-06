@@ -36,6 +36,19 @@ function confirmUrl(context: Context): string {
   return url;
 }
 
+/** The request an emailed link points to, while the link can still be confirmed. */
+async function findConfirmable(input: { id: string; secret: string }) {
+  const doc = await PasswordChanges.findOne({ PasswordChangeGUID: input.id });
+
+  const matches =
+    !!doc &&
+    !doc.Confirmed &&
+    doc.ExpiresAt.getTime() > Date.now() &&
+    timingSafeEqual(sha256(input.secret), Buffer.from(doc.Secret, 'hex'));
+
+  return matches ? doc : null;
+}
+
 function requireUser(context: Context) {
   if (!context.user) {
     throw Unauthenticated('Authentication required');
@@ -53,6 +66,13 @@ export default {
       const result = doc && toResult(doc.PasswordChangeGUID, doc);
 
       return result?.status === 'EXPIRED' ? null : result;
+    },
+
+    // Lets the link's page say it is spent before offering to confirm it again.
+    PasswordChangeLink: async (_: unknown, args: { PasswordChangeLink: unknown }) => {
+      const input = validate(PasswordChangeConfirmSchema, args.PasswordChangeLink);
+
+      return Boolean(await findConfirmable(input));
     },
   },
 
@@ -115,16 +135,10 @@ export default {
     PasswordChangeConfirm: async (_: unknown, args: { PasswordChangeConfirm: unknown }) => {
       const input = validate(PasswordChangeConfirmSchema, args.PasswordChangeConfirm);
 
-      const doc = await PasswordChanges.findOne({ PasswordChangeGUID: input.id });
-
-      const matches =
-        !!doc &&
-        !doc.Confirmed &&
-        doc.ExpiresAt.getTime() > Date.now() &&
-        timingSafeEqual(sha256(input.secret), Buffer.from(doc.Secret, 'hex'));
+      const doc = await findConfirmable(input);
 
       // One answer for every way it can fail, so it says nothing about a request.
-      if (!matches) {
+      if (!doc) {
         throw BadUserInput('This link has expired or was already used.');
       }
 
