@@ -1,10 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import {
-  checkRateLimit,
-  refuseTooManyRequests,
-  setRateLimitHeaders,
-  type RateLimitVerdict,
-} from './rateLimit.js';
 import { generateApiKey, setApiKeyCookie } from 'server/Helpers/apiKey.js';
 import {
   isAuthOperation,
@@ -26,7 +20,7 @@ declare global {
   }
 }
 
-export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
+export function authenticate(req: Request, res: Response, next: NextFunction): void {
   // Allow GET requests through (Playground HTML page)
   if (req.method === 'GET') {
     next();
@@ -86,7 +80,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
   const decoded = verifyAccessToken(req.cookies?.access_token);
 
-  // Every request is counted per session, so one is required to run anything.
+  // Quotas are counted per session, so one is required to run anything.
   if (!decoded) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
@@ -94,17 +88,6 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
   // Attach decoded payload to request for Context to read
   req.tokenPayload = decoded;
-  applyLimit(await checkRateLimit(decoded.UserGUID), res, next);
-}
-
-function applyLimit({ allowed, remaining, limit }: RateLimitVerdict, res: Response, next: NextFunction): void {
-  setRateLimitHeaders(res, remaining, limit);
-
-  if (!allowed) {
-    refuseTooManyRequests(res);
-    return;
-  }
-
   next();
 }
 
