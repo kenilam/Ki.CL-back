@@ -15,6 +15,7 @@ import { useServer } from 'graphql-ws/use/ws';
 import { schema } from './Schema.js';
 import { createContext, createWsContext, type Context } from './Context/index.js';
 import { corsMiddleware } from './Middleware/cors.js';
+import { precompressed } from './Middleware/precompressed.js';
 import { securityHeaders } from './Middleware/securityHeaders.js';
 import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
@@ -107,7 +108,21 @@ async function start() {
   });
 
   // Serve federated Client at /client (CORS required for cross-origin ES module loads)
-  app.use('/client', corsMiddleware, express.static(appRoot.resolve('Client/dist')));
+  app.use(
+    '/client',
+    corsMiddleware,
+    precompressed(appRoot.resolve('Client/dist')),
+    express.static(appRoot.resolve('Client/dist'), {
+      setHeaders(res, path) {
+        // The entry keeps its name across releases, so it is checked every time.
+        // The files under assets are content-hashed.
+        res.setHeader(
+          'Cache-Control',
+          path.includes('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
+        );
+      },
+    }),
+  );
   // Module Federation host looks for @mf-types.zip by default
   app.get('/client/@mf-types.zip', corsMiddleware, (req, res) => {
     res.sendFile(appRoot.resolve('Client/dist/types.zip'));
