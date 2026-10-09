@@ -3,6 +3,8 @@ import { Unavailable } from 'server/Errors/index.js';
 
 interface Mail {
   to: string;
+  /** Where a reply goes, when that is not the sender. */
+  replyTo?: string;
   subject: string;
   text: string;
   html?: string;
@@ -23,7 +25,7 @@ export async function send(mail: Mail): Promise<void> {
 
   if (!MAILER_SERVICE || !MAILER_USER || !MAILER_PASSWORD) {
     if (process.env.NODE_ENV === 'development') {
-      console.info(`[mailer] To: ${mail.to}\nSubject: ${mail.subject}\n\n${mail.text}`);
+      console.info(`[mailer] To: ${mail.to}${mail.replyTo ? `\nReply-To: ${mail.replyTo}` : ''}\nSubject: ${mail.subject}\n\n${mail.text}`);
       return;
     }
 

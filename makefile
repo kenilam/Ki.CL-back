@@ -46,3 +46,8 @@ portfolio.revoke:
 
 portfolio.list:
 	@npx tsx Server/Scripts/portfolioAccess.ts list "$(PIECE)"
+
+# Contact form: make contact.forget EMAIL=someone@example.com
+# Deletes every message kept under that address, for a deletion request.
+contact.forget:
+	@npx tsx Server/Scripts/contactMessages.ts forget "$(EMAIL)"

@@ -41,6 +41,11 @@ export type Asset = {
   url: Scalars['String']['output'];
 };
 
+export type ContactInput = {
+  Email: Scalars['EmailAddress']['input'];
+  Message: Scalars['String']['input'];
+};
+
 export type DeleteMeInput = {
   CurrentPassword: Scalars['String']['input'];
 };
@@ -179,6 +184,8 @@ export type MePayload = {
 export type Mutation = {
   __typename?: 'Mutation';
   Activate?: Maybe<Scalars['Boolean']['output']>;
+  /** Sends a message to the site's owner and acknowledges it at the sender's address. Needs a session that passed the Turnstile check. */
+  Contact?: Maybe<Scalars['Boolean']['output']>;
   DeleteMe?: Maybe<Scalars['Boolean']['output']>;
   ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
   /**
@@ -210,6 +217,11 @@ export type Mutation = {
 
 export type MutationActivateArgs = {
   Activate: ActivateInput;
+};
+
+
+export type MutationContactArgs = {
+  Contact: ContactInput;
 };
 
 
@@ -631,6 +643,7 @@ export type ResolversTypes = ResolversObject<{
   ActivateInput: ActivateInput;
   Asset: ResolverTypeWrapper<Asset>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  ContactInput: ContactInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   DeleteMeInput: DeleteMeInput;
   EmailAddress: ResolverTypeWrapper<Scalars['EmailAddress']['output']>;
@@ -681,6 +694,7 @@ export type ResolversParentTypes = ResolversObject<{
   ActivateInput: ActivateInput;
   Asset: Asset;
   Boolean: Scalars['Boolean']['output'];
+  ContactInput: ContactInput;
   DateTime: Scalars['DateTime']['output'];
   DeleteMeInput: DeleteMeInput;
   EmailAddress: Scalars['EmailAddress']['output'];
@@ -789,6 +803,7 @@ export type MePayloadResolvers<ContextType = Context, ParentType extends Resolve
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   Activate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationActivateArgs, 'Activate'>>;
+  Contact?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationContactArgs, 'Contact'>>;
   DeleteMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMeArgs, 'DeleteMe'>>;
   ExchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   ImageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
