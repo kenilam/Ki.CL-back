@@ -880,6 +880,10 @@ mutation kicl_Activate($Activate: ActivateInput!) {
   Activate(Activate: $Activate)
 }
 
+mutation kicl_Contact($Contact: ContactInput!) {
+  Contact(Contact: $Contact)
+}
+
 mutation kicl_DeleteMe($DeleteMe: DeleteMeInput!) {
   DeleteMe(DeleteMe: $DeleteMe)
 }

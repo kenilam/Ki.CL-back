@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { DeleteMeSchema } from './validation.js';
+import { ContactMessages } from 'server/DataSources/MongoDB/ContactMessages/Model.js';
 import { PasswordChanges } from 'server/DataSources/MongoDB/PasswordChanges/Model.js';
 import { PortfolioAccess } from 'server/DataSources/MongoDB/PortfolioAccess/Model.js';
 import { Registrations } from 'server/DataSources/MongoDB/Registrations/Model.js';
@@ -19,7 +20,7 @@ export default {
       }
 
       const input = validate(DeleteMeSchema, args.DeleteMe);
-      const { UserGUID } = context.user;
+      const { Email, UserGUID } = context.user;
 
       const user = await Users.findOne({ UserGUID }, 'Password');
 
@@ -40,6 +41,8 @@ export default {
       await PasswordChanges.deleteMany({ UserGUID });
       await PortfolioAccess.deleteMany({ UserGUID });
       await Registrations.deleteMany({ UserGUID });
+      // Messages sent from the contact form, signed in or under this address.
+      await ContactMessages.deleteMany({ $or: [{ UserGUID }, { Email: Email.toLowerCase() }] });
       // What they said to the image agent, and the pictures it drew for them.
       await forgetOwner(UserGUID);
       await Users.deleteOne({ UserGUID });
