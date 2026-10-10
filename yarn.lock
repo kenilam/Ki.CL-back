@@ -4123,13 +4123,13 @@ __metadata:
   linkType: hard
 
 "graphql-compose@npm:^9.1.0":
-  version: 9.1.0
-  resolution: "graphql-compose@npm:9.1.0"
+  version: 9.2.2
+  resolution: "graphql-compose@npm:9.2.2"
   dependencies:
     graphql-type-json: "npm:0.3.2"
   peerDependencies:
-    graphql: ^14.2.0 || ^15.0.0 || ^16.0.0
-  checksum: 10c0/3323e08a8739cce90607ba0688a93813f62293eaed19ad39b0b017f31c44fd57b0d39e6c4b7e4d7999bbcfbd4e76ed8c92c6f242eac6104f6738ddbff67e62c6
+    graphql: ^14.2.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/b413a4123063af71b27c7643548510891bd2bb4dc2057a458239d4a24216e4b2de0811e77775284e57aa2caada8cc85de97af7d59412c887db2d4033974df15f
   languageName: node
   linkType: hard
 
