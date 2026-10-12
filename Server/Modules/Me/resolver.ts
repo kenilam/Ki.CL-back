@@ -1,12 +1,13 @@
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 import { Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Query: {
     Me: async (_: unknown, __: unknown, context: Context) => {
       if (!context.tokenPayload) {
-        throw Unauthenticated('Authentication required');
+        throw Unauthenticated();
       }
 
       // Anonymous tokens get minimal info
@@ -28,7 +29,7 @@ export default {
        * access token would keep working until it expires at midnight.
        */
       if (!context.user) {
-        throw Unauthenticated('Session ended');
+        throw Unauthenticated(translate('api', 'error_session_ended'));
       }
 
       // Authenticated users get their own profile
@@ -38,7 +39,7 @@ export default {
       );
 
       if (!user) {
-        throw Unauthenticated('User not found');
+        throw Unauthenticated(translate('api', 'error_user_not_found'));
       }
 
       return {

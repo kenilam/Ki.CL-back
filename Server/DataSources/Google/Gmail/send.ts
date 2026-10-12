@@ -1,5 +1,6 @@
 import nodemailer, { type Transporter } from 'nodemailer';
 import { Unavailable } from 'server/Errors/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 interface Mail {
   to: string;
@@ -29,7 +30,7 @@ export async function send(mail: Mail): Promise<void> {
       return;
     }
 
-    throw Unavailable('Email is not available. Try again later.');
+    throw Unavailable(translate('api', 'error_email_unavailable'));
   }
 
   transport ??= nodemailer.createTransport({

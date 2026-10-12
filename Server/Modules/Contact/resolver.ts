@@ -6,6 +6,7 @@ import { Gmail } from 'server/DataSources/Google/index.js';
 import { CaptchaRequired, Unauthenticated, Unavailable } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
 import { assertWithinQuota, retentionMs } from './quota.js';
+import { translate } from 'server/Helpers/translate.js';
 
 /** The inbox messages go to. Development has no mailer, so any name will do there. */
 function inbox(): string {
@@ -15,7 +16,7 @@ function inbox(): string {
     (process.env.NODE_ENV === 'development' ? 'inbox' : undefined);
 
   if (!address) {
-    throw Unavailable('Email is not available. Try again later.');
+    throw Unavailable(translate('api', 'error_email_unavailable'));
   }
 
   return address;
@@ -27,7 +28,7 @@ export default {
       const UserGUID = context.tokenPayload?.UserGUID;
 
       if (!UserGUID) {
-        throw Unauthenticated('Authentication required');
+        throw Unauthenticated();
       }
 
       // Each message sends two emails, so a session that has not passed Turnstile sends none.

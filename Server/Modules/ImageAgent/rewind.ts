@@ -7,7 +7,7 @@ import {
   ImageAgentRole,
   ImageAgentThreadStatus,
 } from 'server/Types/graphql.js';
-import { OTHER_FOLLOW_UP } from './agent/clarify.js';
+import { otherFollowUp } from './agent/clarify.js';
 import { visible, type LeanImageAgentThread } from './types.js';
 
 /**
@@ -46,7 +46,7 @@ export async function rewindTo(
   const asked = kept
     .slice(lastPicture ? kept.indexOf(lastPicture) + 1 : 0)
     .filter((entry) => entry.kind === ImageAgentMessageKind.Question
-      && entry.text !== OTHER_FOLLOW_UP)
+      && entry.text !== otherFollowUp())
     .length;
 
   const messages = [

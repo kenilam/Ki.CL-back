@@ -1,3 +1,4 @@
+import { translate } from 'server/Helpers/translate.js';
 import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
 import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
 import { ImageAgentRejection } from 'server/Types/graphql.js';
@@ -55,7 +56,7 @@ function parseVerdict(raw: string): ClassifierVerdict | null {
     }
     const reason = typeof parsed.reason === 'string' && parsed.reason.trim()
       ? parsed.reason.trim()
-      : 'That is not a picture the agent can draw.';
+      : translate('api', 'image_agent_refusal');
     return { rejection: VERDICTS[verdict] ?? null, reason };
   } catch {
     return null;

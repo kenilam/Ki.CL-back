@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { translate } from 'server/Helpers/translate.js';
 
 interface AppleUserInfo {
   Email: string;
@@ -18,12 +19,12 @@ export async function verifyAppleToken(token: string): Promise<AppleUserInfo> {
   const decoded = jwt.decode(token) as AppleJwtPayload | null;
 
   if (!decoded?.email) {
-    throw new Error('Unable to verify Apple identity');
+    throw new Error(translate('api', 'error_apple_identity'));
   }
 
   const emailVerified = decoded.email_verified === true || decoded.email_verified === 'true';
   if (!emailVerified) {
-    throw new Error('Apple email not verified');
+    throw new Error(translate('api', 'error_apple_email'));
   }
 
   return {

@@ -2,9 +2,12 @@
  * Copies the site's writing from JSON files into `translations`, one row for
  * each string. Each repo keeps its own namespaces at
  * `<dir>/<language>/<namespace>.json`.
+ * This repo's are in `Server/locales`: the messages the API answers with and
+ * the emails it sends.
  *
  * Run (MONGODB_DATABASE picks test or production, as for the server):
  *   npx tsx Server/Scripts/translations.ts seed ../Ki.CL/App/locales
+ *   npx tsx Server/Scripts/translations.ts seed Server/locales
  *   npx tsx Server/Scripts/translations.ts diff ../Ki.CL/App/locales
  *   npx tsx Server/Scripts/translations.ts prune ../Ki.CL/App/locales
  *   npx tsx Server/Scripts/translations.ts drop resume

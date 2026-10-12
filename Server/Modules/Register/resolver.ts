@@ -8,6 +8,7 @@ import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generate
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie, clearApiKeyCookie } from 'server/Helpers/cookies.js';
 import { ExistingRecord } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
@@ -16,7 +17,7 @@ export default {
 
       const existingUser = await Users.findOne({ Email: input.Email });
       if (existingUser) {
-        throw ExistingRecord('An account with this email already exists');
+        throw ExistingRecord(translate('api', 'error_account_exists'));
       }
 
       const UserGUID = uuid();

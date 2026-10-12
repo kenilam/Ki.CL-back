@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import type { Context } from 'server/Context/index.js';
 import { ImageAgentThreads } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
 import { BadUserInput, CaptchaRequired, NotFound, Unauthenticated } from 'server/Errors/index.js';
+import { translate } from 'server/Helpers/translate.js';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import {
   ImageAgentMessageKind,
@@ -32,14 +33,10 @@ import {
   ThreadsSchema,
 } from './validation.js';
 
-const COPY = {
-  nothingToRetry: 'There is nothing to try again.',
-};
-
 function requireOwner(context: Context): string {
   const owner = context.tokenPayload?.UserGUID;
   if (!owner) {
-    throw Unauthenticated('Authentication required');
+    throw Unauthenticated();
   }
   return owner;
 }
@@ -129,7 +126,7 @@ export default {
       if (input.threadId) {
         const existing = await loadThread(input.threadId, owner);
         if (!existing) {
-          throw NotFound('No conversation with that id');
+          throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
         }
       }
 
@@ -162,7 +159,7 @@ export default {
           { $push: { messages: said }, $set: { status: ImageAgentThreadStatus.Thinking } },
         );
         if (updated.matchedCount === 0) {
-          throw NotFound('That conversation is busy. Wait for the agent to finish.');
+          throw NotFound(translate('api', 'image_agent_error_thread_busy'));
         }
         id = input.threadId;
       } else {
@@ -178,7 +175,7 @@ export default {
 
       const doc = await loadThread(id, owner);
       if (!doc) {
-        throw NotFound('No conversation with that id');
+        throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
       }
       return toResult(doc);
     },
@@ -194,10 +191,10 @@ export default {
       await recoverStalled({ ownerGUID: owner });
       const thread = await loadThread(id, owner);
       if (!thread) {
-        throw NotFound('No conversation with that id');
+        throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
       }
       if (thread.status !== ImageAgentThreadStatus.Idle) {
-        throw BadUserInput(COPY.nothingToRetry);
+        throw BadUserInput(translate('api', 'image_agent_error_nothing_to_retry'));
       }
 
       const messageId = args.messageId
@@ -205,7 +202,7 @@ export default {
           .reverse()
           .find((entry) => entry.role === ImageAgentRole.User)?.id;
       if (!messageId) {
-        throw BadUserInput(COPY.nothingToRetry);
+        throw BadUserInput(translate('api', 'image_agent_error_nothing_to_retry'));
       }
 
       // The message goes out again, so it meets the same limits as a new one.
@@ -213,14 +210,14 @@ export default {
 
       const text = await rewindTo(thread, messageId);
       if (!text) {
-        throw BadUserInput(COPY.nothingToRetry);
+        throw BadUserInput(translate('api', 'image_agent_error_nothing_to_retry'));
       }
 
       void respond(id, owner, text);
 
       const doc = await loadThread(id, owner);
       if (!doc) {
-        throw NotFound('No conversation with that id');
+        throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
       }
       return toResult(doc);
     },
@@ -231,7 +228,7 @@ export default {
       subscribe: withFilter(
         (_parent, _args, context?: Context) => {
           if (!context) {
-            throw Unauthenticated('Authentication required');
+            throw Unauthenticated();
           }
           requireOwner(context);
           return imageAgentPubSub.asyncIterableIterator(IMAGE_AGENT_THREAD_UPDATED);

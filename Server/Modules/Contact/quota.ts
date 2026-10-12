@@ -1,5 +1,6 @@
 import { ContactMessages } from 'server/DataSources/MongoDB/ContactMessages/Model.js';
 import { TooManyRequests } from 'server/Errors/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -35,6 +36,6 @@ export async function assertWithinQuota(input: { UserGUID: string; Email: string
     toAddress >= envNumber('CONTACT_DAILY_LIMIT_PER_EMAIL', 3) ||
     overall >= envNumber('CONTACT_DAILY_LIMIT_GLOBAL', 50)
   ) {
-    throw TooManyRequests('No more messages can be sent today. Try again tomorrow.');
+    throw TooManyRequests(translate('api', 'error_contact_limit'));
   }
 }

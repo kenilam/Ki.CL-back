@@ -1,16 +1,17 @@
 import * as v from 'valibot';
+import { message } from 'server/Helpers/Validation/message.js';
 
 export const MAX_TEXT_LENGTH = 150;
 
-const ObjectId = v.pipe(v.string(), v.regex(/^[a-f0-9]{24}$/i, 'Not an id.'));
+const ObjectId = v.pipe(v.string(), v.regex(/^[a-f0-9]{24}$/i, message('image_agent_validation_id')));
 
 export const SendSchema = v.object({
   threadId: v.optional(v.nullable(ObjectId)),
   text: v.pipe(
     v.string(),
     v.trim(),
-    v.minLength(1, 'Say something.'),
-    v.maxLength(MAX_TEXT_LENGTH, `Keep it to ${MAX_TEXT_LENGTH} characters or fewer.`),
+    v.minLength(1, message('image_agent_validation_text_required')),
+    v.maxLength(MAX_TEXT_LENGTH, message('image_agent_validation_text_max', { count: MAX_TEXT_LENGTH })),
   ),
 });
 

@@ -1,3 +1,4 @@
+import { translate } from 'server/Helpers/translate.js';
 import { ImageAgentRejection } from 'server/Types/graphql.js';
 
 export type RuleVerdict = {
@@ -59,35 +60,35 @@ export function checkRules(prompt: string): RuleVerdict | null {
   if (SEXUAL.test(prompt)) {
     return {
       rejection: ImageAgentRejection.UnsafeSexual,
-      reason: 'Sexual content is not something this agent draws.',
+      reason: translate('api', 'image_agent_refusal_sexual'),
     };
   }
 
   if (VIOLENT.test(prompt)) {
     return {
       rejection: ImageAgentRejection.UnsafeViolent,
-      reason: 'Graphic violence is not something this agent draws.',
+      reason: translate('api', 'image_agent_refusal_violent'),
     };
   }
 
   if (INJECTION.test(prompt)) {
     return {
       rejection: ImageAgentRejection.Spam,
-      reason: 'Describe the picture you want. Instructions to the model are not a picture.',
+      reason: translate('api', 'image_agent_refusal_injection'),
     };
   }
 
   if (URL.test(prompt)) {
     return {
       rejection: ImageAgentRejection.Spam,
-      reason: 'The agent cannot open links. Describe the picture in words.',
+      reason: translate('api', 'image_agent_refusal_link'),
     };
   }
 
   if (letterCount(prompt) < 3) {
     return {
       rejection: ImageAgentRejection.Spam,
-      reason: 'Too short to draw. Say what should be in the picture.',
+      reason: translate('api', 'image_agent_refusal_short'),
     };
   }
 
@@ -95,14 +96,14 @@ export function checkRules(prompt: string): RuleVerdict | null {
   if (words >= 6 && ratio < 0.3) {
     return {
       rejection: ImageAgentRejection.Spam,
-      reason: 'The same word repeated is not a picture.',
+      reason: translate('api', 'image_agent_refusal_repeated'),
     };
   }
 
   if (prompt.length >= 12 && characterVariety(prompt) < 0.2) {
     return {
       rejection: ImageAgentRejection.Spam,
-      reason: 'That reads as keyboard noise rather than a picture.',
+      reason: translate('api', 'image_agent_refusal_noise'),
     };
   }
 

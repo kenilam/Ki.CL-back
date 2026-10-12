@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { message } from 'server/Helpers/Validation/message.js';
 
 /**
  * A blank query would match everything, so it is rejected rather than answered
@@ -9,7 +10,7 @@ export const TaxonSearchSchema = v.object({
   query: v.pipe(
     v.string(),
     v.trim(),
-    v.minLength(2, 'Search needs at least two characters'),
+    v.minLength(2, message('validation_search_min')),
     v.maxLength(120),
   ),
   limit: v.optional(

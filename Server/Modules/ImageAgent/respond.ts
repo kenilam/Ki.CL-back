@@ -10,6 +10,7 @@ import {
   ImageAgentThreads,
   type ImageAgentThreadMessage,
 } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
+import { translate } from 'server/Helpers/translate.js';
 import { ProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
 import {
   ImageAgentMessageKind,
@@ -20,9 +21,9 @@ import {
 } from 'server/Types/graphql.js';
 import {
   clarify,
-  OTHER_CHOICE,
-  OTHER_FOLLOW_UP,
-  SKIP_CHOICE,
+  otherChoice,
+  otherFollowUp,
+  skipChoice,
 } from './agent/clarify.js';
 import { ContentRejectedError, runImageAgent } from './agent/run.js';
 import { checkRules, governPrompt } from './govern/index.js';
@@ -31,16 +32,6 @@ import { publishImageAgentThreadUpdated } from './pubsub.js';
 import { toResult, visible, type LeanImageAgentThread } from './types.js';
 
 const LOG = '[ImageAgent]';
-
-const COPY = {
-  drawn: 'Here it is.',
-  drawnUnreviewed: 'Here it is. No reviewer was available, so it went out unchecked.',
-  drawnBelowBar: 'Here it is. It didn’t pass review, but it was the best of the attempts.',
-  error: 'Something went wrong while drawing.',
-  exhaustedBilling: 'Every drawing provider is out of credit, and waiting will not bring it back.',
-  exhaustedRefills: 'The drawing providers are out of quota for now. Try again later.',
-  providerRefused: 'The image provider declined to draw that.',
-};
 
 type Draft = Omit<ImageAgentThreadMessage, 'id' | 'at'>;
 
@@ -64,12 +55,6 @@ async function publish(threadId: string): Promise<void> {
     publishImageAgentThreadUpdated(toResult(doc));
   }
 }
-
-/** What the person reads while the agent is reading their message. */
-const ACTIVITY = {
-  reading: 'Reading your message.',
-  checking: 'Checking it is something we can draw.',
-};
 
 /** Say what the agent is doing now, while the thread is THINKING. */
 async function doing(threadId: string, activity: string): Promise<void> {
@@ -152,12 +137,8 @@ async function failure(threadId: string, jobId: string | null, error: unknown): 
   await reply(threadId, message({
     role: ImageAgentRole.Agent,
     kind: ImageAgentMessageKind.Failure,
-    // eslint-disable-next-line no-nested-ternary
-    text: exhaustion === 'BILLING'
-      ? COPY.exhaustedBilling
-      : exhaustion === 'REFILLS'
-        ? COPY.exhaustedRefills
-        : COPY.error,
+    // Without a context this is the plain failure line.
+    text: translate('api', 'image_agent_failure', { context: exhaustion?.toLowerCase() }),
     exhaustion,
     jobId: jobId ? new Types.ObjectId(jobId) : null,
   }));
@@ -165,9 +146,9 @@ async function failure(threadId: string, jobId: string | null, error: unknown): 
 
 function deliveryLine(score: ImageAgentJobScore | null): string {
   if (!score) {
-    return COPY.drawnUnreviewed;
+    return translate('api', 'image_agent_drawn_unreviewed');
   }
-  return score.pass ? COPY.drawn : COPY.drawnBelowBar;
+  return translate('api', score.pass ? 'image_agent_drawn' : 'image_agent_drawn_below_bar');
 }
 
 /** Draw the brief, narrating each step into one PROGRESS message. */
@@ -265,7 +246,7 @@ async function draw(
       await reply(threadId, message({
         role: ImageAgentRole.Agent,
         kind: ImageAgentMessageKind.Refusal,
-        text: COPY.providerRefused,
+        text: translate('api', 'image_agent_refusal_provider'),
         rejection: ImageAgentRejection.UnsafeOther,
         jobId: job._id,
       }));
@@ -289,7 +270,7 @@ export async function respond(
   text: string,
 ): Promise<void> {
   try {
-    await doing(threadId, ACTIVITY.reading);
+    await doing(threadId, translate('api', 'image_agent_activity_reading'));
 
     const local = checkRules(text);
     if (local) {
@@ -320,14 +301,14 @@ export async function respond(
     const asked = messages.at(-2);
     if (
       asked?.kind === ImageAgentMessageKind.Question
-      && asked.choices?.includes(OTHER_CHOICE)
-      && text.trim().toLowerCase() === OTHER_CHOICE.toLowerCase()
+      && asked.choices?.includes(otherChoice())
+      && text.trim().toLowerCase() === otherChoice().toLowerCase()
     ) {
       await reply(threadId, message({
         role: ImageAgentRole.Agent,
         kind: ImageAgentMessageKind.Question,
-        text: OTHER_FOLLOW_UP,
-        choices: [SKIP_CHOICE],
+        text: otherFollowUp(),
+        choices: [skipChoice()],
       }));
       return;
     }
@@ -335,7 +316,7 @@ export async function respond(
     // Everything before the message just sent.
     const earlier = transcript(messages.slice(0, -1));
 
-    await doing(threadId, ACTIVITY.checking);
+    await doing(threadId, translate('api', 'image_agent_activity_checking'));
     const verdict = await governPrompt(text, earlier || null);
     if (verdict.rejection) {
       console.log(`${LOG} rejected thread=${threadId} rejection=${verdict.rejection}`);

@@ -9,21 +9,22 @@ import {
   resolveSubtreeRoots,
   type SubtreeKey,
 } from './resolveSubtree.js';
+import { translate } from 'server/Helpers/translate.js';
 
 function throwOtolMiss(miss: {
   status: number;
   message?: string;
 }): never {
   if (miss.status === 0) {
-    throw BadUserInput(miss.message ?? 'Failed to reach Open Tree of Life');
+    throw BadUserInput(miss.message ?? translate('api', 'error_otol_unreachable'));
   }
   if (miss.status === 400 || miss.status === 404) {
     throw NotFound(
-      miss.message ?? 'Tree of Life subtree not found for the given id',
+      miss.message ?? translate('api', 'error_otol_subtree_not_found_for_id'),
     );
   }
   throw BadUserInput(
-    miss.message ?? `Open Tree of Life request failed (${miss.status})`,
+    miss.message ?? translate('api', 'error_otol_request_failed', { status: miss.status }),
   );
 }
 
@@ -60,7 +61,7 @@ export default {
       if (miss) {
         throwOtolMiss(miss);
       }
-      throw NotFound('Tree of Life subtree not found for the given id');
+      throw NotFound(translate('api', 'error_otol_subtree_not_found_for_id'));
     },
 
     TreeOfLifeSubtrees: async (

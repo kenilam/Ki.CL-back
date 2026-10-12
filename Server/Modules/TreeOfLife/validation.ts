@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { message } from 'server/Helpers/Validation/message.js';
 
 /** Cellular organisms - Open Tree of Life synthetic root. */
 export const ROOT_OTT_ID = 93302;
@@ -61,14 +62,14 @@ export const TreeOfLifeSubtreesSchema = v.pipe(
     (input) => (
       (input.ottIds?.length ?? 0) + (input.nodeIds?.length ?? 0) > 0
     ),
-    'Provide at least one ottId or nodeId',
+    message('validation_subtree_roots_required'),
   ),
   v.check(
     (input) => (
       (input.ottIds?.length ?? 0) + (input.nodeIds?.length ?? 0)
       <= MAX_SUBTREES_BATCH
     ),
-    `At most ${MAX_SUBTREES_BATCH} subtree roots per request`,
+    message('validation_subtree_roots_max', { count: MAX_SUBTREES_BATCH }),
   ),
   v.transform((input) => {
     const ottIds = [...new Set(input.ottIds ?? [])];

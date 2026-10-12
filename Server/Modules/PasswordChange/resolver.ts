@@ -16,6 +16,7 @@ import { Gmail } from 'server/DataSources/Google/index.js';
 import { BadUserInput, TooManyRequests, Unauthenticated, Unavailable } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
 import { COMPLETE_MS, COOLDOWN_MS, LINK_MS, toResult, watch } from './status.js';
+import { translate } from 'server/Helpers/translate.js';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest();
 
@@ -30,7 +31,7 @@ function confirmUrl(context: Context): string {
       : undefined);
 
   if (!url) {
-    throw Unavailable('Email is not available. Try again later.');
+    throw Unavailable(translate('api', 'error_email_unavailable'));
   }
 
   return url;
@@ -51,7 +52,7 @@ async function findConfirmable(input: { id: string; secret: string }) {
 
 function requireUser(context: Context) {
   if (!context.user) {
-    throw Unauthenticated('Authentication required');
+    throw Unauthenticated();
   }
 
   return context.user;
@@ -90,17 +91,17 @@ export default {
 
       // Checked before anything is sent, so a wrong password costs no email.
       if (!user || !(await bcrypt.compare(input.CurrentPassword, user.Password))) {
-        throw BadUserInput('Current password is incorrect');
+        throw BadUserInput(translate('api', 'error_password_current_incorrect'));
       }
 
       if (input.Password === input.CurrentPassword) {
-        throw BadUserInput('The new password must be different from the current one.');
+        throw BadUserInput(translate('api', 'error_password_unchanged'));
       }
 
       const earlier = await PasswordChanges.findOne({ UserGUID });
 
       if (earlier && earlier.createdAt.getTime() > Date.now() - COOLDOWN_MS) {
-        throw TooManyRequests('A link was just sent. Wait a minute before asking for another.');
+        throw TooManyRequests(translate('api', 'error_password_link_cooldown'));
       }
 
       await PasswordChanges.deleteOne({ UserGUID });
@@ -126,7 +127,7 @@ export default {
       // After `#`, so the secret is never sent to a server or kept in its logs.
       await Gmail.send({
         to: Email,
-        ...Gmail.emails.passwordChangeConfirm({ link: `${url}#${id}.${secret}` }),
+        ...Gmail.emails.passwordChangeConfirm({ link: `${url}#${id}.${secret}`, minutes: LINK_MS / 60_000 }),
       });
 
       return toResult(id, doc);
@@ -139,7 +140,7 @@ export default {
 
       // One answer for every way it can fail, so it says nothing about a request.
       if (!doc) {
-        throw BadUserInput('This link has expired or was already used.');
+        throw BadUserInput(translate('api', 'error_password_link_expired'));
       }
 
       doc.Confirmed = true;
@@ -169,7 +170,7 @@ export default {
       const saved = doc && (await Users.updateOne({ UserGUID, Active: true }, { Password: doc.Password }));
 
       if (!saved?.matchedCount) {
-        throw BadUserInput('This password change was not confirmed in time.');
+        throw BadUserInput(translate('api', 'error_password_change_unconfirmed'));
       }
 
       // New tokens replace the stored refresh token, so a session on another device can't renew.
@@ -197,7 +198,7 @@ export default {
     PasswordChangeUpdated: {
       subscribe: (_: unknown, args: { id: string }, context?: Context) => {
         if (!context?.user) {
-          throw Unauthenticated('Authentication required');
+          throw Unauthenticated();
         }
 
         return watch(args.id, context.user.UserGUID);

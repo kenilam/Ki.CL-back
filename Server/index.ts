@@ -21,6 +21,7 @@ import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
 import { sessionRoute } from './Modules/ExchangeToken/route.js';
 import { connectDatabase, mongoose, pingPrimary } from './DataSources/MongoDB/index.js';
+import { loadTranslations } from './DataSources/MongoDB/Translations/cache.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
 import type { IncomingMessage } from 'node:http';
@@ -95,6 +96,8 @@ const server = new ApolloServer<Partial<Context>>({
 
 async function start() {
   await connectDatabase();
+  // The server's own messages are read from memory, so the strings are loaded before it answers.
+  await loadTranslations();
   await loadCerts();
   await server.start();
 

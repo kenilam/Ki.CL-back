@@ -1,3 +1,5 @@
+import { translate } from 'server/Helpers/translate.js';
+
 interface GoogleUserInfo {
   Email: string;
   FirstName: string | null;
@@ -14,7 +16,7 @@ export async function verifyGoogleToken(token: string): Promise<GoogleUserInfo> 
   );
 
   if (!response.ok) {
-    throw new Error('Failed to verify Google token');
+    throw new Error(translate('api', 'error_google_token'));
   }
 
   const data = await response.json() as {
@@ -26,7 +28,7 @@ export async function verifyGoogleToken(token: string): Promise<GoogleUserInfo> 
   };
 
   if (!data.email || !data.email_verified) {
-    throw new Error('Google email not verified');
+    throw new Error(translate('api', 'error_google_email'));
   }
 
   return {
