@@ -1,6 +1,5 @@
 import { DateTime } from '^/Codegen/scalars.js';
 import { EmailAddress } from '^/Codegen/scalars.js';
-import { JSONObject } from '^/Codegen/scalars.js';
 import { JWT } from '^/Codegen/scalars.js';
 import { NonEmptyString } from '^/Codegen/scalars.js';
 import { URL } from '^/Codegen/scalars.js';
@@ -19,7 +18,6 @@ export type Scalars = {
   Float: { input: number; output: number; }
   DateTime: { input: DateTime; output: DateTime; }
   EmailAddress: { input: EmailAddress; output: EmailAddress; }
-  JSONObject: { input: JSONObject; output: JSONObject; }
   JWT: { input: JWT; output: JWT; }
   NonEmptyString: { input: NonEmptyString; output: NonEmptyString; }
   URL: { input: URL; output: URL; }
@@ -352,8 +350,8 @@ export type Query = {
   TaxonSearch: Array<TaxonSearchResult>;
   TaxonVisual: TaxonVisual;
   /**
-   * The namespaces asked for that exist in this language. One that doesn't exist
-   * is left out of the answer.
+   * Every string of the namespaces asked for, in this language. A namespace that
+   * doesn't exist adds nothing to the answer.
    *
    * Runs without a session: the site needs its words before it can start one,
    * and they are public.
@@ -548,14 +546,14 @@ export enum TaxonVisualStatus {
   Ready = 'READY'
 }
 
-/** One namespace of the site's writing in one language, as i18next resources. */
+/** One string of the site's writing in one language. */
 export type Translation = {
   __typename?: 'Translation';
-  /** Changes when any string in the namespace does. */
-  hash: Scalars['String']['output'];
+  /** The string's path in its namespace, joined with dots: `account.signOut`. */
+  field: Scalars['String']['output'];
   language: Scalars['String']['output'];
   namespace: Scalars['String']['output'];
-  resources: Scalars['JSONObject']['output'];
+  value: Scalars['String']['output'];
 };
 
 /**
@@ -686,7 +684,6 @@ export type ResolversTypes = ResolversObject<{
   ImageAgentThread: ResolverTypeWrapper<ImageAgentThread>;
   ImageAgentThreadStatus: ImageAgentThreadStatus;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
-  JSONObject: ResolverTypeWrapper<Scalars['JSONObject']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -733,7 +730,6 @@ export type ResolversParentTypes = ResolversObject<{
   ImageAgentScore: ImageAgentScore;
   ImageAgentThread: ImageAgentThread;
   Int: Scalars['Int']['output'];
-  JSONObject: Scalars['JSONObject']['output'];
   JWT: Scalars['JWT']['output'];
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
@@ -815,10 +811,6 @@ export type ImageAgentThreadResolvers<ContextType = Context, ParentType extends 
   style?: Resolver<Maybe<ResolversTypes['ImageAgentStyle']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
 }>;
-
-export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
-  name: 'JSONObject';
-}
 
 export interface JwtScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JWT'], any> {
   name: 'JWT';
@@ -916,10 +908,10 @@ export type TaxonVisualScoreResolvers<ContextType = Context, ParentType extends 
 }>;
 
 export type TranslationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Translation'] = ResolversParentTypes['Translation']> = ResolversObject<{
-  hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  field?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   namespace?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  resources?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
 export type TreeOfLifeNodeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TreeOfLifeNode'] = ResolversParentTypes['TreeOfLifeNode']> = ResolversObject<{
@@ -953,7 +945,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ImageAgentMessage?: ImageAgentMessageResolvers<ContextType>;
   ImageAgentScore?: ImageAgentScoreResolvers<ContextType>;
   ImageAgentThread?: ImageAgentThreadResolvers<ContextType>;
-  JSONObject?: GraphQLScalarType;
   JWT?: GraphQLScalarType;
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

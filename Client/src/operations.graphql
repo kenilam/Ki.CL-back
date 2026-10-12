@@ -198,8 +198,8 @@ query kicl_Translations($language: String!, $namespaces: [String!]!) {
   Translations(language: $language, namespaces: $namespaces) {
     language
     namespace
-    hash
-    resources
+    field
+    value
   }
 }
 

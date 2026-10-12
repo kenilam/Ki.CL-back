@@ -1,16 +1,16 @@
-"""One namespace of the site's writing in one language, as i18next resources."""
+"""One string of the site's writing in one language."""
 type Translation {
   language: String!
   namespace: String!
-  """Changes when any string in the namespace does."""
-  hash: String!
-  resources: JSONObject!
+  """The string's path in its namespace, joined with dots: `account.signOut`."""
+  field: String!
+  value: String!
 }
 
 extend type Query {
   """
-  The namespaces asked for that exist in this language. One that doesn't exist
-  is left out of the answer.
+  Every string of the namespaces asked for, in this language. A namespace that
+  doesn't exist adds nothing to the answer.
 
   Runs without a session: the site needs its words before it can start one,
   and they are public.

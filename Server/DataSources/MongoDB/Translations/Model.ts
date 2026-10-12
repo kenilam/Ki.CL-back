@@ -8,10 +8,9 @@ import mongoose, { Schema, type Document } from 'mongoose';
 export interface ITranslation extends Document {
   language: string;
   namespace: string;
-  /** The key's path in the namespace, joined with dots: `account.signOut`. */
+  /** The key's path in the namespace, joined with dots: `account.signOut`. A list's items are numbered: `lines.0`. */
   field: string;
-  /** A string, or an array where i18next returns a list whole. */
-  value: unknown;
+  value: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +20,7 @@ const TranslationSchema = new Schema<ITranslation>(
     language: { type: String, required: true },
     namespace: { type: String, required: true },
     field: { type: String, required: true },
-    value: { type: Schema.Types.Mixed, required: true },
+    value: { type: String, required: true },
   },
   {
     collection: 'translations',

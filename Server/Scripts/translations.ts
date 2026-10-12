@@ -25,24 +25,26 @@ const USAGE = 'Usage: translations.ts seed|diff|prune <dir> | drop <namespace>';
 const RESERVED = /[.:$]/;
 
 type Branch = { [key: string]: unknown };
-type File = { language: string; namespace: string; fields: Map<string, unknown> };
+type File = { language: string; namespace: string; fields: Map<string, string> };
 
-const isBranch = (value: unknown): value is Branch =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
+/** A list is a branch whose keys are its positions, so `lines[0]` is the field `lines.0`. */
+const isBranch = (value: unknown): value is Branch => typeof value === 'object' && value !== null;
 
-const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
-
-/** Every string or list in the file, by its dotted path. */
-function flatten(branch: Branch, file: string, path: string[] = [], fields = new Map<string, unknown>()) {
+/** Every string in the file, by its dotted path. */
+function flatten(branch: Branch, file: string, path: string[] = [], fields = new Map<string, string>()) {
   for (const [key, value] of Object.entries(branch)) {
     if (RESERVED.test(key)) {
       throw new Error(`${file}: the key "${key}" contains ".", ":" or "$".`);
     }
 
+    const field = [...path, key].join('.');
+
     if (isBranch(value)) {
       flatten(value, file, [...path, key], fields);
+    } else if (typeof value === 'string') {
+      fields.set(field, value);
     } else {
-      fields.set([...path, key].join('.'), value);
+      throw new Error(`${file}: ${field} is not a string.`);
     }
   }
 
@@ -60,7 +62,7 @@ function readFiles(directory: string): File[] {
         const path = join(root, language, name);
         const contents: unknown = JSON.parse(readFileSync(path, 'utf8'));
 
-        if (!isBranch(contents)) {
+        if (!isBranch(contents) || Array.isArray(contents)) {
           throw new Error(`${path}: expected an object of keys.`);
         }
 
@@ -80,7 +82,7 @@ function readFiles(directory: string): File[] {
  * now has `account.title`, or the other way round. One is a string where the
  * other needs a branch.
  */
-const collides = (stored: string, fields: Map<string, unknown>): boolean =>
+const collides = (stored: string, fields: Map<string, string>): boolean =>
   [...fields.keys()].some((field) => field.startsWith(`${stored}.`) || stored.startsWith(`${field}.`));
 
 async function run(): Promise<void> {
@@ -110,7 +112,7 @@ async function run(): Promise<void> {
     const rows = await Translations.find({ language, namespace }, 'field value').lean();
     const stored = new Map(rows.map((row) => [row.field, row.value]));
 
-    const changed = [...fields].filter(([field, value]) => !same(value, stored.get(field)));
+    const changed = [...fields].filter(([field, value]) => value !== stored.get(field));
 
     if (command === 'diff') {
       behind += changed.length;
