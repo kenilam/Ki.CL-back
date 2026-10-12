@@ -1,6 +1,7 @@
 import { ImageAgentJobs } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
 import { ImageAgentThreads } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
 import { TooManyRequests } from 'server/Errors/index.js';
+import { translate } from 'server/Helpers/translate.js';
 import { ImageAgentRole, ImageAgentThreadStatus } from 'server/Types/graphql.js';
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -11,7 +12,7 @@ const DAY_MS = 24 * HOUR_MS;
  * say which one or when it resets, because that would tell someone trying to
  * get around it where to look.
  */
-const UNAVAILABLE = 'The agent can’t take more requests right now. Try again later.';
+const unavailable = (): string => translate('api', 'image_agent_error_unavailable');
 
 function envNumber(name: string, fallback: number): number {
   const value = Number(process.env[name]);
@@ -161,33 +162,33 @@ export async function assertWithinQuota(ownerGUID: string): Promise<void> {
   const extensions = { remaining: allowance.remaining, limit: allowance.limit };
 
   if (allowance.busy) {
-    throw TooManyRequests('Wait for the agent to answer before sending more.', extensions);
+    throw TooManyRequests(translate('api', 'image_agent_error_waiting'), extensions);
   }
 
   if (allowance.nextAllowedAt) {
-    throw TooManyRequests('Too soon after the last message.', {
+    throw TooManyRequests(translate('api', 'image_agent_error_too_soon'), {
       ...extensions,
       nextAllowedAt: allowance.nextAllowedAt.toISOString(),
     });
   }
 
   if (spoken >= perUserDailyMessages()) {
-    throw TooManyRequests(UNAVAILABLE, extensions);
+    throw TooManyRequests(unavailable(), extensions);
   }
 
   if (allowance.remaining <= 0) {
-    throw TooManyRequests(UNAVAILABLE, extensions);
+    throw TooManyRequests(unavailable(), extensions);
   }
 
   if (!recent.includes(ownerGUID) && recent.length >= hourlyCallers()) {
-    throw TooManyRequests(UNAVAILABLE, extensions);
+    throw TooManyRequests(unavailable(), extensions);
   }
 
   if (spokenEverywhere >= globalDailyMessages()) {
-    throw TooManyRequests(UNAVAILABLE, extensions);
+    throw TooManyRequests(unavailable(), extensions);
   }
 
   if (globalDrawn >= globalDailyLimit()) {
-    throw TooManyRequests(UNAVAILABLE, extensions);
+    throw TooManyRequests(unavailable(), extensions);
   }
 }

@@ -53,6 +53,7 @@ contact.forget:
 	@npx tsx Server/Scripts/contactMessages.ts forget "$(EMAIL)"
 
 # The site's writing: make translations.seed DIR=../Ki.CL/App/locales
+# The server's own messages and emails: make translations.seed DIR=Server/locales
 # Reads <DIR>/<language>/<namespace>.json into one row for each string. seed
 # adds and changes strings, diff fails when the database is behind the files,
 # prune removes strings the files no longer have, drop removes a whole namespace.

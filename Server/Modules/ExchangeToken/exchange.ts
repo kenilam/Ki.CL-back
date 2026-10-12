@@ -7,6 +7,7 @@ import type { Context } from 'server/Context/index.js';
 import { CaptchaRequired, Unavailable } from 'server/Errors/index.js';
 import { parseCookies } from 'server/Helpers/auth.js';
 import { turnstileToken, verifyTurnstile } from 'server/Helpers/turnstile.js';
+import { translate } from 'server/Helpers/translate.js';
 
 /** Must match the `action` the client renders the widget with. */
 const TURNSTILE_ACTION = 'exchange-token';
@@ -92,7 +93,7 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
       return false;
     }
     if (!(await passedTurnstile(context))) {
-      throw Unavailable('Could not confirm you are human right now. Try again later.');
+      throw Unavailable(translate('api', 'error_human_check_unavailable'));
     }
     await issue(context, { ...current, human: true });
     return true;

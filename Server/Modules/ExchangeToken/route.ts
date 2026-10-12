@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { GraphQLError } from 'graphql';
 
+import { translate } from 'server/Helpers/translate.js';
 import { exchangeToken } from './exchange.js';
 
 /** The HTTP status for each error `exchangeToken` throws. */
@@ -31,6 +32,6 @@ export async function sessionRoute(req: Request, res: Response): Promise<void> {
     }
 
     console.error('[ExchangeToken] session route failed', error);
-    res.status(500).json({ error: 'Could not start a session.' });
+    res.status(500).json({ error: translate('api', 'error_session_start') });
   }
 }

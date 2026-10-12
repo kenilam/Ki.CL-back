@@ -1,5 +1,6 @@
 import * as v from 'valibot';
 import { GraphQLError } from 'graphql';
+import { translate } from 'server/Helpers/translate.js';
 
 export function validate<
   TSchema extends v.GenericSchema,
@@ -8,7 +9,7 @@ export function validate<
 
   if (!result.success) {
     const firstIssue = result.issues[0];
-    const message = firstIssue?.message || 'Validation failed';
+    const message = firstIssue?.message || translate('api', 'validation_failed');
 
     throw new GraphQLError(message, {
       extensions: {

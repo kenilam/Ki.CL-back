@@ -1,3 +1,4 @@
+import { translate } from 'server/Helpers/translate.js';
 import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
 import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
 import { ImageAgentStyle } from 'server/Types/graphql.js';
@@ -16,18 +17,20 @@ export function maxQuestions(): number {
  * Offered with every question, so the person can always skip straight to
  * drawing.
  */
-export const SKIP_CHOICE = 'Just draw it';
+export const skipChoice = (): string => translate('api', 'image_agent_choice_skip');
 
 /**
  * Offered with every question that has choices, for when none of them fit.
  * Picking it gets an open follow-up rather than another list.
+ *
+ * The pick comes back as this text and is compared with it, so a thread
+ * waiting on the question when the wording changes reads the old text as an
+ * ordinary answer.
  */
-export const OTHER_CHOICE = 'Something else';
+export const otherChoice = (): string => translate('api', 'image_agent_choice_something_else');
 
-/** The follow-up to OTHER_CHOICE. Fixed, so answering it costs no model call. */
-export const OTHER_FOLLOW_UP = 'What do you have in mind? Describe it in your own words.';
-
-const OFFERED = [OTHER_CHOICE, SKIP_CHOICE].map((choice) => choice.toLowerCase());
+/** The follow-up to `otherChoice`. Fixed, so answering it costs no model call. */
+export const otherFollowUp = (): string => translate('api', 'image_agent_question_something_else');
 
 export type Decision =
   | { action: 'ask'; question: string; choices: string[] }
@@ -168,14 +171,15 @@ export async function clarify(input: ClarifyInput): Promise<Decision> {
   }
 
   if (decision.action === 'ask' && !mustDraw) {
+    const other = otherChoice();
+    const skip = skipChoice();
+    const offered = [other, skip].map((choice) => choice.toLowerCase());
     const choices = decision.choices.filter(
-      (choice) => !OFFERED.includes(choice.toLowerCase()),
+      (choice) => !offered.includes(choice.toLowerCase()),
     );
     return {
       ...decision,
-      choices: choices.length
-        ? [...choices, OTHER_CHOICE, SKIP_CHOICE]
-        : [SKIP_CHOICE],
+      choices: choices.length ? [...choices, other, skip] : [skip],
     };
   }
 

@@ -6,6 +6,7 @@ import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generate
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie, clearApiKeyCookie } from 'server/Helpers/cookies.js';
 import { BadUserInput, Forbidden } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
@@ -18,16 +19,16 @@ export default {
       );
 
       if (!user) {
-        throw BadUserInput('Invalid email or password');
+        throw BadUserInput(translate('api', 'error_credentials'));
       }
 
       if (!user.Active) {
-        throw Forbidden('Account is not activated. Please check your email.');
+        throw Forbidden(translate('api', 'error_account_inactive'));
       }
 
       const isValidPassword = await bcrypt.compare(input.Password, user.Password);
       if (!isValidPassword) {
-        throw BadUserInput('Invalid email or password');
+        throw BadUserInput(translate('api', 'error_credentials'));
       }
 
       const { AccessToken, RefreshToken } = await generateUserToken({

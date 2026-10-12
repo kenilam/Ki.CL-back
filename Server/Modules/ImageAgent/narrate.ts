@@ -1,5 +1,6 @@
 import type { ImageAgentStepKind } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
-import { ImageAgentStyle } from 'server/Types/graphql.js';
+import { translate } from 'server/Helpers/translate.js';
+import type { ImageAgentStyle } from 'server/Types/graphql.js';
 
 /** Longest subject that still reads as a phrase inside a sentence. */
 const MAX_SUBJECT = 60;
@@ -9,13 +10,6 @@ const DANGLING = new Set([
   'a', 'an', 'and', 'at', 'beneath', 'by', 'for', 'from', 'her', 'his', 'in',
   'into', 'its', 'of', 'on', 'or', 'over', 'the', 'their', 'to', 'under', 'with',
 ]);
-
-const STYLE: Record<ImageAgentStyle, string> = {
-  [ImageAgentStyle.Photography]: 'a photograph',
-  [ImageAgentStyle.Illustration]: 'an illustration',
-  [ImageAgentStyle.Minimal]: 'a minimal picture',
-  [ImageAgentStyle.Render_3D]: 'a 3D render',
-};
 
 /**
  * A leading "a minimal illustration of", "a 3D render of" and the like. The
@@ -62,27 +56,19 @@ export function progressAfter(
   brief: string,
   style: ImageAgentStyle,
 ): string {
-  const subject = subjectOf(brief);
+  // Drawing names the style, so that step has a sentence for each one.
+  const step = kind === 'REFINE' ? `${kind}_${style}` : kind;
 
-  switch (kind) {
-    case 'GOVERN':
-      return `Writing the prompt for ${subject}.`;
-    case 'REFINE':
-      return `Drawing ${subject} as ${STYLE[style]}. This takes about a minute.`;
-    case 'GENERATE':
-      return `Checking ${subject} came out as asked.`;
-    case 'SCORE':
-      return 'Deciding whether to try again.';
-    case 'RETRY':
-      return 'Writing the prompt again, with the reviewer’s notes.';
-    case 'PERSIST':
-      return 'Nearly there.';
-    default:
-      return 'Stopping.';
-  }
+  // A step without a sentence of its own reads the plain key.
+  return translate('api', 'image_agent_progress', {
+    context: step.toLowerCase(),
+    subject: subjectOf(brief),
+  });
 }
 
 /** The thinking step before a decision: about the earlier picture, when there is one. */
 export function planning(brief: string | null): string {
-  return brief ? `Working out the change to ${subjectOf(brief)}.` : 'Working out the picture.';
+  return brief
+    ? translate('api', 'image_agent_planning_change', { subject: subjectOf(brief) })
+    : translate('api', 'image_agent_planning');
 }

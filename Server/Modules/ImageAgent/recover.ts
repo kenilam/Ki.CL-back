@@ -6,6 +6,7 @@ import {
   ImageAgentStepKind,
 } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
 import { ImageAgentThreads } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
+import { translate } from 'server/Helpers/translate.js';
 import {
   ImageAgentMessageKind,
   ImageAgentRole,
@@ -27,10 +28,6 @@ const MINUTE_MS = 60 * 1000;
  */
 const THINKING_LIMIT_MS = 2 * MINUTE_MS;
 const DRAWING_LIMIT_MS = 8 * MINUTE_MS;
-
-const COPY = {
-  interrupted: 'I stopped before can finish the last request.',
-};
 
 /**
  * Closes stalled turns so the person can carry on.
@@ -84,7 +81,7 @@ export async function recoverStalled(scope: {
             id: new Types.ObjectId().toString(),
             role: ImageAgentRole.Agent,
             kind: ImageAgentMessageKind.Failure,
-            text: COPY.interrupted,
+            text: translate('api', 'image_agent_failure_interrupted'),
             jobId: null,
             assetId: null,
             score: null,

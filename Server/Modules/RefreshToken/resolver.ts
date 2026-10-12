@@ -4,6 +4,7 @@ import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generate
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import { Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 interface RefreshPayload {
   UserGUID: string;
@@ -27,7 +28,7 @@ export default {
       }
 
       if (!token) {
-        throw Unauthenticated('Refresh token not found');
+        throw Unauthenticated(translate('api', 'error_refresh_token_missing'));
       }
 
       let decoded: RefreshPayload;
@@ -37,14 +38,14 @@ export default {
           process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!,
         ) as RefreshPayload;
       } catch {
-        throw Unauthenticated('Refresh token expired or invalid');
+        throw Unauthenticated(translate('api', 'error_refresh_token_invalid'));
       }
 
       // For authenticated users, verify the token record exists
       if (decoded.aud === 'user') {
         const tokenRecord = await UserTokens.findOne({ Token: token });
         if (!tokenRecord) {
-          throw Unauthenticated('Session invalidated. Please sign in again.');
+          throw Unauthenticated(translate('api', 'error_session_invalidated'));
         }
       }
 

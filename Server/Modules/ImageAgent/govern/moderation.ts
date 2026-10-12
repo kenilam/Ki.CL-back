@@ -1,3 +1,4 @@
+import { translate } from 'server/Helpers/translate.js';
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
 import { ImageAgentRejection } from 'server/Types/graphql.js';
 
@@ -99,10 +100,10 @@ export async function moderatePrompt(prompt: string): Promise<ModerationVerdict 
 export function reasonForModeration(verdict: ModerationVerdict): string {
   switch (verdict.rejection) {
     case ImageAgentRejection.UnsafeSexual:
-      return 'Sexual content is not something this agent draws.';
+      return translate('api', 'image_agent_refusal_sexual');
     case ImageAgentRejection.UnsafeViolent:
-      return 'Graphic violence and harm are not something this agent draws.';
+      return translate('api', 'image_agent_refusal_harm');
     default:
-      return 'That request is outside what this agent will draw.';
+      return translate('api', 'image_agent_refusal_outside');
   }
 }

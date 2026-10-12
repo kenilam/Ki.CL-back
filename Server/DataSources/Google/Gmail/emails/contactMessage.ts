@@ -1,8 +1,8 @@
-import { render } from './render.js';
+import { render, t } from './render.js';
 
 /** The message as it reaches the inbox. Replying answers the sender. */
 export const contactMessage = ({ Email, Message }: { Email: string; Message: string }) => {
-  const subject = `Message from ${Email}`;
+  const subject = t('contact_message_subject', { email: Email });
 
   return {
     subject,

@@ -7,6 +7,7 @@ import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generate
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie, clearApiKeyCookie } from 'server/Helpers/cookies.js';
 import { BadUserInput, NotFound } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
@@ -19,21 +20,21 @@ export default {
       });
 
       if (!registration) {
-        throw NotFound('Registration not found');
+        throw NotFound(translate('api', 'error_registration_not_found'));
       }
 
       const isValidSecret = await bcrypt.compare(input.Secret, registration.Secret);
       if (!isValidSecret) {
-        throw BadUserInput('Invalid activation secret');
+        throw BadUserInput(translate('api', 'error_activation_secret'));
       }
 
       const user = await Users.findOne({ UserGUID: input.UserGUID });
       if (!user) {
-        throw NotFound('User not found');
+        throw NotFound(translate('api', 'error_user_not_found'));
       }
 
       if (user.Active) {
-        throw BadUserInput('Account is already activated');
+        throw BadUserInput(translate('api', 'error_account_active'));
       }
 
       await Users.updateOne(

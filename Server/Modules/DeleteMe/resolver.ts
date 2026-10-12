@@ -11,12 +11,13 @@ import { clearAuthCookies } from 'server/Helpers/cookies.js';
 import { forgetOwner } from 'server/Modules/ImageAgent/forget.js';
 import { BadUserInput, Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
     DeleteMe: async (_: unknown, args: { DeleteMe: unknown }, context: Context) => {
       if (!context.user) {
-        throw Unauthenticated('Authentication required');
+        throw Unauthenticated();
       }
 
       const input = validate(DeleteMeSchema, args.DeleteMe);
@@ -25,12 +26,12 @@ export default {
       const user = await Users.findOne({ UserGUID }, 'Password');
 
       if (!user) {
-        throw Unauthenticated('User not found');
+        throw Unauthenticated(translate('api', 'error_user_not_found'));
       }
 
       // The session alone isn't enough to delete an account.
       if (!(await bcrypt.compare(input.CurrentPassword, user.Password))) {
-        throw BadUserInput('Password is incorrect');
+        throw BadUserInput(translate('api', 'error_password_incorrect'));
       }
 
       /*

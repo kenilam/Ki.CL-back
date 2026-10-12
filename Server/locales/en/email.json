@@ -1,0 +1,18 @@
+{
+  "brand": "KI.CL",
+  "contact_message_subject": "Message from {{email}}",
+  "contact_received_subject": "Your message was received",
+  "contact_received_thanks": "Thank you for writing to Ki.CL. The message has arrived and a reply will come to this address.",
+  "contact_received_unread": "This mailbox is not read. If you did not write, ignore this email.",
+  "password_change_confirm_action": "Confirm the change",
+  "password_change_confirm_asked": "Someone signed in to your Ki.CL account asked to change its password.",
+  "password_change_confirm_expiry_one": "The link works for {{count}} minute.",
+  "password_change_confirm_expiry_other": "The link works for {{count}} minutes.",
+  "password_change_confirm_ignore": "If this was not you, ignore this email. Your password stays the same.",
+  "password_change_confirm_open_one": "Open this link within {{count}} minute to confirm it:\n{{link}}",
+  "password_change_confirm_open_other": "Open this link within {{count}} minutes to confirm it:\n{{link}}",
+  "password_change_confirm_subject": "Confirm your password change",
+  "password_changed_contact": "If this was not you, write to {{contact}}.",
+  "password_changed_notice": "The password of your Ki.CL account was just changed.",
+  "password_changed_subject": "Your password was changed"
+}

@@ -1,3 +1,5 @@
+import { translate } from 'server/Helpers/translate.js';
+
 const OTOL_SUBTREE_URL = 'https://api.opentreeoflife.org/v3/tree_of_life/subtree';
 const OTOL_TAXON_INFO_URL = 'https://api.opentreeoflife.org/v3/taxonomy/taxon_info';
 const OTOL_NODE_INFO_URL = 'https://api.opentreeoflife.org/v3/tree_of_life/node_info';
@@ -74,7 +76,7 @@ export async function fetchOtolSubtreeResult(options: {
       body: JSON.stringify(body),
     });
   } catch {
-    return { ok: false, status: 0, message: 'Failed to reach Open Tree of Life' };
+    return { ok: false, status: 0, message: translate('api', 'error_otol_unreachable') };
   }
 
   if (!response.ok) {
@@ -97,7 +99,7 @@ export async function fetchOtolSubtreeResult(options: {
     return {
       ok: false,
       status: 404,
-      message: json.message ?? 'Tree of Life subtree not found',
+      message: json.message ?? translate('api', 'error_otol_subtree_not_found'),
     };
   }
 
@@ -145,7 +147,7 @@ export async function fetchOtolNodeLineage(options: {
       body: JSON.stringify(body),
     });
   } catch {
-    return { ok: false, status: 0, message: 'Failed to reach Open Tree of Life' };
+    return { ok: false, status: 0, message: translate('api', 'error_otol_unreachable') };
   }
 
   if (!response.ok) {

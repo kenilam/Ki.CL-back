@@ -9,6 +9,7 @@ import { verifyGoogleToken } from './Providers/Google.js';
 import { verifyAppleToken } from './Providers/Apple.js';
 import { BadUserInput } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { translate } from 'server/Helpers/translate.js';
 
 interface SocialUserInfo {
   Email: string;
@@ -24,7 +25,7 @@ async function getProviderUserInfo(provider: string, token: string): Promise<Soc
     case 'apple':
       return verifyAppleToken(token);
     default:
-      throw BadUserInput(`Unsupported provider: ${provider}`);
+      throw BadUserInput(translate('api', 'error_provider_unsupported', { provider }));
   }
 }
 

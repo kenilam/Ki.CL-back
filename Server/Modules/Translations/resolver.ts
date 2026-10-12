@@ -1,5 +1,5 @@
 import { validate } from 'server/Helpers/Validation/validate.js';
-import { findTranslations } from './cache.js';
+import { findTranslations } from 'server/DataSources/MongoDB/Translations/cache.js';
 import { TranslationsSchema } from './validation.js';
 
 export default {
