@@ -31,6 +31,35 @@ const CACHE_CONTROL: Record<string, string> = {
 };
 
 const DEFAULT_CACHE_CONTROL = 'public, max-age=0, must-revalidate';
+
+type ByteRange = { end: number; start: number };
+
+/**
+ * The one range a `Range` header asks for: `null` when there is no header or
+ * it asks for several, which gets the whole file, and `false` when the range
+ * lies outside the file.
+ */
+function parseRange(
+  header: string | undefined,
+  size: number,
+): ByteRange | false | null {
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? '');
+
+  if (!match || (!match[1] && !match[2])) {
+    return null;
+  }
+
+  // `bytes=-500` is the last 500 bytes.
+  const start = match[1]
+    ? Number(match[1])
+    : Math.max(0, size - Number(match[2]));
+  const end = match[1] && match[2]
+    ? Math.min(Number(match[2]), size - 1)
+    : size - 1;
+
+  return start > end || start >= size ? false : { end, start };
+}
+
 export function createGoogleStorageAssetHandler() {
   return async function googleStorageAssetHandler(
     req: Request,
@@ -100,12 +129,38 @@ export function createGoogleStorageAssetHandler() {
             || DEFAULT_CACHE_CONTROL,
         ),
       );
-      if (meta.size) {
-        res.setHeader('Content-Length', String(meta.size));
+
+      /*
+       * Safari will not play audio or video from a server that ignores `Range`:
+       * it asks for the first two bytes, and a 200 with the whole file fails
+       * the element.
+       */
+      const size = Number(meta.size);
+      const range = size ? parseRange(req.headers.range, size) : null;
+
+      if (size) {
+        res.setHeader('Accept-Ranges', 'bytes');
+      }
+
+      if (range === false) {
+        res.setHeader('Content-Range', `bytes */${size}`);
+        res.status(416).end();
+        return;
+      }
+
+      if (range) {
+        res.status(206);
+        res.setHeader(
+          'Content-Range',
+          `bytes ${range.start}-${range.end}/${size}`,
+        );
+        res.setHeader('Content-Length', String(range.end - range.start + 1));
+      } else if (size) {
+        res.setHeader('Content-Length', String(size));
       }
 
       file
-        .createReadStream()
+        .createReadStream(range ?? undefined)
         .on('error', (error) => {
           if (!res.headersSent) {
             res.status(502);
