@@ -4,3 +4,4 @@ scalar JWT
 scalar UUID
 scalar URL
 scalar NonEmptyString
+scalar JSONObject

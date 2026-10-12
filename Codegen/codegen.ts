@@ -7,6 +7,7 @@ const SCALAR_MAP_SERVER = {
   UUID: '^/Codegen/scalars.js#UUID',
   URL: '^/Codegen/scalars.js#URL',
   NonEmptyString: '^/Codegen/scalars.js#NonEmptyString',
+  JSONObject: '^/Codegen/scalars.js#JSONObject',
 };
 
 const SCALAR_MAP_CLIENT = {
@@ -16,6 +17,7 @@ const SCALAR_MAP_CLIENT = {
   UUID: '../scalars#UUID',
   URL: '../scalars#URL',
   NonEmptyString: '../scalars#NonEmptyString',
+  JSONObject: '../scalars#JSONObject',
 };
 
 const config: CodegenConfig = {

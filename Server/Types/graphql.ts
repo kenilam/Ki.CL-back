@@ -1,5 +1,6 @@
 import { DateTime } from '^/Codegen/scalars.js';
 import { EmailAddress } from '^/Codegen/scalars.js';
+import { JSONObject } from '^/Codegen/scalars.js';
 import { JWT } from '^/Codegen/scalars.js';
 import { NonEmptyString } from '^/Codegen/scalars.js';
 import { URL } from '^/Codegen/scalars.js';
@@ -18,6 +19,7 @@ export type Scalars = {
   Float: { input: number; output: number; }
   DateTime: { input: DateTime; output: DateTime; }
   EmailAddress: { input: EmailAddress; output: EmailAddress; }
+  JSONObject: { input: JSONObject; output: JSONObject; }
   JWT: { input: JWT; output: JWT; }
   NonEmptyString: { input: NonEmptyString; output: NonEmptyString; }
   URL: { input: URL; output: URL; }
@@ -350,6 +352,14 @@ export type Query = {
   TaxonSearch: Array<TaxonSearchResult>;
   TaxonVisual: TaxonVisual;
   /**
+   * The namespaces asked for that exist in this language. One that doesn't exist
+   * is left out of the answer.
+   *
+   * Runs without a session: the site needs its words before it can start one,
+   * and they are public.
+   */
+  Translations: Array<Translation>;
+  /**
    * Subtree from Open Tree of Life (cached in Mongo).
    * `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
    * Warm Mongo rows skip OTOL (known leaf or existing child edges).
@@ -405,6 +415,12 @@ export type QueryTaxonVisualArgs = {
   name: Scalars['String']['input'];
   ottId: Scalars['Int']['input'];
   rank?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryTranslationsArgs = {
+  language: Scalars['String']['input'];
+  namespaces: Array<Scalars['String']['input']>;
 };
 
 
@@ -531,6 +547,16 @@ export enum TaxonVisualStatus {
   Pending = 'PENDING',
   Ready = 'READY'
 }
+
+/** One namespace of the site's writing in one language, as i18next resources. */
+export type Translation = {
+  __typename?: 'Translation';
+  /** Changes when any string in the namespace does. */
+  hash: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  namespace: Scalars['String']['output'];
+  resources: Scalars['JSONObject']['output'];
+};
 
 /**
  * Flat OTOL + studio node. Tree edges are nodeId-only, parent-pointer style:
@@ -660,6 +686,7 @@ export type ResolversTypes = ResolversObject<{
   ImageAgentThread: ResolverTypeWrapper<ImageAgentThread>;
   ImageAgentThreadStatus: ImageAgentThreadStatus;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  JSONObject: ResolverTypeWrapper<Scalars['JSONObject']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -683,6 +710,7 @@ export type ResolversTypes = ResolversObject<{
   TaxonVisualExhaustion: TaxonVisualExhaustion;
   TaxonVisualScore: ResolverTypeWrapper<TaxonVisualScore>;
   TaxonVisualStatus: TaxonVisualStatus;
+  Translation: ResolverTypeWrapper<Translation>;
   TreeOfLifeNode: ResolverTypeWrapper<TreeOfLifeNode>;
   URL: ResolverTypeWrapper<Scalars['URL']['output']>;
   UUID: ResolverTypeWrapper<Scalars['UUID']['output']>;
@@ -705,6 +733,7 @@ export type ResolversParentTypes = ResolversObject<{
   ImageAgentScore: ImageAgentScore;
   ImageAgentThread: ImageAgentThread;
   Int: Scalars['Int']['output'];
+  JSONObject: Scalars['JSONObject']['output'];
   JWT: Scalars['JWT']['output'];
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
@@ -723,6 +752,7 @@ export type ResolversParentTypes = ResolversObject<{
   TaxonSearchResult: TaxonSearchResult;
   TaxonVisual: TaxonVisual;
   TaxonVisualScore: TaxonVisualScore;
+  Translation: Translation;
   TreeOfLifeNode: TreeOfLifeNode;
   URL: Scalars['URL']['output'];
   UUID: Scalars['UUID']['output'];
@@ -786,6 +816,10 @@ export type ImageAgentThreadResolvers<ContextType = Context, ParentType extends 
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
 }>;
 
+export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+  name: 'JSONObject';
+}
+
 export interface JwtScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JWT'], any> {
   name: 'JWT';
 }
@@ -846,6 +880,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   PasswordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'PasswordChangeLink'>>;
   TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
+  Translations?: Resolver<Array<ResolversTypes['Translation']>, ParentType, ContextType, RequireFields<QueryTranslationsArgs, 'language' | 'namespaces'>>;
   TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
   TreeOfLifeSubtrees?: Resolver<Array<Maybe<ResolversTypes['TreeOfLifeNode']>>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreesArgs, 'heightLimit'>>;
 }>;
@@ -880,6 +915,13 @@ export type TaxonVisualScoreResolvers<ContextType = Context, ParentType extends 
   taxonMatch?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
 }>;
 
+export type TranslationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Translation'] = ResolversParentTypes['Translation']> = ResolversObject<{
+  hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  namespace?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  resources?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+}>;
+
 export type TreeOfLifeNodeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TreeOfLifeNode'] = ResolversParentTypes['TreeOfLifeNode']> = ResolversObject<{
   ancestor?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType>;
@@ -911,6 +953,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ImageAgentMessage?: ImageAgentMessageResolvers<ContextType>;
   ImageAgentScore?: ImageAgentScoreResolvers<ContextType>;
   ImageAgentThread?: ImageAgentThreadResolvers<ContextType>;
+  JSONObject?: GraphQLScalarType;
   JWT?: GraphQLScalarType;
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
@@ -922,6 +965,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   TaxonSearchResult?: TaxonSearchResultResolvers<ContextType>;
   TaxonVisual?: TaxonVisualResolvers<ContextType>;
   TaxonVisualScore?: TaxonVisualScoreResolvers<ContextType>;
+  Translation?: TranslationResolvers<ContextType>;
   TreeOfLifeNode?: TreeOfLifeNodeResolvers<ContextType>;
   URL?: GraphQLScalarType;
   UUID?: GraphQLScalarType;

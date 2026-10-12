@@ -51,3 +51,19 @@ portfolio.list:
 # Deletes every message kept under that address, for a deletion request.
 contact.forget:
 	@npx tsx Server/Scripts/contactMessages.ts forget "$(EMAIL)"
+
+# The site's writing: make translations.seed DIR=../Ki.CL/App/locales
+# Reads <DIR>/<language>/<namespace>.json into one row for each string. seed
+# adds and changes strings, diff fails when the database is behind the files,
+# prune removes strings the files no longer have, drop removes a whole namespace.
+translations.seed:
+	@npx tsx Server/Scripts/translations.ts seed "$(DIR)"
+
+translations.diff:
+	@npx tsx Server/Scripts/translations.ts diff "$(DIR)"
+
+translations.prune:
+	@npx tsx Server/Scripts/translations.ts prune "$(DIR)"
+
+translations.drop:
+	@npx tsx Server/Scripts/translations.ts drop "$(NAMESPACE)"

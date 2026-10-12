@@ -9,6 +9,7 @@ export type EmailAddress = string & { readonly __brand: 'EmailAddress' };
 export type URL = string & { readonly __brand: 'URL' };
 export type NonEmptyString = string & { readonly __brand: 'NonEmptyString' };
 export type DateTime = Date & { readonly __brand: 'DateTime' };
+export type JSONObject = Record<string, unknown>;
 
 // Client-side versions (received as strings over JSON)
 export type DateTimeString = string & { readonly __brand: 'DateTime' };

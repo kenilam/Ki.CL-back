@@ -1,0 +1,19 @@
+"""One namespace of the site's writing in one language, as i18next resources."""
+type Translation {
+  language: String!
+  namespace: String!
+  """Changes when any string in the namespace does."""
+  hash: String!
+  resources: JSONObject!
+}
+
+extend type Query {
+  """
+  The namespaces asked for that exist in this language. One that doesn't exist
+  is left out of the answer.
+
+  Runs without a session: the site needs its words before it can start one,
+  and they are public.
+  """
+  Translations(language: String!, namespaces: [String!]!): [Translation!]!
+}
