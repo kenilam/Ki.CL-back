@@ -350,6 +350,14 @@ export type Query = {
   TaxonSearch: Array<TaxonSearchResult>;
   TaxonVisual: TaxonVisual;
   /**
+   * Every string of the namespaces asked for, in this language. A namespace that
+   * doesn't exist adds nothing to the answer.
+   *
+   * Runs without a session: the site needs its words before it can start one,
+   * and they are public.
+   */
+  Translations: Array<Translation>;
+  /**
    * Subtree from Open Tree of Life (cached in Mongo).
    * `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
    * Warm Mongo rows skip OTOL (known leaf or existing child edges).
@@ -405,6 +413,12 @@ export type QueryTaxonVisualArgs = {
   name: Scalars['String']['input'];
   ottId: Scalars['Int']['input'];
   rank?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryTranslationsArgs = {
+  language: Scalars['String']['input'];
+  namespaces: Array<Scalars['String']['input']>;
 };
 
 
@@ -531,6 +545,16 @@ export enum TaxonVisualStatus {
   Pending = 'PENDING',
   Ready = 'READY'
 }
+
+/** One string of the site's writing in one language. */
+export type Translation = {
+  __typename?: 'Translation';
+  /** The string's path in its namespace, joined with dots: `account.signOut`. */
+  field: Scalars['String']['output'];
+  language: Scalars['String']['output'];
+  namespace: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
 
 /**
  * Flat OTOL + studio node. Tree edges are nodeId-only, parent-pointer style:
@@ -683,6 +707,7 @@ export type ResolversTypes = ResolversObject<{
   TaxonVisualExhaustion: TaxonVisualExhaustion;
   TaxonVisualScore: ResolverTypeWrapper<TaxonVisualScore>;
   TaxonVisualStatus: TaxonVisualStatus;
+  Translation: ResolverTypeWrapper<Translation>;
   TreeOfLifeNode: ResolverTypeWrapper<TreeOfLifeNode>;
   URL: ResolverTypeWrapper<Scalars['URL']['output']>;
   UUID: ResolverTypeWrapper<Scalars['UUID']['output']>;
@@ -723,6 +748,7 @@ export type ResolversParentTypes = ResolversObject<{
   TaxonSearchResult: TaxonSearchResult;
   TaxonVisual: TaxonVisual;
   TaxonVisualScore: TaxonVisualScore;
+  Translation: Translation;
   TreeOfLifeNode: TreeOfLifeNode;
   URL: Scalars['URL']['output'];
   UUID: Scalars['UUID']['output'];
@@ -846,6 +872,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   PasswordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'PasswordChangeLink'>>;
   TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
   TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
+  Translations?: Resolver<Array<ResolversTypes['Translation']>, ParentType, ContextType, RequireFields<QueryTranslationsArgs, 'language' | 'namespaces'>>;
   TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
   TreeOfLifeSubtrees?: Resolver<Array<Maybe<ResolversTypes['TreeOfLifeNode']>>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreesArgs, 'heightLimit'>>;
 }>;
@@ -878,6 +905,13 @@ export type TaxonVisualScoreResolvers<ContextType = Context, ParentType extends 
   overall?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   pass?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   taxonMatch?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+}>;
+
+export type TranslationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Translation'] = ResolversParentTypes['Translation']> = ResolversObject<{
+  field?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  language?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  namespace?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
 export type TreeOfLifeNodeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TreeOfLifeNode'] = ResolversParentTypes['TreeOfLifeNode']> = ResolversObject<{
@@ -922,6 +956,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   TaxonSearchResult?: TaxonSearchResultResolvers<ContextType>;
   TaxonVisual?: TaxonVisualResolvers<ContextType>;
   TaxonVisualScore?: TaxonVisualScoreResolvers<ContextType>;
+  Translation?: TranslationResolvers<ContextType>;
   TreeOfLifeNode?: TreeOfLifeNodeResolvers<ContextType>;
   URL?: GraphQLScalarType;
   UUID?: GraphQLScalarType;

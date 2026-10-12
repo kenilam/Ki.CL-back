@@ -3,6 +3,7 @@
 
 export { KiclProvider, getKiclClient } from './provider';
 export { getSessionType, isAuthenticated, hasSession, getApiKey } from './utils';
+export { loadTranslations } from './translations';
 /*
  * Typed documents, not generated hooks.
  *
