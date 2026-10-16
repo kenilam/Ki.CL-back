@@ -68,3 +68,15 @@ translations.prune:
 
 translations.drop:
 	@npx tsx Server/Scripts/translations.ts drop "$(NAMESPACE)"
+
+# Every repo's namespaces at once. The other repos are checked out beside this
+# one; name other folders with TRANSLATION_DIRS="a b".
+#   make translations.seed.all                               the development database
+#   MONGODB_DATABASE=production make translations.seed.all   production
+TRANSLATION_DIRS ?= Server/locales ../Ki.CL/App/locales ../Ki.CL-design-system/Design/src/locales ../Ki.CL-moonshot-exercise/Client/src/locales
+
+translations.seed.all:
+	@for dir in $(TRANSLATION_DIRS); do npx tsx Server/Scripts/translations.ts seed "$$dir" || exit 1; done
+
+translations.diff.all:
+	@for dir in $(TRANSLATION_DIRS); do npx tsx Server/Scripts/translations.ts diff "$$dir" || exit 1; done
