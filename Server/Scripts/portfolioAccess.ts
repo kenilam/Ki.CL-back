@@ -8,7 +8,7 @@
  *   npx tsx Server/Scripts/portfolioAccess.ts list moonshot
  */
 import 'dotenv/config';
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 import { PortfolioAccess } from 'server/DataSources/MongoDB/PortfolioAccess/Model.js';
 import { usersOf } from 'server/DataSources/MongoDB/PortfolioAccess/relations.js';
@@ -50,7 +50,7 @@ async function run(): Promise<void> {
     // The piece is created on its first grant.
     const portfolio = await Portfolios.findOneAndUpdate(
       { Path: path },
-      { $setOnInsert: { PortfolioGUID: uuid(), Path: path } },
+      { $setOnInsert: { PortfolioGUID: randomUUID(), Path: path } },
       { new: true, upsert: true },
     );
 

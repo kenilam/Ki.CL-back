@@ -1,4 +1,5 @@
 import { PasswordChanges, type IPasswordChange } from 'server/DataSources/MongoDB/PasswordChanges/Model.js';
+import { PasswordChangeStatus, type PasswordChange } from 'server/Types/graphql.js';
 
 /** How long the emailed link works. */
 export const LINK_MS = 10 * 60 * 1000;
@@ -11,20 +12,17 @@ export const COOLDOWN_MS = 60 * 1000;
 
 const POLL_MS = 2000;
 
-export type Status = 'PENDING' | 'CONFIRMED' | 'EXPIRED';
-
-export interface PasswordChangeResult {
-  id: string;
-  status: Status;
+/** Mongo's date, not the branded scalar. */
+export type PasswordChangeResult = Omit<PasswordChange, '__typename' | 'expiresAt'> & {
   expiresAt: Date;
-}
+};
 
 export function toResult(id: string, doc: IPasswordChange | null): PasswordChangeResult {
   if (!doc || doc.ExpiresAt.getTime() <= Date.now()) {
-    return { id, status: 'EXPIRED', expiresAt: doc?.ExpiresAt ?? new Date() };
+    return { id, status: PasswordChangeStatus.Expired, expiresAt: doc?.ExpiresAt ?? new Date() };
   }
 
-  return { id, status: doc.Confirmed ? 'CONFIRMED' : 'PENDING', expiresAt: doc.ExpiresAt };
+  return { id, status: doc.Confirmed ? PasswordChangeStatus.Confirmed : PasswordChangeStatus.Pending, expiresAt: doc.ExpiresAt };
 }
 
 const read = async (id: string, UserGUID: string) =>
@@ -42,14 +40,14 @@ export function watch(
   id: string,
   UserGUID: string,
 ): AsyncIterableIterator<{ PasswordChangeUpdated: PasswordChangeResult }> {
-  let last: Status | undefined;
+  let last: PasswordChangeStatus | undefined;
   let closed = false;
 
   const done = { value: undefined, done: true } as const;
 
   return {
     async next() {
-      while (!closed && last !== 'CONFIRMED' && last !== 'EXPIRED') {
+      while (!closed && last !== PasswordChangeStatus.Confirmed && last !== PasswordChangeStatus.Expired) {
         const result = await read(id, UserGUID);
 
         if (result.status !== last) {

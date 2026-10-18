@@ -1,11 +1,11 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
 import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
 import { CaptchaRequired, Unavailable } from 'server/Errors/index.js';
-import { parseCookies } from 'server/Helpers/auth.js';
+import { parseCookies, type TokenPayload } from 'server/Helpers/auth.js';
 import { turnstileToken, verifyTurnstile } from 'server/Helpers/turnstile.js';
 import { translate } from 'server/Helpers/translate.js';
 
@@ -14,12 +14,7 @@ const TURNSTILE_ACTION = 'exchange-token';
 
 const LOG = '[ExchangeToken]';
 
-type Identity = {
-  UserGUID: string;
-  aud: 'anon' | 'user';
-  /** Passed the Turnstile check. Paid operations require it. */
-  human?: boolean;
-};
+type Identity = Pick<TokenPayload, 'UserGUID' | 'aud' | 'human'>;
 
 function verify(token: string | undefined, key: string): Identity | null {
   if (!token) return null;
@@ -122,6 +117,6 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
    * without `human`, and the visitor comes back here to earn it.
    */
   const human = await passedTurnstile(context);
-  await issue(context, { UserGUID: uuid(), aud: 'anon', human });
+  await issue(context, { UserGUID: randomUUID(), aud: 'anon', human });
   return true;
 }

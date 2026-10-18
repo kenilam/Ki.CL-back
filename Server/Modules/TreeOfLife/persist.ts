@@ -11,14 +11,10 @@ import {
 /** Mongo's duplicate-key error code. */
 const DUPLICATE_KEY = 11000;
 
-type FlatNode = {
-  nodeId: string;
-  ottId: number | null;
-  name: string | null;
-  rank: string | null;
-  ancestorNodeId: string | null;
-  numTips: number | null;
-};
+type FlatNode = Pick<
+  ITreeOfLifeNode,
+  'nodeId' | 'ottId' | 'name' | 'rank' | 'ancestorNodeId' | 'numTips'
+>;
 
 function flattenArguson(
   node: ArgusonNode,

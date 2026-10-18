@@ -1,4 +1,5 @@
 import { imageContentType } from 'server/Helpers/imageFormat.js';
+import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { runProviderFailover } from './providers/failover.js';
 import { buildVisionProviders } from './providers/vision/index.js';
 import {
@@ -61,46 +62,37 @@ export function unscored(): ImageScore {
 }
 
 function parseScore(raw: string): ImageScore | null {
-  const trimmed = raw.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced?.[1]?.trim() ?? trimmed;
-  const start = body.indexOf('{');
-  const end = body.lastIndexOf('}');
-  if (start < 0 || end <= start) {
+  const parsed = parseModelJson(raw);
+  if (!parsed) {
     return null;
   }
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1)) as Record<string, unknown>;
-    const num = (key: string, fallback = 0) => (
-      typeof parsed[key] === 'number' ? parsed[key] as number : fallback
-    );
-    const suggestions = Array.isArray(parsed.suggestions)
-      ? parsed.suggestions.filter((s): s is string => typeof s === 'string')
-      : [];
-    const taxon_match = num('taxon_match');
-    const overall = num('overall');
-    // Absent on a reply from before the criterion existed; treat as unjudged
-    // rather than as a zero that would fail every such image.
-    const anatomy = num('anatomy', 10);
-    const pass = typeof parsed.pass === 'boolean'
-      ? parsed.pass
-      : overall >= 7 && taxon_match >= 6 && anatomy >= 6;
+  const num = (key: string, fallback = 0) => (
+    typeof parsed[key] === 'number' ? parsed[key] as number : fallback
+  );
+  const suggestions = Array.isArray(parsed.suggestions)
+    ? parsed.suggestions.filter((s): s is string => typeof s === 'string')
+    : [];
+  const taxon_match = num('taxon_match');
+  const overall = num('overall');
+  // Absent on a reply from before the criterion existed; treat as unjudged
+  // rather than as a zero that would fail every such image.
+  const anatomy = num('anatomy', 10);
+  const pass = typeof parsed.pass === 'boolean'
+    ? parsed.pass
+    : overall >= 7 && taxon_match >= 6 && anatomy >= 6;
 
-    return {
-      taxon_match,
-      morphology: num('morphology'),
-      anatomy,
-      style_plate: num('style_plate'),
-      single_subject: num('single_subject'),
-      no_text: num('no_text'),
-      overall,
-      pass,
-      suggestions: suggestions.slice(0, 3),
-      scored: true,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    taxon_match,
+    morphology: num('morphology'),
+    anatomy,
+    style_plate: num('style_plate'),
+    single_subject: num('single_subject'),
+    no_text: num('no_text'),
+    overall,
+    pass,
+    suggestions: suggestions.slice(0, 3),
+    scored: true,
+  };
 }
 
 /**

@@ -3,16 +3,11 @@ import { createHash } from 'node:crypto';
 import { Storage } from 'server/DataSources/Google/index.js';
 import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { imageContentType, imageExtension } from 'server/Helpers/imageFormat.js';
+import type { CreatedTaxonAsset } from 'server/Modules/TaxonVisual/generateImage.js';
 import type { GeneratedImage } from 'server/Modules/TaxonVisual/providers/image/types.js';
 
 /** Agent output sits under its own prefix in the pipeline bucket. */
 const OBJECT_PREFIX = 'agent/';
-
-export type PersistedImage = {
-  assetId: string;
-  url: string;
-  generator: string;
-};
 
 /**
  * Content-addressed like the taxon plates, so the immutable cache header the
@@ -26,7 +21,7 @@ function objectName(jobId: string, buffer: Buffer): string {
 export async function persistImage(
   jobId: string,
   image: GeneratedImage,
-): Promise<PersistedImage> {
+): Promise<CreatedTaxonAsset> {
   const { path } = await Storage.uploadBuffer({
     buffer: image.buffer,
     objectName: objectName(jobId, image.buffer),

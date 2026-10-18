@@ -1,4 +1,5 @@
 import { translate } from 'server/Helpers/translate.js';
+import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
 import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
 import { ImageAgentStyle } from 'server/Types/graphql.js';
@@ -98,39 +99,30 @@ function parseChoices(value: unknown): string[] {
 }
 
 function parseDecision(raw: string): Decision | null {
-  const trimmed = raw.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced?.[1]?.trim() ?? trimmed;
-  const start = body.indexOf('{');
-  const end = body.lastIndexOf('}');
-  if (start < 0 || end <= start) {
+  const parsed = parseModelJson(raw);
+  if (!parsed) {
     return null;
   }
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1)) as Record<string, unknown>;
-    if (parsed.action === 'ask' && typeof parsed.question === 'string' && parsed.question.trim()) {
-      return {
-        action: 'ask',
-        question: parsed.question.trim(),
-        choices: parseChoices(parsed.choices),
-      };
-    }
-    if (parsed.action === 'draw' && typeof parsed.brief === 'string' && parsed.brief.trim()) {
-      const style = typeof parsed.style === 'string'
-        ? parsed.style.trim().toUpperCase()
-        : '';
-      return {
-        action: 'draw',
-        brief: parsed.brief.trim(),
-        style: STYLES.includes(style)
-          ? (style as ImageAgentStyle)
-          : ImageAgentStyle.Illustration,
-      };
-    }
-    return null;
-  } catch {
-    return null;
+  if (parsed.action === 'ask' && typeof parsed.question === 'string' && parsed.question.trim()) {
+    return {
+      action: 'ask',
+      question: parsed.question.trim(),
+      choices: parseChoices(parsed.choices),
+    };
   }
+  if (parsed.action === 'draw' && typeof parsed.brief === 'string' && parsed.brief.trim()) {
+    const style = typeof parsed.style === 'string'
+      ? parsed.style.trim().toUpperCase()
+      : '';
+    return {
+      action: 'draw',
+      brief: parsed.brief.trim(),
+      style: STYLES.includes(style)
+        ? (style as ImageAgentStyle)
+        : ImageAgentStyle.Illustration,
+    };
+  }
+  return null;
 }
 
 /**

@@ -1,23 +1,13 @@
 import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
 import type { Response } from 'express';
 import type { IncomingMessage } from 'node:http';
-import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
+import { Users, type IUser } from 'server/DataSources/MongoDB/Users/Model.js';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
-import {
-  createAssetLoaders,
-  type AssetLoaders,
-} from 'server/DataSources/MongoDB/Assets/loaders.js';
-import {
-  createTreeOfLifeLoaders,
-  type TreeOfLifeLoaders,
-} from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
+import { createAssetLoaders } from 'server/DataSources/MongoDB/Assets/loaders.js';
+import { createTreeOfLifeLoaders } from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
 import { parseCookies, verifyAccessToken, type TokenPayload } from 'server/Helpers/auth.js';
 
-export interface AuthenticatedUser {
-  UserGUID: string;
-  Email: string;
-  Active: boolean;
-}
+export type AuthenticatedUser = Pick<IUser, 'UserGUID' | 'Email' | 'Active'>;
 
 export interface Context {
   headers: Record<string, string | string[] | undefined>;
@@ -27,10 +17,7 @@ export interface Context {
   operationName: string | undefined;
   isWhitelisted: boolean;
   tokenPayload: Pick<TokenPayload, 'UserGUID' | 'aud' | 'human'> | null;
-  loaders: {
-    treeOfLife: TreeOfLifeLoaders;
-    asset: AssetLoaders;
-  };
+  loaders: ReturnType<typeof createLoaders>;
 }
 
 function createLoaders() {

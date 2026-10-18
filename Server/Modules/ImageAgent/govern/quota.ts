@@ -2,7 +2,11 @@ import { ImageAgentJobs } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.
 import { ImageAgentThreads } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
 import { TooManyRequests } from 'server/Errors/index.js';
 import { translate } from 'server/Helpers/translate.js';
-import { ImageAgentRole, ImageAgentThreadStatus } from 'server/Types/graphql.js';
+import {
+  ImageAgentRole,
+  ImageAgentThreadStatus,
+  type ImageAgentAllowance,
+} from 'server/Types/graphql.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -55,12 +59,9 @@ export function minIntervalSeconds(): number {
   return envNumber('IMAGE_AGENT_MIN_INTERVAL_SECONDS', 5);
 }
 
-export type Allowance = {
-  remaining: number;
-  limit: number;
+/** `running` is added by the resolver. */
+export type Allowance = Omit<ImageAgentAllowance, '__typename' | 'running' | 'nextAllowedAt'> & {
   nextAllowedAt: Date | null;
-  /** A turn is running in one of the caller's conversations. */
-  busy: boolean;
 };
 
 /**

@@ -1,5 +1,6 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import type { TextChatOptions } from './types.js';
+import { parseModelList } from 'server/Modules/TaxonVisual/providers/modelList.js';
+import type { GeminiResponse, TextChatOptions } from './types.js';
 
 /**
  * Quality → capacity within Google (last org in the text pipeline).
@@ -10,26 +11,6 @@ export const DEFAULT_GEMINI_TEXT_MODELS = [
   'gemini-3.5-flash-lite',
   'gemini-3.1-flash-lite',
 ] as const;
-
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
-    };
-  }>;
-  error?: { message?: string; status?: string; code?: number };
-}
-
-function parseModelList(raw: string | undefined): string[] {
-  if (!raw?.trim()) {
-    return [];
-  }
-  return [...new Set(
-    raw.split(',')
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  )];
-}
 
 /** Env override: GEMINI_TEXT_MODELS, else GEMINI_TEXT_MODEL + defaults. */
 export function resolveGeminiTextModels(): string[] {

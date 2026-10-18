@@ -13,6 +13,7 @@ import {
 import { translate } from 'server/Helpers/translate.js';
 import { ProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
 import {
+  ImageAgentExhaustion,
   ImageAgentMessageKind,
   ImageAgentRejection,
   ImageAgentRole,
@@ -109,11 +110,11 @@ function transcript(messages: ImageAgentThreadMessage[]): string {
     .join('\n');
 }
 
-function exhaustionKind(error: unknown): 'REFILLS' | 'BILLING' | null {
+function exhaustionKind(error: unknown): ImageAgentExhaustion | null {
   if (!(error instanceof ProviderLimitError)) {
     return null;
   }
-  return error.needsBilling ? 'BILLING' : 'REFILLS';
+  return error.needsBilling ? ImageAgentExhaustion.Billing : ImageAgentExhaustion.Refills;
 }
 
 async function failure(threadId: string, jobId: string | null, error: unknown): Promise<void> {

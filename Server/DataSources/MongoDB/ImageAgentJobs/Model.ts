@@ -1,6 +1,6 @@
 import mongoose, { Schema, type Document, Types } from 'mongoose';
 
-import type { ImageAgentStyle } from 'server/Types/graphql.js';
+import type { ImageAgentScore, ImageAgentStyle } from 'server/Types/graphql.js';
 
 /**
  * Status of a drawing. Internal: the API shows the conversation, and a job is
@@ -30,15 +30,7 @@ export const ImageAgentStepKind = {
 export type ImageAgentStepKind =
   (typeof ImageAgentStepKind)[keyof typeof ImageAgentStepKind];
 
-export type ImageAgentJobScore = {
-  relevance: number;
-  quality: number;
-  styleMatch: number;
-  composition: number;
-  overall: number;
-  pass: boolean;
-  suggestions: string[];
-};
+export type ImageAgentJobScore = Omit<ImageAgentScore, '__typename'>;
 
 export type ImageAgentJobStep = {
   kind: ImageAgentStepKind;

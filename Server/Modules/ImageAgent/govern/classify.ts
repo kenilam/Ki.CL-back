@@ -1,4 +1,5 @@
 import { translate } from 'server/Helpers/translate.js';
+import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
 import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
 import { ImageAgentRejection } from 'server/Types/graphql.js';
@@ -38,29 +39,20 @@ const MARK_CLOSE = '<<<END>>>';
 const HISTORY_OPEN = '<<<EARLIER>>>';
 
 function parseVerdict(raw: string): ClassifierVerdict | null {
-  const trimmed = raw.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced?.[1]?.trim() ?? trimmed;
-  const start = body.indexOf('{');
-  const end = body.lastIndexOf('}');
-  if (start < 0 || end <= start) {
+  const parsed = parseModelJson(raw);
+  if (!parsed) {
     return null;
   }
-  try {
-    const parsed = JSON.parse(body.slice(start, end + 1)) as Record<string, unknown>;
-    const verdict = typeof parsed.verdict === 'string'
-      ? parsed.verdict.trim().toUpperCase()
-      : '';
-    if (!(verdict in VERDICTS)) {
-      return null;
-    }
-    const reason = typeof parsed.reason === 'string' && parsed.reason.trim()
-      ? parsed.reason.trim()
-      : translate('api', 'image_agent_refusal');
-    return { rejection: VERDICTS[verdict] ?? null, reason };
-  } catch {
+  const verdict = typeof parsed.verdict === 'string'
+    ? parsed.verdict.trim().toUpperCase()
+    : '';
+  if (!(verdict in VERDICTS)) {
     return null;
   }
+  const reason = typeof parsed.reason === 'string' && parsed.reason.trim()
+    ? parsed.reason.trim()
+    : translate('api', 'image_agent_refusal');
+  return { rejection: VERDICTS[verdict] ?? null, reason };
 }
 
 /**

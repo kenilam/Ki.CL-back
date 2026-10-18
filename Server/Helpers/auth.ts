@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { validateApiToken } from 'server/Middleware/apiToken.js';
+import { getAccessTokenExpiry } from 'server/Helpers/tokenExpiry.js';
 
 export interface TokenPayload {
   UserGUID: string;
@@ -31,18 +32,7 @@ export function parseCookies(cookieHeader: string | undefined): Record<string, s
  * Check if a timestamp (ms) is expired (past midnight boundary).
  */
 function isApiKeyExpired(timestamp: number): boolean {
-  const created = new Date(timestamp);
-  const now = new Date();
-
-  const expiry = new Date(created);
-  expiry.setHours(0, 0, 0, 0);
-  expiry.setDate(expiry.getDate() + 1);
-
-  if (created.getHours() === 23 && created.getMinutes() >= 45) {
-    expiry.setDate(expiry.getDate() + 1);
-  }
-
-  return now >= expiry;
+  return new Date() >= getAccessTokenExpiry(new Date(timestamp));
 }
 
 /**

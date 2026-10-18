@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { RegisterSchema } from './validation.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
@@ -20,8 +20,8 @@ export default {
         throw ExistingRecord(translate('api', 'error_account_exists'));
       }
 
-      const UserGUID = uuid();
-      const RegistrationGUID = uuid();
+      const UserGUID = randomUUID();
+      const RegistrationGUID = randomUUID();
       const { password: Secret } = await generatePassword();
 
       await Users.create({

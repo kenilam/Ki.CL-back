@@ -1,6 +1,7 @@
 import type { Response } from 'express';
 import { sign as cryptoSign } from 'node:crypto';
 import { getPrivateKey } from './certs.js';
+import { getAccessTokenExpiry } from './tokenExpiry.js';
 
 /**
  * Get milliseconds until next midnight.
@@ -8,15 +9,7 @@ import { getPrivateKey } from './certs.js';
  */
 export function msUntilMidnight(): number {
   const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(0, 0, 0, 0);
-  midnight.setDate(midnight.getDate() + 1);
-
-  if (now.getHours() === 23 && now.getMinutes() >= 45) {
-    midnight.setDate(midnight.getDate() + 1);
-  }
-
-  return midnight.getTime() - now.getTime();
+  return getAccessTokenExpiry(now).getTime() - now.getTime();
 }
 
 /**
