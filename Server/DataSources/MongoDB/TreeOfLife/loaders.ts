@@ -11,24 +11,21 @@ import { TreeOfLifeNodes, type ITreeOfLifeNode } from './Model.js';
 type RawTreeOfLifeNode = ITreeOfLifeNode &
   Required<{ _id: mongoose.Types.ObjectId }> & { __v: number };
 
-export type LeanTreeOfLifeNode = {
-  nodeId: string;
-  ottId: number | null;
-  name: string | null;
-  rank: string | null;
-  ancestorNodeId: string | null;
-  numTips: number | null;
-  assetId: string | null;
-  description: string | null;
-  visualStatus: string | null;
-  visualScore: {
-    overall: number;
-    taxonMatch: number;
-    pass: boolean;
-  } | null;
-  prompt?: string | null;
-  error?: string | null;
-};
+export type LeanTreeOfLifeNode = Pick<
+  ITreeOfLifeNode,
+  | 'nodeId'
+  | 'ottId'
+  | 'name'
+  | 'rank'
+  | 'ancestorNodeId'
+  | 'numTips'
+  | 'description'
+  | 'visualStatus'
+  | 'visualScore'
+> &
+  Partial<Pick<ITreeOfLifeNode, 'prompt' | 'error'>> & {
+    assetId: string | null;
+  };
 
 /**
  * Browsing reads go to the nearest Atlas node, so London reads its own replica.
@@ -37,19 +34,13 @@ export type LeanTreeOfLifeNode = {
 type ReadPreference = 'nearest' | 'primary';
 
 function toLean(doc: RawTreeOfLifeNode): LeanTreeOfLifeNode {
-  const score = doc.visualScore as LeanTreeOfLifeNode['visualScore'] | undefined;
   return {
     ...(doc as Omit<LeanTreeOfLifeNode, 'assetId' | 'visualScore' | 'ancestorNodeId'>),
     ancestorNodeId:
       typeof doc.ancestorNodeId === 'string' ? doc.ancestorNodeId : null,
     assetId: doc.assetId ? String(doc.assetId) : null,
-    visualScore: score
-      ? {
-          overall: score.overall,
-          taxonMatch: score.taxonMatch,
-          pass: score.pass,
-        }
-      : null,
+    // The score schema has no `_id`, so the lean read is already the plain shape.
+    visualScore: doc.visualScore ?? null,
   };
 }
 

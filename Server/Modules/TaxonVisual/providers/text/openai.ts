@@ -1,16 +1,9 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import type { TextChatOptions } from './types.js';
+import type { OpenAIChatResponse, TextChatOptions } from './types.js';
 
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const PROVIDER = 'openai';
-
-interface OpenAIChatResponse {
-  choices?: Array<{
-    message?: { content?: string | null };
-  }>;
-  error?: { message?: string; code?: string; type?: string };
-}
 
 export function isOpenAiTextConfigured(): boolean {
   return Boolean(process.env.OPENAI_API_KEY?.trim());

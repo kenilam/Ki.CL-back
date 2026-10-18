@@ -27,7 +27,7 @@ Codegen must be re-run (`yarn codegen`) after editing any `Server/Modules/**/*.g
 - **Client** - `@ki-cl/client`, a React 19 + Apollo Client package built with Vite and exposed via Module Federation (`@module-federation/vite`), served by the Server itself at `/client` (see below).
 
 ### Module-per-feature schema
-Each GraphQL feature lives under `Server/Modules/<Name>/` with a co-located `schema.graphql` + `resolver.ts` (and often `validation.ts`). `Server/Schema.ts` globs every `Modules/**/*.graphql` and `Modules/**/resolver.{ts,js}`, merges them with `@graphql-tools/merge`, and merges the result with a separate DataLoader-driven schema (`DataSources/MongoDB/DataLoader.ts`) via `mergeSchemas`. To add a GraphQL feature, add a new `Modules/<Name>/` folder - no central registration is needed beyond that.
+Each GraphQL feature lives under `Server/Modules/<Name>/` with a co-located `schema.graphql` + `resolver.ts` (and often `validation.ts`). `Server/Schema.ts` globs every `Modules/**/*.graphql` and `Modules/**/resolver.{ts,js}`, merges them with `@graphql-tools/merge`, and builds the schema with `makeExecutableSchema`. To add a GraphQL feature, add a new `Modules/<Name>/` folder - no central registration is needed beyond that.
 
 Current modules: `Register`, `Activate`, `SignIn`, `SignOut`, `SocialSignIn` (Google/Apple), `RefreshToken`, `ExchangeToken`, `Me`, `UpdateMe`, `DeleteMe`, `PasswordChange`, `Contact`, `Asset`, `TreeOfLife`, `TaxonVisual`, `TaxonSearch`, `Portfolio`, `ImageAgent`, `Translations`.
 
@@ -48,7 +48,7 @@ There are two mounted paths sharing one Express app and one Apollo Server instan
 WebSocket subscriptions are handled manually (not via the `ws`+`path` option, which breaks with two paths on one server) - `Server/index.ts` listens on `httpServer`'s `upgrade` event and routes to one of two `WebSocketServer({ noServer: true })` instances (`/graphql` vs `/api`) itself.
 
 ### Data layer
-MongoDB via Mongoose (`Server/DataSources/MongoDB/`), one folder per collection (`Users`, `UserTokens`, `Registrations`, `Secrets`, `TreeOfLife`, `Assets`, `Translations` and others), each with a `Model.ts`. `Translations` also has `cache.ts`, the in-memory copy of every string. Per-request DataLoaders (`TreeOfLife`, `Asset`) are created fresh per GraphQL context in `Server/Context/index.ts::createLoaders` to avoid cross-request cache leaks. `Server/DataSources/MongoDB/DataLoader.ts` also contributes its own mergeable schema fragment for loader-backed fields.
+MongoDB via Mongoose (`Server/DataSources/MongoDB/`), one folder per collection (`Users`, `UserTokens`, `Registrations`, `Secrets`, `TreeOfLife`, `Assets`, `Translations` and others), each with a `Model.ts`. `Translations` also has `cache.ts`, the in-memory copy of every string. Per-request DataLoaders (`TreeOfLife`, `Asset`) are created fresh per GraphQL context in `Server/Context/index.ts::createLoaders` to avoid cross-request cache leaks.
 
 Static assets (TaxonVisual images) live in Google Cloud Storage; `Server/DataSources/Google/Storage/` streams them through the server (`GOOGLE_STORAGE_PROXY`, default `/assets`) rather than exposing the bucket directly, since the bucket is private and anonymous access 403s.
 

@@ -6,7 +6,8 @@ import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failov
 import { buildImageProviders } from 'server/Modules/TaxonVisual/providers/image/index.js';
 import type { GeneratedImage } from 'server/Modules/TaxonVisual/providers/image/types.js';
 import type { ImageAgentStyle } from 'server/Types/graphql.js';
-import { persistImage, type PersistedImage } from './persist.js';
+import type { CreatedTaxonAsset } from 'server/Modules/TaxonVisual/generateImage.js';
+import { persistImage } from './persist.js';
 import { refinePrompt, retryPrompt } from './refinePrompt.js';
 import { scoreImage } from './scoreImage.js';
 
@@ -36,7 +37,7 @@ export type AgentInput = {
   style: ImageAgentStyle;
 };
 
-export type AgentOutcome = PersistedImage & {
+export type AgentOutcome = CreatedTaxonAsset & {
   imagePrompt: string;
   /** Null when no provider could review the image. */
   score: ImageAgentJobScore | null;

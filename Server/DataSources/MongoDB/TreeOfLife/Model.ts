@@ -1,14 +1,12 @@
 import mongoose, { Schema, type Document, Types } from 'mongoose';
 
-import { TaxonVisualStatus } from 'server/Types/graphql.js';
+import {
+  TaxonVisualExhaustion,
+  TaxonVisualStatus,
+  type TaxonVisualScore,
+} from 'server/Types/graphql.js';
 
-export type { TaxonVisualStatus };
-
-export type TreeOfLifeVisualScore = {
-  overall: number;
-  taxonMatch: number;
-  pass: boolean;
-};
+export type TreeOfLifeVisualScore = Omit<TaxonVisualScore, '__typename'>;
 
 /**
  * Flat OTOL node cache + studio fields.
@@ -56,7 +54,7 @@ export interface ITreeOfLifeNode extends Document {
    * Kept because the reason outlives the request that discovered it: a client
    * asking later still needs to know whether waiting will help.
    */
-  visualExhaustion: 'REFILLS' | 'BILLING' | null;
+  visualExhaustion: TaxonVisualExhaustion | null;
   /** Internal only - not exposed on TreeOfLife GraphQL. */
   error: string | null;
   createdAt: Date;
@@ -132,7 +130,7 @@ const TreeOfLifeNodeSchema = new Schema<ITreeOfLifeNode>(
     },
     visualExhaustion: {
       type: String,
-      enum: ['REFILLS', 'BILLING', null],
+      enum: [...Object.values(TaxonVisualExhaustion), null],
       default: null,
     },
     error: {

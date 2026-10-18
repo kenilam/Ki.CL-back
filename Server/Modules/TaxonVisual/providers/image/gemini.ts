@@ -1,4 +1,5 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { parseModelList } from 'server/Modules/TaxonVisual/providers/modelList.js';
 
 /**
  * Paid last-resort image models. Each has its own quota in AI Studio.
@@ -20,17 +21,6 @@ interface GeminiResponse {
     content?: { parts?: GeminiPart[] };
   }>;
   error?: { message?: string; status?: string; code?: number };
-}
-
-function parseModelList(raw: string | undefined): string[] {
-  if (!raw?.trim()) {
-    return [];
-  }
-  return [...new Set(
-    raw.split(',')
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  )];
 }
 
 /** Env override: GEMINI_IMAGE_MODELS, else GEMINI_IMAGE_MODEL + defaults. */

@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { ContactSchema } from './validation.js';
 import { ContactMessages } from 'server/DataSources/MongoDB/ContactMessages/Model.js';
@@ -42,7 +42,7 @@ export default {
       await assertWithinQuota({ UserGUID, Email });
 
       const doc = await ContactMessages.create({
-        ContactMessageGUID: uuid(),
+        ContactMessageGUID: randomUUID(),
         UserGUID,
         Email,
         Message,

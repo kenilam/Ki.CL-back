@@ -1,6 +1,7 @@
 import mongoose, { Schema, type Document, Types } from 'mongoose';
 
 import type {
+  ImageAgentExhaustion,
   ImageAgentMessageKind,
   ImageAgentRejection,
   ImageAgentRole,
@@ -22,7 +23,7 @@ export type ImageAgentThreadMessage = {
   assetId: Types.ObjectId | null;
   score: ImageAgentJobScore | null;
   rejection: ImageAgentRejection | null;
-  exhaustion: 'REFILLS' | 'BILLING' | null;
+  exhaustion: ImageAgentExhaustion | null;
   /** Replies offered with a QUESTION, sent as text when picked. */
   choices?: string[];
   /**

@@ -1,6 +1,5 @@
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import {
   PasswordChangeCompleteSchema,
@@ -17,6 +16,7 @@ import { BadUserInput, TooManyRequests, Unauthenticated, Unavailable } from 'ser
 import type { Context } from 'server/Context/index.js';
 import { COMPLETE_MS, COOLDOWN_MS, LINK_MS, toResult, watch } from './status.js';
 import { translate } from 'server/Helpers/translate.js';
+import { PasswordChangeStatus } from 'server/Types/graphql.js';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest();
 
@@ -66,7 +66,7 @@ export default {
       const doc = await PasswordChanges.findOne({ UserGUID });
       const result = doc && toResult(doc.PasswordChangeGUID, doc);
 
-      return result?.status === 'EXPIRED' ? null : result;
+      return result?.status === PasswordChangeStatus.Expired ? null : result;
     },
 
     // Lets the link's page say it is spent before offering to confirm it again.
@@ -106,7 +106,7 @@ export default {
 
       await PasswordChanges.deleteOne({ UserGUID });
 
-      const id = uuid();
+      const id = randomUUID();
       const secret = randomBytes(32).toString('base64url');
 
       /*

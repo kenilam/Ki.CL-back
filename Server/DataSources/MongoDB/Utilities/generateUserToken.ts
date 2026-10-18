@@ -1,20 +1,16 @@
 import jwt from 'jsonwebtoken';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
+import type { TokenPayload } from 'server/Helpers/auth.js';
 import { getAccessTokenExpiry, getRefreshTokenExpiry, secondsUntil } from 'server/Helpers/tokenExpiry.js';
 
-interface GenerateUserTokenProps {
-  UserGUID: string;
-  aud?: 'anon' | 'user';
-  /** Carried into both tokens, so a refresh keeps it. */
-  human?: boolean;
-}
+/** `human` is carried into both tokens, so a refresh keeps it. */
+type GenerateUserTokenProps = Pick<TokenPayload, 'UserGUID' | 'human'> &
+  Partial<Pick<TokenPayload, 'aud'>>;
 
-export interface UserTokenPayload {
+export type UserTokenPayload = Pick<TokenPayload, 'UserGUID' | 'aud'> & {
   AccessToken: string;
   RefreshToken: string;
-  UserGUID: string;
-  aud: 'anon' | 'user';
-}
+};
 
 export async function generateUserToken(
   props: GenerateUserTokenProps,

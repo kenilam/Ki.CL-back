@@ -1,4 +1,5 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import type { OpenAIChatResponse } from 'server/Modules/TaxonVisual/providers/text/types.js';
 import type { VisionChatOptions } from './types.js';
 
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
@@ -6,13 +7,6 @@ export const DEFAULT_OPENAI_VISION_MODEL = 'gpt-4o';
 
 export function resolveOpenAiVisionModel(): string {
   return process.env.OPENAI_VISION_MODEL?.trim() || DEFAULT_OPENAI_VISION_MODEL;
-}
-
-interface OpenAIChatResponse {
-  choices?: Array<{
-    message?: { content?: string | null };
-  }>;
-  error?: { message?: string; code?: string; type?: string };
 }
 
 export function isOpenAiVisionConfigured(): boolean {

@@ -1,13 +1,9 @@
 import DataLoader from 'dataloader';
 import { Types } from 'mongoose';
 
-import { Assets } from './Model.js';
+import { Assets, type IAsset } from './Model.js';
 
-export type LeanAsset = {
-  _id: Types.ObjectId;
-  url: string;
-  generator: string | null;
-};
+export type LeanAsset = Pick<IAsset, '_id' | 'url' | 'generator'>;
 
 async function batchAssetsById(
   ids: readonly string[],

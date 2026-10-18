@@ -5,38 +5,24 @@ import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'serve
 import { Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
 import { translate } from 'server/Helpers/translate.js';
-
-interface RefreshPayload {
-  UserGUID: string;
-  aud: 'anon' | 'user';
-  /** Carried over, so a refresh does not send the visitor back to the check. */
-  human?: boolean;
-  iat: number;
-  exp: number;
-}
+import { parseCookies, type TokenPayload } from 'server/Helpers/auth.js';
 
 export default {
   Mutation: {
     RefreshToken: async (_: unknown, __: unknown, context: Context) => {
       // The refresh token comes from the cookie, not from a GraphQL input.
-      const cookieHeader = context.headers['cookie'] as string | undefined;
-      let token: string | undefined;
-
-      if (cookieHeader) {
-        const match = cookieHeader.match(/refresh_token=([^;]+)/);
-        token = match?.[1];
-      }
+      const token = parseCookies(context.headers['cookie'] as string | undefined).refresh_token;
 
       if (!token) {
         throw Unauthenticated(translate('api', 'error_refresh_token_missing'));
       }
 
-      let decoded: RefreshPayload;
+      let decoded: TokenPayload;
       try {
         decoded = jwt.verify(
           token,
           process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!,
-        ) as RefreshPayload;
+        ) as TokenPayload;
       } catch {
         throw Unauthenticated(translate('api', 'error_refresh_token_invalid'));
       }

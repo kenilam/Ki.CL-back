@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { randomUUID } from 'node:crypto';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { SocialSignInSchema } from './validation.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
@@ -39,7 +39,7 @@ export default {
       let user = await Users.findOne({ Email: userInfo.Email });
 
       if (!user) {
-        const UserGUID = uuid();
+        const UserGUID = randomUUID();
         const { hash: Password } = await generatePassword();
 
         user = await Users.create({

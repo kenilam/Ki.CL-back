@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
-import { TaxonVisualStatus } from 'server/Types/graphql.js';
+import { TaxonVisualExhaustion, TaxonVisualStatus } from 'server/Types/graphql.js';
 import { ensureTreeOfLifeNodeByOttId } from 'server/Modules/TreeOfLife/persist.js';
 import { TaxonVisualSchema } from './validation.js';
 import { buildTaxonDescriptionPrompt } from './prompt.js';
@@ -18,11 +18,7 @@ import {
   TAXON_VISUAL_UPDATED,
   taxonVisualPubSub,
 } from './pubsub.js';
-import type {
-  TaxonVisualExhaustion,
-  TaxonVisualResult,
-  TaxonVisualScoreResult,
-} from './types.js';
+import type { TaxonVisualResult, TaxonVisualScoreResult } from './types.js';
 
 /**
  * How many plates a taxon gets before the best one stands.
@@ -48,12 +44,18 @@ const SETTLED: TaxonVisualStatus[] = [
  * refills tomorrow is reason enough to wait, and saying otherwise would send
  * someone to a billing page they do not need.
  */
-function exhaustionKind(error: unknown): 'REFILLS' | 'BILLING' | null {
+function exhaustionKind(error: unknown): TaxonVisualExhaustion | null {
   if (!(error instanceof ProviderLimitError)) {
     return null;
   }
 
-  return error.needsBilling ? 'BILLING' : 'REFILLS';
+  return error.needsBilling ? TaxonVisualExhaustion.Billing : TaxonVisualExhaustion.Refills;
+}
+
+/** Whether an error message is about quota rather than a fault. `studio budget` is in older stored errors. */
+function isQuotaMessage(message: string): boolean {
+  const lower = message.toLowerCase();
+  return ['billing', 'quota', 'studio budget', 'rate limit'].some((word) => lower.includes(word));
 }
 
 function failureStatus(error: unknown): TaxonVisualStatus.Error | TaxonVisualStatus.Exhausted {
@@ -61,14 +63,7 @@ function failureStatus(error: unknown): TaxonVisualStatus.Error | TaxonVisualSta
     return TaxonVisualStatus.Exhausted;
   }
   const message = error instanceof Error ? error.message : String(error);
-  if (
-    message.toLowerCase().includes('billing')
-    || message.toLowerCase().includes('quota')
-    || message.toLowerCase().includes('rate limit')
-  ) {
-    return TaxonVisualStatus.Exhausted;
-  }
-  return TaxonVisualStatus.Error;
+  return isQuotaMessage(message) ? TaxonVisualStatus.Exhausted : TaxonVisualStatus.Error;
 }
 
 function toVisualScore(
@@ -107,16 +102,7 @@ function toResult(doc: {
   error?: string | null;
 }): TaxonVisualResult {
   let status = doc.status ?? doc.visualStatus ?? TaxonVisualStatus.Pending;
-  if (
-    status === TaxonVisualStatus.Error
-    && doc.error
-    && (
-      doc.error.toLowerCase().includes('billing')
-      || doc.error.toLowerCase().includes('quota')
-      || doc.error.toLowerCase().includes('studio budget')
-      || doc.error.toLowerCase().includes('rate limit')
-    )
-  ) {
+  if (status === TaxonVisualStatus.Error && doc.error && isQuotaMessage(doc.error)) {
     status = TaxonVisualStatus.Exhausted;
   }
 
@@ -133,7 +119,7 @@ function toResult(doc: {
      * exists.
      */
     exhaustion: status === TaxonVisualStatus.Exhausted
-      ? doc.visualExhaustion ?? 'REFILLS'
+      ? doc.visualExhaustion ?? TaxonVisualExhaustion.Refills
       : null,
   };
 }

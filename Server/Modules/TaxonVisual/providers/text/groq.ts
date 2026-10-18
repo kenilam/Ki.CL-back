@@ -1,5 +1,5 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import type { TextChatOptions } from './types.js';
+import type { OpenAIChatResponse, TextChatOptions } from './types.js';
 
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const PROVIDER = 'groq';
@@ -18,13 +18,6 @@ const isReasoningModel = (model: string) => model.startsWith('openai/gpt-oss');
  */
 export function resolveGroqTextModel(): string {
   return process.env.GROQ_TEXT_MODEL?.trim() ?? '';
-}
-
-interface GroqChatResponse {
-  choices?: Array<{
-    message?: { content?: string | null };
-  }>;
-  error?: { message?: string; code?: string; type?: string };
 }
 
 export function isGroqTextConfigured(): boolean {
@@ -58,7 +51,7 @@ export async function chatGroq(options: TextChatOptions): Promise<string> {
     }),
   });
 
-  const payload = (await response.json()) as GroqChatResponse;
+  const payload = (await response.json()) as OpenAIChatResponse;
 
   if (!response.ok) {
     const message = payload.error?.message

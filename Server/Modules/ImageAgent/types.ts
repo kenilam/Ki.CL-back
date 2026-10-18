@@ -2,40 +2,23 @@ import type {
   IImageAgentThread,
   ImageAgentThreadMessage,
 } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
-import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
-import type {
-  ImageAgentMessageKind,
-  ImageAgentRejection,
-  ImageAgentRole,
-  ImageAgentStyle,
-  ImageAgentThreadStatus,
-} from 'server/Types/graphql.js';
+import type { ImageAgentMessage, ImageAgentThread } from 'server/Types/graphql.js';
 
-export interface ImageAgentMessageResult {
-  id: string;
-  role: ImageAgentRole;
-  kind: ImageAgentMessageKind;
-  text: string | null;
-  assetId: string | null;
-  score: ImageAgentJobScore | null;
-  rejection: ImageAgentRejection | null;
-  exhaustion: 'REFILLS' | 'BILLING' | null;
-  choices: string[];
+/** `asset` is resolved from `assetId`. Dates are Mongo's, not the branded scalar. */
+export type ImageAgentMessageResult = Omit<ImageAgentMessage, '__typename' | 'asset' | 'at'> & {
   at: Date;
-}
+};
 
-/** What the resolvers hand to GraphQL. `asset` is resolved from `assetId`. */
-export interface ImageAgentThreadResult {
-  id: string;
+/** What the resolvers hand to GraphQL. */
+export type ImageAgentThreadResult = Omit<
+  ImageAgentThread,
+  '__typename' | 'messages' | 'createdAt' | 'updatedAt'
+> & {
   ownerGUID: string;
-  status: ImageAgentThreadStatus;
-  brief: string | null;
-  style: ImageAgentStyle | null;
-  activity: string | null;
   messages: ImageAgentMessageResult[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
 /** A `.lean()` read of the thread: the fields, without the Mongoose document. */
 export type LeanImageAgentThread = Pick<

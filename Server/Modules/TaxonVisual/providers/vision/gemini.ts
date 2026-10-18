@@ -1,4 +1,6 @@
 import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { parseModelList } from 'server/Modules/TaxonVisual/providers/modelList.js';
+import type { GeminiResponse } from 'server/Modules/TaxonVisual/providers/text/types.js';
 import type { VisionChatOptions } from './types.js';
 
 /**
@@ -9,26 +11,6 @@ export const DEFAULT_GEMINI_VISION_MODELS = [
   'gemini-flash-latest',
   'gemini-flash-lite-latest',
 ] as const;
-
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
-    };
-  }>;
-  error?: { message?: string; status?: string; code?: number };
-}
-
-function parseModelList(raw: string | undefined): string[] {
-  if (!raw?.trim()) {
-    return [];
-  }
-  return [...new Set(
-    raw.split(',')
-      .map((entry) => entry.trim())
-      .filter(Boolean),
-  )];
-}
 
 /** Env override: GEMINI_VISION_MODELS, else the defaults above. */
 export function resolveGeminiVisionModels(): string[] {

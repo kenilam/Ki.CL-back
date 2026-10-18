@@ -1,3 +1,4 @@
+import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { runProviderFailover } from './providers/failover.js';
 import { buildTextChatProviders } from './providers/text/index.js';
 import {
@@ -11,22 +12,6 @@ import {
   type ResolveSpecimenContext,
   type SpecimenDomain,
 } from './prompt.js';
-
-function parseJsonObject(raw: string): Record<string, unknown> | null {
-  const trimmed = raw.trim();
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced?.[1]?.trim() ?? trimmed;
-  const start = body.indexOf('{');
-  const end = body.lastIndexOf('}');
-  if (start < 0 || end <= start) {
-    return null;
-  }
-  try {
-    return JSON.parse(body.slice(start, end + 1)) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
 
 function asDomain(value: unknown): SpecimenDomain {
   if (
@@ -99,7 +84,7 @@ export async function resolveSpecimen(
       }),
       'description',
     );
-    const parsed = parseJsonObject(raw);
+    const parsed = parseModelJson(raw);
     if (!parsed) {
       console.warn('[TaxonVisual] specimen resolve returned non-JSON; using fallback');
       specimen = fallbackSpecimen(name, rank, domainHint);

@@ -1,6 +1,7 @@
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { fetchOtolNameMatches } from 'server/Modules/TreeOfLife/otol.js';
+import { TaxonSearchSource, type TaxonSearchResult } from 'server/Types/graphql.js';
 import { TaxonSearchSchema } from './validation.js';
 
 /**
@@ -14,17 +15,9 @@ function literal(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-type Result = {
-  nodeId: string | null;
-  ottId: number | null;
-  name: string;
-  rank: string | null;
-  source: 'DATABASE' | 'OPEN_TREE';
-};
-
 export default {
   Query: {
-    TaxonSearch: async (_: unknown, args: unknown): Promise<Result[]> => {
+    TaxonSearch: async (_: unknown, args: unknown): Promise<TaxonSearchResult[]> => {
       const { query, limit } = validate(TaxonSearchSchema, args);
 
       /*
@@ -46,7 +39,7 @@ export default {
           ottId: node.ottId ?? null,
           name: node.name ?? '',
           rank: node.rank ?? null,
-          source: 'DATABASE' as const,
+          source: TaxonSearchSource.Database,
         }));
       }
 
@@ -72,7 +65,7 @@ export default {
         ottId: match.ottId,
         name: match.name,
         rank: null,
-        source: 'OPEN_TREE' as const,
+        source: TaxonSearchSource.OpenTree,
       }));
     },
   },
