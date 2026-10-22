@@ -1,4 +1,8 @@
 import type { ProviderAttempt } from 'server/Modules/TaxonVisual/providers/failover.js';
+import {
+  applySelfHostedOnly,
+  SELF_HOSTED,
+} from 'server/Modules/TaxonVisual/providers/self-hosted.js';
 import type { VisionChatOptions } from './types.js';
 import {
   chatGeminiVision,
@@ -10,9 +14,14 @@ import {
   isOpenAiVisionConfigured,
   resolveOpenAiVisionModel,
 } from './openai.js';
+import {
+  chatSelfHostedVision,
+  isSelfHostedVisionConfigured,
+  selfHostedVisionTimeoutMs,
+} from './self-hosted.js';
 
 /**
- * Vision QA pipeline: OpenAI → Gemini.
+ * Vision QA pipeline: self-hosted → OpenAI → Gemini.
  *
  * Scoring used to be a single call to OpenAI with no fallback, while text and
  * images each had three providers. When that one account ran out of credit the
@@ -26,7 +35,13 @@ import {
 export function buildVisionProviders(
   options: VisionChatOptions,
 ): ProviderAttempt<string>[] {
-  return [
+  return applySelfHostedOnly([
+    {
+      name: SELF_HOSTED,
+      isConfigured: isSelfHostedVisionConfigured,
+      timeoutMs: selfHostedVisionTimeoutMs(),
+      run: () => chatSelfHostedVision(options),
+    },
     {
       name: `openai:${resolveOpenAiVisionModel()}`,
       isConfigured: isOpenAiVisionConfigured,
@@ -37,7 +52,7 @@ export function buildVisionProviders(
       isConfigured: isGeminiVisionConfigured,
       run: () => chatGeminiVision({ ...options, model }),
     })),
-  ];
+  ]);
 }
 
 export type { VisionChatOptions } from './types.js';

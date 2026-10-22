@@ -7,6 +7,8 @@ export type ProviderAttempt<T> = {
   name: string;
   isConfigured: () => boolean;
   run: () => Promise<T>;
+  /** Replaces the per-kind default for a provider that is known to be slower. */
+  timeoutMs?: number;
 };
 
 /**
@@ -224,7 +226,11 @@ export async function runProviderFailover<T>(
   for (const provider of available) {
     console.log(`[TaxonVisual] ${kind} trying "${provider.name}"…`);
     try {
-      const result = await withRetries(provider.name, provider.run, TIMEOUT_MS[kind]);
+      const result = await withRetries(
+        provider.name,
+        provider.run,
+        provider.timeoutMs ?? TIMEOUT_MS[kind],
+      );
       console.log(`[TaxonVisual] ${kind} using "${provider.name}"`);
       return result;
     } catch (error) {

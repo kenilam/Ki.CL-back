@@ -1,0 +1,13 @@
+# torch is installed by the Dockerfile from the CUDA wheel index; it is listed
+# here so a local install on a GPU machine pulls a matching build.
+torch>=2.6
+diffusers>=0.36
+transformers>=4.57
+accelerate>=1.4
+safetensors>=0.5
+sentencepiece>=0.2
+bitsandbytes>=0.45
+huggingface_hub>=0.30
+fastapi>=0.115
+uvicorn[standard]>=0.34
+pillow>=11
