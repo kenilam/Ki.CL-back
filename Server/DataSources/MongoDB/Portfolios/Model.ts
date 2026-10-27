@@ -1,8 +1,8 @@
 import mongoose, { Schema, type Document } from 'mongoose';
 
 /**
- * A piece under Ki.CL's `/portfolio`, named by its path segment (`moonshot`,
- * `pika`). Who may open it is in `portfolio-access`.
+ * A piece under Ki.CL's `/portfolio`, named by its path segment, like
+ * `moonshot`. Who may open it is in `portfolio-access`.
  */
 export interface IPortfolio extends Document {
   PortfolioGUID: string;
