@@ -5,12 +5,22 @@ import { translate, type Key, type Values } from 'server/Helpers/translate.js';
 
 const compiled = new Map<string, pug.compileTemplate>();
 
+/** Node has `getTextInfo`, but TypeScript's Intl types don't list it yet. */
+const directionOf = (language: string): string => {
+  const locale = new Intl.Locale(language) as Intl.Locale & {
+    getTextInfo: () => { direction: string };
+  };
+
+  return locale.getTextInfo().direction;
+};
+
 /** A string of the `email` namespace. The templates call it as `t`. */
 export const t = (key: Key<'email'>, values?: Values): string => translate('email', key, values);
 
 /**
  * Renders `<name>.pug` from this folder. A template is compiled once, on first
- * use. Every template gets `t` for its text and `language` for the layout.
+ * use. Every template gets `t` for its text, and `language` and `direction`
+ * for the layout.
  */
 export function render(name: string, locals: Record<string, unknown>): string {
   let template = compiled.get(name);
@@ -20,5 +30,7 @@ export function render(name: string, locals: Record<string, unknown>): string {
     compiled.set(name, template);
   }
 
-  return template({ ...locals, language: currentAcceptLanguages()[0], t });
+  const [language] = currentAcceptLanguages();
+
+  return template({ ...locals, direction: directionOf(language), language, t });
 }
