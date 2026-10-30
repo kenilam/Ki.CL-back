@@ -1,8 +1,8 @@
+import type { CreatedAsset } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { generateTaxonDescription } from 'server/Modules/TaxonVisual/generateDescription.js';
 import {
   generateTaxonImageBuffer,
   persistTaxonImage,
-  type CreatedTaxonAsset,
 } from 'server/Modules/TaxonVisual/generateImage.js';
 import {
   inferDomainFromLineage,
@@ -23,14 +23,14 @@ import {
   fetchOtolTaxonInfo,
   formatLineagePath,
   lineageNamesForTaxon,
-} from 'server/Modules/TreeOfLife/otol.js';
+} from 'server/DataSources/OpenTreeOfLife/index.js';
 
 /** Initial generate + one vision-guided retry (matches learning agent budget). */
 const MAX_IMAGE_ATTEMPTS = 2;
 
 const LOG = '[TaxonVisual]';
 
-export type TaxonVisualPipelineResult = CreatedTaxonAsset & {
+export type TaxonVisualPipelineResult = CreatedAsset & {
   prompt: string;
   description: string | null;
   specimen: ResolvedSpecimen;

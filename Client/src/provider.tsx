@@ -7,10 +7,12 @@ import {
 } from '@apollo/client';
 // Apollo Client 4 serves the React bindings from their own entry point.
 import { ApolloProvider as BaseApolloProvider } from '@apollo/client/react';
+import { SetContextLink } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from '@apollo/client/utilities';
 
 import { Kicl_ExchangeTokenDocument } from 'api/generated/graphql';
+import { acceptLanguage } from 'api/acceptLanguage';
 import { createSocketClient } from 'api/socket';
 import { hasSession } from 'api/utils';
 
@@ -36,6 +38,14 @@ function toWsUri(httpUri: string): string {
   }
   return httpUri.replace(/^http/, 'ws');
 }
+
+const acceptLanguageLink = new SetContextLink(({ headers }) => {
+  if (typeof document === 'undefined') {
+    return {};
+  }
+
+  return { headers: { 'Accept-Language': acceptLanguage(document.documentElement.lang), ...headers } };
+});
 
 function createKiclClient(
   uri: string,
@@ -65,9 +75,9 @@ function createKiclClient(
             );
           },
           wsLink,
-          httpLink,
+          acceptLanguageLink.concat(httpLink),
         )
-      : httpLink;
+      : acceptLanguageLink.concat(httpLink);
 
   return new ApolloClient({
     link,

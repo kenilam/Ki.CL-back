@@ -1,8 +1,4 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import {
-  adaptImagePromptForFlux,
-  type ResolvedSpecimen,
-} from 'server/Modules/TaxonVisual/prompt.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 
 const MODEL = '@cf/black-forest-labs/flux-1-schnell';
 /** Schnell max is 8 - use the ceiling; 4 was too soft for taxon fidelity. */
@@ -23,20 +19,16 @@ export function isCloudflareImageConfigured(): boolean {
   );
 }
 
-export async function generateImageCloudflare(
-  prompt: string,
-  specimen?: ResolvedSpecimen | null,
-): Promise<Buffer> {
+export async function generateImageCloudflare(prompt: string): Promise<Buffer> {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
   const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim();
   if (!accountId || !apiToken) {
     throw new Error('CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN not configured');
   }
 
-  const adapted = adaptImagePromptForFlux(prompt, specimen);
-  const clipped = adapted.length > MAX_PROMPT
-    ? adapted.slice(0, MAX_PROMPT)
-    : adapted;
+  const clipped = prompt.length > MAX_PROMPT
+    ? prompt.slice(0, MAX_PROMPT)
+    : prompt;
 
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,

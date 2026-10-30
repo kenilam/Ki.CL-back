@@ -38,3 +38,5 @@ const AssetSchema = new Schema<IAsset>(
 export const Assets =
   (mongoose.models.Assets as mongoose.Model<IAsset>)
   || mongoose.model<IAsset>('Assets', AssetSchema);
+
+export type CreatedAsset = { assetId: string; url: string; generator: string };

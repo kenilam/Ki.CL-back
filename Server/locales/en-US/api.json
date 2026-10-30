@@ -84,7 +84,6 @@
   "try_again_later": "Try again later.",
   "validation_email": "Invalid email address",
   "validation_failed": "Validation failed",
-  "validation_language": "Unknown language",
   "validation_message_max": "Message must not exceed 5000 characters",
   "validation_message_required": "Message is required",
   "validation_namespace": "Unknown namespace",

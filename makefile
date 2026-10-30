@@ -54,7 +54,7 @@ contact.forget:
 
 # The site's writing: make translations.seed DIR=../Ki.CL/App/locales
 # The server's own messages and emails: make translations.seed DIR=Server/locales
-# Reads <DIR>/<language>/<namespace>.json into one row for each string. seed
+# Reads <DIR>/en-US/<namespace>.json into one row for each string. seed
 # adds and changes strings, diff fails when the database is behind the files,
 # prune removes strings the files no longer have, drop removes a whole namespace.
 translations.seed:
@@ -68,6 +68,17 @@ translations.prune:
 
 translations.drop:
 	@npx tsx Server/Scripts/translations.ts drop "$(NAMESPACE)"
+
+# Translates the en-US strings that are new or changed into every other
+# AcceptLanguage, or the ones named: make translations.translate LANGUAGES="fr ja".
+# Run it after seeding. A string that fails is reported and tried again next run.
+translations.translate:
+	@npx tsx Server/Scripts/translations.ts translate $(LANGUAGES)
+
+# Renames language to accept-language (en becomes en-US). Run it before the first
+# seed of a release, and with FINISH=--finish a release later.
+translations.migrate:
+	@npx tsx Server/Scripts/translations.ts migrate $(FINISH)
 
 # Every repo's namespaces at once. The other repos are checked out beside this
 # one; name other folders with TRANSLATION_DIRS="a b".

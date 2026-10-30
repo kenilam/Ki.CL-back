@@ -1,8 +1,8 @@
 import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
 import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { imageContentType } from 'server/Helpers/imageFormat.js';
-import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
-import { buildVisionProviders } from 'server/Modules/TaxonVisual/providers/vision/index.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildVisionProviders } from 'server/DataSources/AI/vision/index.js';
 import type { ImageAgentStyle } from 'server/Types/graphql.js';
 import { buildScoreSystemPrompt, buildScoreUserPrompt } from './prompt.js';
 

@@ -1,7 +1,7 @@
 import { translate } from 'server/Helpers/translate.js';
 import { parseModelJson } from 'server/Helpers/parseModelJson.js';
-import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
-import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildTextChatProviders } from 'server/DataSources/AI/text/index.js';
 import { ImageAgentStyle } from 'server/Types/graphql.js';
 
 /**

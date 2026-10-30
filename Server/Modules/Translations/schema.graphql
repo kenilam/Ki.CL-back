@@ -1,19 +1,33 @@
-"""One string of the site's writing in one language."""
+"""One string of the site's writing."""
 type Translation {
-  language: String!
   namespace: String!
   """The string's path in its namespace, joined with dots: `account.signOut`."""
   field: String!
   value: String!
 }
 
+"""Whether a language can be shown yet."""
+type AcceptLanguageStatus {
+  acceptLanguage: AcceptLanguage!
+  """Every `en-US` string is in this language. Only a complete language can be picked or answered in."""
+  complete: Boolean!
+  """`make translations.translate` is working on this language now."""
+  translating: Boolean!
+}
+
 extend type Query {
   """
-  Every string of the namespaces asked for, in this language. A namespace that
-  doesn't exist adds nothing to the answer.
+  Every string of the namespaces asked for. Each comes from the first language
+  that has it: the request's Accept-Language header in its q order, then
+  `en-US`. A namespace that doesn't exist adds nothing to the answer.
 
   Runs without a session: the site needs its words before it can start one,
   and they are public.
   """
-  Translations(language: String!, namespaces: [String!]!): [Translation!]!
+  Translations(namespaces: [String!]!): [Translation!]!
+}
+
+type Subscription {
+  """Every language's status now, and again whenever one changes."""
+  AcceptLanguagesUpdated: [AcceptLanguageStatus!]!
 }

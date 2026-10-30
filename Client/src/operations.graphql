@@ -194,9 +194,8 @@ query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
   }
 }
 
-query kicl_Translations($language: String!, $namespaces: [String!]!) {
-  Translations(language: $language, namespaces: $namespaces) {
-    language
+query kicl_Translations($namespaces: [String!]!) {
+  Translations(namespaces: $namespaces) {
     namespace
     field
     value
@@ -1073,5 +1072,13 @@ subscription kicl_TaxonVisualUpdated($ottId: Int!) {
       pass
     }
     exhaustion
+  }
+}
+
+subscription kicl_AcceptLanguagesUpdated {
+  AcceptLanguagesUpdated {
+    acceptLanguage
+    complete
+    translating
   }
 }

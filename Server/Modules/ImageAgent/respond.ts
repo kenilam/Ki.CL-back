@@ -11,7 +11,7 @@ import {
   type ImageAgentThreadMessage,
 } from 'server/DataSources/MongoDB/ImageAgentThreads/Model.js';
 import { translate } from 'server/Helpers/translate.js';
-import { ProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { ProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import {
   ImageAgentExhaustion,
   ImageAgentMessageKind,

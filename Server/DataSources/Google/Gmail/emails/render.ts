@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import pug from 'pug';
-import { LANGUAGE, translate, type Key, type Values } from 'server/Helpers/translate.js';
+import { currentAcceptLanguages } from 'server/Helpers/acceptLanguage.js';
+import { translate, type Key, type Values } from 'server/Helpers/translate.js';
 
 const compiled = new Map<string, pug.compileTemplate>();
 
@@ -19,5 +20,5 @@ export function render(name: string, locals: Record<string, unknown>): string {
     compiled.set(name, template);
   }
 
-  return template({ ...locals, language: LANGUAGE, t });
+  return template({ ...locals, language: currentAcceptLanguages()[0], t });
 }

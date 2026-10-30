@@ -1,6 +1,6 @@
 import { parseModelJson } from 'server/Helpers/parseModelJson.js';
-import { runProviderFailover } from './providers/failover.js';
-import { buildTextChatProviders } from './providers/text/index.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildTextChatProviders } from 'server/DataSources/AI/text/index.js';
 import {
   applyLineageDomainGate,
   type LineageDomainHint,

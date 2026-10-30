@@ -4,15 +4,15 @@ import { Types } from 'mongoose';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { TaxonVisualExhaustion, TaxonVisualStatus } from 'server/Types/graphql.js';
-import { ensureTreeOfLifeNodeByOttId } from 'server/Modules/TreeOfLife/persist.js';
+import { ensureTreeOfLifeNodeByOttId } from 'server/DataSources/MongoDB/TreeOfLife/persist.js';
 import { TaxonVisualSchema } from './validation.js';
 import { buildTaxonDescriptionPrompt } from './prompt.js';
 import { taxonVisualObjectExists } from './generateImage.js';
 import { generateTaxonDescription } from './generateDescription.js';
 import { runTaxonVisualPipeline } from './pipeline.js';
-import { anyProviderAvailable } from './providers/failover.js';
-import { buildImageProviders } from './providers/image/index.js';
-import { ProviderLimitError } from './providerLimitError.js';
+import { anyProviderAvailable } from 'server/DataSources/AI/failover.js';
+import { buildImageProviders } from 'server/DataSources/AI/image/index.js';
+import { ProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import {
   publishTaxonVisualUpdated,
   TAXON_VISUAL_UPDATED,

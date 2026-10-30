@@ -1,5 +1,5 @@
-import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
-import { buildTextChatProviders } from 'server/Modules/TaxonVisual/providers/text/index.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildTextChatProviders } from 'server/DataSources/AI/text/index.js';
 import type { ImageAgentStyle } from 'server/Types/graphql.js';
 import { buildRefinePrompt, buildRetryPrompt } from './prompt.js';
 

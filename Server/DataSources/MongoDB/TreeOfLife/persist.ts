@@ -6,7 +6,7 @@ import {
   argusonName,
   fetchOtolSubtreeResult,
   type ArgusonNode,
-} from './otol.js';
+} from 'server/DataSources/OpenTreeOfLife/index.js';
 
 /** Mongo's duplicate-key error code. */
 const DUPLICATE_KEY = 11000;

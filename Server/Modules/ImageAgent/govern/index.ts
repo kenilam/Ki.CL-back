@@ -1,4 +1,4 @@
-import { ProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { ProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import type { ImageAgentRejection } from 'server/Types/graphql.js';
 import { classifyPrompt } from './classify.js';
 import { moderatePrompt, reasonForModeration } from './moderation.js';

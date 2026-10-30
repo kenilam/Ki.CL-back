@@ -1,4 +1,4 @@
-import type { ProviderAttempt } from 'server/Modules/TaxonVisual/providers/failover.js';
+import type { ProviderAttempt } from 'server/DataSources/AI/failover.js';
 import type { VisionChatOptions } from './types.js';
 import {
   chatGeminiVision,

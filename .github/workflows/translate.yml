@@ -1,0 +1,56 @@
+name: Translate
+
+# Translates new and changed en-US strings into the other languages. It only
+# sends strings that are missing or whose English changed, so a run with
+# nothing to do is quick, and a run that stops at the model quota is picked up
+# by the next one.
+on:
+  schedule:
+    # Just after Gemini's free daily quota resets, at midnight Pacific time.
+    - cron: '30 8 * * *'
+  workflow_dispatch:
+    inputs:
+      database:
+        description: Database
+        type: choice
+        options:
+          - production
+          - dev
+        default: production
+      languages:
+        description: Languages, separated by spaces. Empty for all.
+        required: false
+
+concurrency:
+  group: translate-${{ inputs.database || 'production' }}
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+
+      # setup-node's yarn cache calls yarn, which has to be the packageManager
+      # version by then. The runner ships Yarn 1.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      # The languages come in through the environment, not the command line, so
+      # nothing typed into the form runs as shell.
+      - run: make translations.translate LANGUAGES="$LANGUAGES"
+        env:
+          LANGUAGES: ${{ inputs.languages }}
+          MONGODB_ATLAS_URI: ${{ secrets.MONGODB_ATLAS_URI }}
+          MONGODB_DATABASE: ${{ inputs.database || 'production' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_TEXT_MODEL: ${{ vars.GROQ_TEXT_MODEL }}

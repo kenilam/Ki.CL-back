@@ -1,4 +1,4 @@
-import type { TextChatOptions } from 'server/Modules/TaxonVisual/providers/text/types.js';
+import type { TextChatOptions } from 'server/DataSources/AI/text/types.js';
 
 export type VisionChatOptions = TextChatOptions & {
   /** Raw image bytes - encoded per provider, never stored. */

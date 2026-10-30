@@ -1,4 +1,4 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import type { OpenAIChatResponse, TextChatOptions } from './types.js';
 
 const GROQ_CHAT_URL = 'https://api.groq.com/openai/v1/chat/completions';

@@ -3,8 +3,8 @@ import {
   clearTreeOfLifeLoaders,
   type LeanTreeOfLifeNode,
 } from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
-import { fetchOtolNodeLineage, fetchOtolSubtreeResult } from './otol.js';
-import { persistArgusonTree, persistLineageSpine } from './persist.js';
+import { fetchOtolNodeLineage, fetchOtolSubtreeResult } from 'server/DataSources/OpenTreeOfLife/index.js';
+import { persistArgusonTree, persistLineageSpine } from 'server/DataSources/MongoDB/TreeOfLife/persist.js';
 import { ROOT_OTT_ID } from './validation.js';
 
 const ROOT_NODE_ID = `ott${ROOT_OTT_ID}`;
