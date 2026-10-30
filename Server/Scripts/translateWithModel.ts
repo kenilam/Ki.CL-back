@@ -11,7 +11,7 @@ const CHUNK_CHARACTERS = 3000;
 const PLURAL = /_(zero|one|two|few|many|other)$/;
 // How a language is written where its name alone doesn't say.
 const WRITTEN_AS: Partial<Record<string, string>> = {
-  'zh-Hant': 'Write it in Hong Kong Cantonese: written Cantonese as it is used in Hong Kong, with Hong Kong vocabulary, in Traditional characters.',
+  'zh-Hant': 'Write it in standard written Chinese (書面語) as it is used in Hong Kong, in Traditional characters, with Hong Kong vocabulary and punctuation. Do not write colloquial Cantonese: no spoken forms such as 嘅, 咗, 喺, 唔, 冇, 啲, 嘢, 佢, 哋, 嚟 or 咁.',
 };
 
 const TOKEN = /\{\{\s*\w+\s*\}\}|\$t\([^)]*\)|\{\w+\}|`[^`]*`|\]\([^)]*\)|\*\*|<\/?[\w-]+\s*\/?>/g;
