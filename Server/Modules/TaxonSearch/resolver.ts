@@ -1,6 +1,6 @@
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
-import { fetchOtolNameMatches } from 'server/Modules/TreeOfLife/otol.js';
+import { fetchOtolNameMatches } from 'server/DataSources/OpenTreeOfLife/index.js';
 import { TaxonSearchSource, type TaxonSearchResult } from 'server/Types/graphql.js';
 import { TaxonSearchSchema } from './validation.js';
 

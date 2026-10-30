@@ -1,39 +1,88 @@
 import mongoose from 'mongoose';
-import { Translations, type ITranslation } from './Model.js';
+import { TranslationRuns } from 'server/DataSources/MongoDB/TranslationRuns/Model.js';
+import { AcceptLanguage } from './acceptLanguage.js';
+import { Translations } from './Model.js';
 
-export type Translation = Pick<ITranslation, 'field' | 'language' | 'namespace' | 'value'>;
+export type Translation = { namespace: string; field: string; value: string };
+export type AcceptLanguageStatus = {
+  acceptLanguage: AcceptLanguage;
+  complete: boolean;
+  translating: boolean;
+};
 
-/** One namespace in one language: its rows as the query returns them, and the same strings by field. */
 type Entry = { rows: Translation[]; values: Map<string, string> };
 type Store = Map<string, Entry>;
 
 const TTL_MS = 60_000;
-/** Development reads the database every time, so a seed shows on the next reload. */
 const CACHED = process.env.NODE_ENV !== 'development';
+
+// A run the script hasn't touched for this long stopped without clearing itself.
+const RUN_STALE_MS = 5 * 60_000;
+
+const PLURAL = /_(zero|one|two|few|many|other)$/;
 
 let store: Store | null = null;
 let loadedAt = 0;
 let loading: Promise<Store> | null = null;
+let statuses: AcceptLanguageStatus[] = [];
 
-const keyOf = (language: string, namespace: string): string => `${language}:${namespace}`;
+function keyOf(acceptLanguage: string, namespace: string): string {
+  return `${acceptLanguage}:${namespace}`;
+}
+
+function statusesOf(grouped: Store, namespaces: Set<string>, running: Set<string>): AcceptLanguageStatus[] {
+  return Object.values(AcceptLanguage).map((acceptLanguage) => {
+    // Compared without plural endings: Chinese has only `_other` where English has `_one` and `_other`.
+    const complete = [...namespaces].every((namespace) => {
+      const translated = new Set(
+        [...(grouped.get(keyOf(acceptLanguage, namespace))?.values.keys() ?? [])].map((field) => {
+          return field.replace(PLURAL, '');
+        }),
+      );
+
+      return [...(grouped.get(keyOf(AcceptLanguage.EnUs, namespace))?.values.keys() ?? [])].every((field) => {
+        return translated.has(field.replace(PLURAL, ''));
+      });
+    });
+
+    return { acceptLanguage, complete, translating: running.has(acceptLanguage) };
+  });
+}
 
 function load(): Promise<Store> {
-  loading ??= Translations.find({}, 'field language namespace value')
-    .sort({ language: 1, namespace: 1, field: 1 })
-    .read('nearest')
-    .lean()
-    .then((rows) => {
+  loading ??= Promise.all([
+    Translations.find({}, 'accept-language field namespace value')
+      .sort({ 'accept-language': 1, namespace: 1, field: 1 })
+      .read('nearest')
+      .lean(),
+    TranslationRuns.find({ updatedAt: { $gt: new Date(Date.now() - RUN_STALE_MS) } }, 'accept-language')
+      .read('nearest')
+      .lean(),
+  ])
+    .then(([rows, runs]) => {
       const grouped: Store = new Map();
+      const namespaces = new Set<string>();
 
-      for (const row of rows) {
-        const key = keyOf(row.language, row.namespace);
+      for (const { 'accept-language': acceptLanguage, field, namespace, value } of rows) {
+        const key = keyOf(acceptLanguage, namespace);
         const entry = grouped.get(key) ?? { rows: [], values: new Map<string, string>() };
 
-        entry.rows.push(row);
-        entry.values.set(row.field, row.value);
+        entry.rows.push({ namespace, field, value });
+        entry.values.set(field, value);
         grouped.set(key, entry);
+
+        if (acceptLanguage === AcceptLanguage.EnUs) {
+          namespaces.add(namespace);
+        }
       }
 
+      const running = new Set(
+        runs.map((run) => {
+          return run['accept-language'];
+        }),
+      );
+
+      statuses = statusesOf(grouped, namespaces, running);
       store = grouped;
       loadedAt = Date.now();
       return grouped;
@@ -45,13 +94,14 @@ function load(): Promise<Store> {
   return loading;
 }
 
-/** Starts a read without waiting for it. Before the database is connected there is nothing to read. */
 function reload(): void {
   if (mongoose.connection.readyState !== mongoose.ConnectionStates.connected) {
     return;
   }
 
-  load().catch((error: unknown) => console.error('❌ Translations did not reload:', error));
+  load().catch((error: unknown) => {
+    console.error('❌ Translations did not reload:', error);
+  });
 }
 
 /**
@@ -69,33 +119,88 @@ export async function loadTranslations(): Promise<void> {
 }
 
 /**
- * The strings of the namespaces that exist, from memory. The query runs
- * without a session, so it must not cost a database read per request.
- *
- * A copy older than a minute is still returned while a fresh one loads, so a
- * seed shows within about a minute on each instance.
+ * Each field of the namespaces, from the first of the languages that has it,
+ * and the languages the fields came from, in the same order. The query runs
+ * without a session, so it must not cost a database read per request. A copy
+ * older than a minute is still returned while a fresh one loads, so a seed
+ * shows within about a minute on each instance.
  */
-export async function findTranslations(language: string, namespaces: string[]): Promise<Translation[]> {
+export async function findTranslations(
+  acceptLanguages: string[],
+  namespaces: string[],
+): Promise<{ translations: Translation[]; contentLanguages: string[] }> {
   if (!CACHED || !store) {
     store = await load();
-  } else if (Date.now() - loadedAt > TTL_MS) {
+  }
+
+  if (Date.now() - loadedAt > TTL_MS) {
     reload();
   }
 
   const current = store;
-  return namespaces.flatMap((namespace) => current.get(keyOf(language, namespace))?.rows ?? []);
+  const used = new Set<string>();
+
+  const translations = namespaces.flatMap((namespace) => {
+    const fields = new Map<string, Translation>();
+
+    for (const acceptLanguage of acceptLanguages) {
+      for (const row of current.get(keyOf(acceptLanguage, namespace))?.rows ?? []) {
+        if (!fields.has(row.field)) {
+          fields.set(row.field, row);
+          used.add(acceptLanguage);
+        }
+      }
+    }
+
+    return [...fields.values()];
+  });
+
+  const contentLanguages = acceptLanguages.filter((acceptLanguage) => {
+    return used.has(acceptLanguage);
+  });
+
+  return { translations, contentLanguages };
+}
+
+/**
+ * Whether each language is fully translated, and whether `make
+ * translations.translate` is working on it, from the same copy in memory.
+ */
+export async function findAcceptLanguageStatuses(): Promise<AcceptLanguageStatus[]> {
+  if (!CACHED || !store) {
+    store = await load();
+  }
+
+  if (Date.now() - loadedAt > TTL_MS) {
+    reload();
+  }
+
+  return statuses;
+}
+
+/** The languages a request may be answered in: each fully translated one, and always `en-US`. */
+export function availableAcceptLanguages(): Set<string> {
+  return new Set([
+    AcceptLanguage.EnUs,
+    ...statuses
+      .filter(({ complete }) => {
+        return complete;
+      })
+      .map(({ acceptLanguage }) => {
+        return acceptLanguage;
+      }),
+  ]);
 }
 
 /**
  * One string from memory, or undefined when the database doesn't have it or
  * hasn't been read yet. It can't wait for a read, so an old copy is answered
- * from while a fresh one loads. Development starts that load on every call,
- * so a seed shows on the request after the next one.
+ * from while a fresh one loads.
  */
-export function storedTranslation(language: string, namespace: string, field: string): string | undefined {
+export function storedTranslation(acceptLanguage: string, namespace: string, field: string): string | undefined {
   if (!CACHED || !store || Date.now() - loadedAt > TTL_MS) {
     reload();
   }
 
-  return store?.get(keyOf(language, namespace))?.values.get(field);
+  return store?.get(keyOf(acceptLanguage, namespace))?.values.get(field);
 }

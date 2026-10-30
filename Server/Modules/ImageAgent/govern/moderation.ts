@@ -1,5 +1,5 @@
 import { translate } from 'server/Helpers/translate.js';
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import { ImageAgentRejection } from 'server/Types/graphql.js';
 
 const OPENAI_MODERATION_URL = 'https://api.openai.com/v1/moderations';

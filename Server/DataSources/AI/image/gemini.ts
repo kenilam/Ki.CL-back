@@ -1,5 +1,5 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import { parseModelList } from 'server/Modules/TaxonVisual/providers/modelList.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
+import { parseModelList } from 'server/DataSources/AI/modelList.js';
 
 /**
  * Paid last-resort image models. Each has its own quota in AI Studio.

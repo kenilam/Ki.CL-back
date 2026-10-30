@@ -18,6 +18,7 @@ import { precompressed } from './Middleware/precompressed.js';
 import { securityHeaders } from './Middleware/securityHeaders.js';
 import { authenticate } from './Middleware/authenticate.js';
 import { apiProxy } from './Middleware/apiProxy.js';
+import { acceptLanguage } from './Middleware/acceptLanguage.js';
 import { sessionRoute } from './Modules/ExchangeToken/route.js';
 import { connectDatabase, mongoose, pingPrimary } from './DataSources/MongoDB/index.js';
 import { loadTranslations } from './DataSources/MongoDB/Translations/cache.js';
@@ -151,6 +152,7 @@ async function start() {
     cookieParser(),
     corsMiddleware,
     express.json(),
+    acceptLanguage,
     authenticate,
     expressMiddleware(server, {
       context: createContext,
@@ -162,6 +164,7 @@ async function start() {
     cookieParser(),
     corsMiddleware,
     express.json(),
+    acceptLanguage,
     apiProxy,
     authenticate,
     expressMiddleware(server, {
@@ -173,7 +176,7 @@ async function start() {
    * ExchangeToken without GraphQL, ahead of the BFF so Apollo doesn't take the
    * path. It needs no key: the BFF lets anyone run ExchangeToken too.
    */
-  app.post('/api/session', securityHeaders, corsMiddleware, sessionRoute);
+  app.post('/api/session', securityHeaders, corsMiddleware, acceptLanguage, sessionRoute);
 
   // Public BFF - injects x-api-key server-side; never exposes it to the browser
   app.use('/api', ...apiMiddleware);

@@ -1,5 +1,4 @@
-import type { ProviderAttempt } from 'server/Modules/TaxonVisual/providers/failover.js';
-import type { ResolvedSpecimen } from 'server/Modules/TaxonVisual/prompt.js';
+import type { ProviderAttempt } from 'server/DataSources/AI/failover.js';
 import type { GeneratedImage } from './types.js';
 import {
   generateImageCloudflare,
@@ -21,7 +20,7 @@ import {
 
 export type BuildImageProviderOptions = {
   openaiOnly?: boolean;
-  specimen?: ResolvedSpecimen | null;
+  fluxPrompt?: string;
 };
 
 /**
@@ -32,7 +31,7 @@ export function buildImageProviders(
   prompt: string,
   options: BuildImageProviderOptions = {},
 ): ProviderAttempt<GeneratedImage>[] {
-  const specimen = options.specimen ?? null;
+  const fluxPrompt = options.fluxPrompt ?? prompt;
   const providers: ProviderAttempt<GeneratedImage>[] = [
     {
       name: 'openai:gpt-image-1',
@@ -46,7 +45,7 @@ export function buildImageProviders(
       name: 'cloudflare:flux-1-schnell',
       isConfigured: isCloudflareImageConfigured,
       run: async () => ({
-        buffer: await generateImageCloudflare(prompt, specimen),
+        buffer: await generateImageCloudflare(fluxPrompt),
         generator: 'cloudflare:flux-1-schnell',
       }),
     },
@@ -54,7 +53,7 @@ export function buildImageProviders(
       name: 'pollinations:flux',
       isConfigured: isPollinationsImageConfigured,
       run: async () => ({
-        buffer: await generateImagePollinations(prompt, specimen),
+        buffer: await generateImagePollinations(fluxPrompt),
         generator: 'pollinations:flux',
       }),
     },

@@ -2,11 +2,11 @@ import {
   ImageAgentStepKind,
   type ImageAgentJobScore,
 } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
-import { runProviderFailover } from 'server/Modules/TaxonVisual/providers/failover.js';
-import { buildImageProviders } from 'server/Modules/TaxonVisual/providers/image/index.js';
-import type { GeneratedImage } from 'server/Modules/TaxonVisual/providers/image/types.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildImageProviders } from 'server/DataSources/AI/image/index.js';
+import type { GeneratedImage } from 'server/DataSources/AI/image/types.js';
 import type { ImageAgentStyle } from 'server/Types/graphql.js';
-import type { CreatedTaxonAsset } from 'server/Modules/TaxonVisual/generateImage.js';
+import type { CreatedAsset } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { persistImage } from './persist.js';
 import { refinePrompt, retryPrompt } from './refinePrompt.js';
 import { scoreImage } from './scoreImage.js';
@@ -37,7 +37,7 @@ export type AgentInput = {
   style: ImageAgentStyle;
 };
 
-export type AgentOutcome = CreatedTaxonAsset & {
+export type AgentOutcome = CreatedAsset & {
   imagePrompt: string;
   /** Null when no provider could review the image. */
   score: ImageAgentJobScore | null;

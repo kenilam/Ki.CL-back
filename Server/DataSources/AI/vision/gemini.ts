@@ -1,6 +1,6 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import { parseModelList } from 'server/Modules/TaxonVisual/providers/modelList.js';
-import type { GeminiResponse } from 'server/Modules/TaxonVisual/providers/text/types.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
+import { parseModelList } from 'server/DataSources/AI/modelList.js';
+import type { GeminiResponse } from 'server/DataSources/AI/text/types.js';
 import type { VisionChatOptions } from './types.js';
 
 /**

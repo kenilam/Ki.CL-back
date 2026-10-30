@@ -1,4 +1,4 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 
 const OPENAI_IMAGES_URL = 'https://api.openai.com/v1/images/generations';
 const MODEL = 'gpt-image-1';

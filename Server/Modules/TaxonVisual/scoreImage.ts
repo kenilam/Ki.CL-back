@@ -1,7 +1,7 @@
 import { imageContentType } from 'server/Helpers/imageFormat.js';
 import { parseModelJson } from 'server/Helpers/parseModelJson.js';
-import { runProviderFailover } from './providers/failover.js';
-import { buildVisionProviders } from './providers/vision/index.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
+import { buildVisionProviders } from 'server/DataSources/AI/vision/index.js';
 import {
   buildScoreImageSystemPrompt,
   buildScoreImageUserPrompt,

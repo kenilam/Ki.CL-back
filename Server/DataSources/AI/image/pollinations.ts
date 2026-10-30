@@ -1,8 +1,11 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import {
-  adaptImagePromptForFlux,
-  type ResolvedSpecimen,
-} from 'server/Modules/TaxonVisual/prompt.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
+
+// The free endpoint takes the prompt in the URL.
+const MAX_PROMPT = 900;
+
+function clip(prompt: string): string {
+  return prompt.length > MAX_PROMPT ? `${prompt.slice(0, MAX_PROMPT)}…` : prompt;
+}
 
 /** Legacy OpenAI-compatible path (can mis-bill Flux when pollen is 0). */
 const POLLINATIONS_OPENAI_URL = 'https://gen.pollinations.ai/v1/images/generations';
@@ -67,9 +70,8 @@ async function bufferFromImage(
 /** Free GET endpoint - Flux does not consume Pollen. */
 async function generateViaFreeGet(
   prompt: string,
-  specimen?: ResolvedSpecimen | null,
 ): Promise<Buffer> {
-  const adapted = adaptImagePromptForFlux(prompt, specimen);
+  const adapted = clip(prompt);
   const url = new URL(
     `${POLLINATIONS_FREE_BASE}/${encodeURIComponent(adapted)}`,
   );
@@ -108,7 +110,6 @@ async function generateViaFreeGet(
 /** OpenAI-compatible POST - used when a key is present; may require Pollen. */
 async function generateViaOpenAiCompat(
   prompt: string,
-  specimen?: ResolvedSpecimen | null,
 ): Promise<Buffer> {
   const response = await fetch(POLLINATIONS_OPENAI_URL, {
     method: 'POST',
@@ -118,7 +119,7 @@ async function generateViaOpenAiCompat(
     },
     body: JSON.stringify({
       model: MODEL,
-      prompt: adaptImagePromptForFlux(prompt, specimen),
+      prompt: clip(prompt),
       size: `${SIZE}x${SIZE}`,
       n: 1,
       response_format: 'b64_json',
@@ -151,12 +152,11 @@ async function generateViaOpenAiCompat(
 
 export async function generateImagePollinations(
   prompt: string,
-  specimen?: ResolvedSpecimen | null,
 ): Promise<Buffer> {
   // Flux is always free on the GET path. The OpenAI-compatible endpoint
   // can reject with "Insufficient balance" even for Flux when pollen is 0.
   try {
-    return await generateViaFreeGet(prompt, specimen);
+    return await generateViaFreeGet(prompt);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Rate/budget limits: do not burn a second path that needs pollen.
@@ -164,9 +164,9 @@ export async function generateImagePollinations(
       throw error;
     }
     console.warn(
-      `[TaxonVisual] pollinations free GET failed (${message}); trying OpenAI-compat`,
+      `[AI] pollinations free GET failed (${message}); trying OpenAI-compat`,
     );
   }
 
-  return generateViaOpenAiCompat(prompt, specimen);
+  return generateViaOpenAiCompat(prompt);
 }

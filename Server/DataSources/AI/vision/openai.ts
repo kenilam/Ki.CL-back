@@ -1,5 +1,5 @@
-import { throwIfProviderLimitError } from 'server/Modules/TaxonVisual/providerLimitError.js';
-import type { OpenAIChatResponse } from 'server/Modules/TaxonVisual/providers/text/types.js';
+import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
+import type { OpenAIChatResponse } from 'server/DataSources/AI/text/types.js';
 import type { VisionChatOptions } from './types.js';
 
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';

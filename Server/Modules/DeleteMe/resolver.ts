@@ -8,7 +8,7 @@ import { Registrations } from 'server/DataSources/MongoDB/Registrations/Model.js
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
 import { clearAuthCookies } from 'server/Helpers/cookies.js';
-import { forgetOwner } from 'server/Modules/ImageAgent/forget.js';
+import { forgetOwner } from 'server/DataSources/MongoDB/ImageAgentThreads/forget.js';
 import { BadUserInput, Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
 import { translate } from 'server/Helpers/translate.js';

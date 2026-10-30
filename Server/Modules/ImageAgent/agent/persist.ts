@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto';
 import { Storage } from 'server/DataSources/Google/index.js';
 import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
 import { imageContentType, imageExtension } from 'server/Helpers/imageFormat.js';
-import type { CreatedTaxonAsset } from 'server/Modules/TaxonVisual/generateImage.js';
-import type { GeneratedImage } from 'server/Modules/TaxonVisual/providers/image/types.js';
+import type { CreatedAsset } from 'server/DataSources/MongoDB/Assets/Model.js';
+import type { GeneratedImage } from 'server/DataSources/AI/image/types.js';
 
 /** Agent output sits under its own prefix in the pipeline bucket. */
 const OBJECT_PREFIX = 'agent/';
@@ -21,7 +21,7 @@ function objectName(jobId: string, buffer: Buffer): string {
 export async function persistImage(
   jobId: string,
   image: GeneratedImage,
-): Promise<CreatedTaxonAsset> {
+): Promise<CreatedAsset> {
   const { path } = await Storage.uploadBuffer({
     buffer: image.buffer,
     objectName: objectName(jobId, image.buffer),

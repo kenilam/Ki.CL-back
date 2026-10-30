@@ -1,7 +1,7 @@
 import {
   isCreditExhaustedError,
   ProviderLimitError,
-} from 'server/Modules/TaxonVisual/providerLimitError.js';
+} from 'server/DataSources/AI/providerLimitError.js';
 
 export type ProviderAttempt<T> = {
   name: string;
@@ -124,7 +124,7 @@ async function withRetries<T>(
         if (!lastError.retryable) {
           if (isCreditExhaustedError(lastError.message)) {
             console.warn(
-              `[TaxonVisual] "${provider}" is out of credit; standing down for `
+              `[AI] "${provider}" is out of credit; standing down for `
               + `${CREDIT_COOLDOWN_MS / 3_600_000}h`,
             );
             markProviderExhausted(provider, Date.now() + CREDIT_COOLDOWN_MS);
@@ -155,7 +155,7 @@ async function withRetries<T>(
           ? retryAfter
           : 2 ** (attempt - 1) * 1000;
         console.warn(
-          `[TaxonVisual] "${provider}" rate-limited; retry ${attempt}/${RATE_LIMIT_MAX_RETRIES} in ${delayMs}ms`,
+          `[AI] "${provider}" rate-limited; retry ${attempt}/${RATE_LIMIT_MAX_RETRIES} in ${delayMs}ms`,
         );
         await new Promise((resolve) => {
           setTimeout(resolve, delayMs);
@@ -166,7 +166,7 @@ async function withRetries<T>(
       if (attempt < DEFAULT_MAX_RETRIES) {
         const delayMs = 2 ** (attempt - 1) * 1000;
         console.warn(
-          `[TaxonVisual] "${provider}" failed (${lastError.message}); `
+          `[AI] "${provider}" failed (${lastError.message}); `
           + `retry ${attempt}/${DEFAULT_MAX_RETRIES} in ${delayMs}ms`,
         );
         await new Promise((resolve) => {
@@ -199,7 +199,7 @@ export async function runProviderFailover<T>(
       return true;
     }
     console.warn(
-      `[TaxonVisual] ${kind} skipping "${provider.name}" (budget cooldown)`,
+      `[AI] ${kind} skipping "${provider.name}" (budget cooldown)`,
     );
     return false;
   });
@@ -216,22 +216,22 @@ export async function runProviderFailover<T>(
   }
 
   console.log(
-    `[TaxonVisual] ${kind} pipeline: ${available.map((p) => p.name).join(' → ')}`,
+    `[AI] ${kind} pipeline: ${available.map((p) => p.name).join(' → ')}`,
   );
 
   const errors: Error[] = [];
 
   for (const provider of available) {
-    console.log(`[TaxonVisual] ${kind} trying "${provider.name}"…`);
+    console.log(`[AI] ${kind} trying "${provider.name}"…`);
     try {
       const result = await withRetries(provider.name, provider.run, TIMEOUT_MS[kind]);
-      console.log(`[TaxonVisual] ${kind} using "${provider.name}"`);
+      console.log(`[AI] ${kind} using "${provider.name}"`);
       return result;
     } catch (error) {
       const next = error instanceof Error ? error : new Error(String(error));
       errors.push(next);
       console.warn(
-        `[TaxonVisual] ${kind} agent "${provider.name}" failed → next: ${next.message}`,
+        `[AI] ${kind} agent "${provider.name}" failed → next: ${next.message}`,
       );
     }
   }

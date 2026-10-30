@@ -2,13 +2,14 @@ import { createHash } from 'node:crypto';
 
 import { Storage } from 'server/DataSources/Google/index.js';
 import { imageContentType, imageExtension } from 'server/Helpers/imageFormat.js';
-import { Assets } from 'server/DataSources/MongoDB/Assets/Model.js';
-import { runProviderFailover } from './providers/failover.js';
+import { Assets, type CreatedAsset } from 'server/DataSources/MongoDB/Assets/Model.js';
+import { adaptImagePromptForFlux, type ResolvedSpecimen } from './prompt.js';
+import { runProviderFailover } from 'server/DataSources/AI/failover.js';
 import {
   buildImageProviders,
   type BuildImageProviderOptions,
-} from './providers/image/index.js';
-import type { GeneratedImage } from './providers/image/types.js';
+} from 'server/DataSources/AI/image/index.js';
+import type { GeneratedImage } from 'server/DataSources/AI/image/types.js';
 
 /**
  * Every render of one taxon shares this prefix; the digest after it is what
@@ -48,18 +49,16 @@ export async function taxonVisualObjectExists(ottId: number): Promise<boolean> {
   return names.length > 0;
 }
 
-export type CreatedTaxonAsset = {
-  assetId: string;
-  url: string;
-  generator: string;
+type TaxonImageOptions = Pick<BuildImageProviderOptions, 'openaiOnly'> & {
+  specimen?: ResolvedSpecimen | null;
 };
 
 export async function generateTaxonImageBuffer(
   prompt: string,
-  options: BuildImageProviderOptions = {},
+  { openaiOnly, specimen }: TaxonImageOptions = {},
 ): Promise<GeneratedImage> {
   return runProviderFailover(
-    buildImageProviders(prompt, options),
+    buildImageProviders(prompt, { openaiOnly, fluxPrompt: adaptImagePromptForFlux(prompt, specimen) }),
     'image',
   );
 }
@@ -67,7 +66,7 @@ export async function generateTaxonImageBuffer(
 export async function persistTaxonImage(
   ottId: number,
   image: GeneratedImage,
-): Promise<CreatedTaxonAsset> {
+): Promise<CreatedAsset> {
   const objectName = taxonVisualObjectName(ottId, image.buffer);
 
   const { path } = await Storage.uploadBuffer({
@@ -102,8 +101,8 @@ export async function persistTaxonImage(
 export async function generateTaxonImage(
   ottId: number,
   prompt: string,
-  options: BuildImageProviderOptions = {},
-): Promise<CreatedTaxonAsset> {
+  options: TaxonImageOptions = {},
+): Promise<CreatedAsset> {
   const image = await generateTaxonImageBuffer(prompt, options);
   return persistTaxonImage(ottId, image);
 }
