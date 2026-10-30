@@ -73,7 +73,7 @@ translations.drop:
 # AcceptLanguage, or the ones named: make translations.translate LANGUAGES="fr ja".
 # Run it after seeding. A string that fails is reported and tried again next run.
 translations.translate:
-	@npx tsx Server/Scripts/translations.ts translate $(LANGUAGES)
+	@npx tsx Server/Scripts/translations.ts translate $$LANGUAGES
 
 # Renames language to accept-language (en becomes en-US). Run it before the first
 # seed of a release, and with FINISH=--finish a release later.
