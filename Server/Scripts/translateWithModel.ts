@@ -9,14 +9,9 @@ import type { TextChatOptions } from 'server/DataSources/AI/text/types.js';
 const CHUNK_CHARACTERS = 3000;
 
 const PLURAL = /_(zero|one|two|few|many|other)$/;
-// How a language is written where its name alone doesn't say.
-const WRITTEN_AS: Partial<Record<string, string>> = {
-  'zh-Hant': 'Write it in standard written Chinese (書面語) as it is used in Hong Kong, in Traditional characters, with Hong Kong vocabulary and punctuation. Do not write colloquial Cantonese: no spoken forms such as 嘅, 咗, 喺, 唔, 冇, 啲, 嘢, 佢, 哋, 嚟 or 咁.',
-};
-
 const TOKEN = /\{\{\s*\w+\s*\}\}|\$t\([^)]*\)|\{\w+\}|`[^`]*`|\]\([^)]*\)|\*\*|<\/?[\w-]+\s*\/?>/g;
 
-function system(acceptLanguage: string, namespace: string): string {
+function system(acceptLanguage: string, namespace: string, prompt = ''): string {
   const name = new Intl.DisplayNames(['en'], { type: 'language' }).of(acceptLanguage);
 
   return [
@@ -28,7 +23,7 @@ function system(acceptLanguage: string, namespace: string): string {
     `A field ending in _zero, _one, _two, _few, _many or _other is one plural form of a string, picked by {{count}}. Write the form for that CLDR plural category in ${name}. Its English is the nearest English form.`,
     'Leave names of products, people and code as they are, for example Ki.CL, GitHub and React.',
     `Use ${name} punctuation.`,
-    WRITTEN_AS[acceptLanguage] ?? '',
+    prompt,
   ]
     .filter((line) => {
       return line !== '';
@@ -59,9 +54,14 @@ function parse(reply: string): Record<string, unknown> {
   return parsed as Record<string, unknown>;
 }
 
-async function ask(acceptLanguage: string, namespace: string, strings: Record<string, string>): Promise<Record<string, unknown>> {
+async function ask(
+  acceptLanguage: string,
+  namespace: string,
+  strings: Record<string, string>,
+  prompt?: string,
+): Promise<Record<string, unknown>> {
   const options: TextChatOptions = {
-    system: system(acceptLanguage, namespace),
+    system: system(acceptLanguage, namespace, prompt),
     user: JSON.stringify(strings, null, 2),
     maxTokens: 8192,
     temperature: 0.2,
@@ -146,6 +146,7 @@ export async function translateWithModel(
   acceptLanguage: string,
   namespace: string,
   strings: Map<string, string>,
+  prompt?: string,
 ): Promise<{ translated: Map<string, string>; failed: string[]; limited: boolean }> {
   const translated = new Map<string, string>();
   let limited = false;
@@ -157,7 +158,7 @@ export async function translateWithModel(
       let answer: Record<string, unknown> = {};
 
       try {
-        answer = await ask(acceptLanguage, namespace, pending);
+        answer = await ask(acceptLanguage, namespace, pending, prompt);
       } catch (error) {
         if (error instanceof ProviderLimitError) {
           limited = true;

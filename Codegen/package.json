@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "operations": "tsx generateOperations.ts",
-    "generate": "tsx generateAcceptLanguage.ts && tsx generateOperations.ts && graphql-codegen --config codegen.ts"
+    "generate": "tsx generateOperations.ts && graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "@graphql-codegen/cli": "^7.2.0",

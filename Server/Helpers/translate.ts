@@ -1,5 +1,5 @@
 import { storedTranslation } from 'server/DataSources/MongoDB/Translations/cache.js';
-import { AcceptLanguage } from 'server/DataSources/MongoDB/Translations/acceptLanguage.js';
+import { SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
 import { currentAcceptLanguages } from 'server/Helpers/acceptLanguage.js';
 import api from 'server/locales/en-US/api.json' with { type: 'json' };
 import email from 'server/locales/en-US/email.json' with { type: 'json' };
@@ -35,7 +35,7 @@ const bundled = new Map(
 function read(acceptLanguage: string, namespace: string, field: string): string | undefined {
   const stored = storedTranslation(acceptLanguage, namespace, field);
 
-  if (stored !== undefined || acceptLanguage !== AcceptLanguage.EnUs) {
+  if (stored !== undefined || acceptLanguage !== SOURCE) {
     return stored;
   }
 

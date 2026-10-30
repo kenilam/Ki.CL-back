@@ -7,21 +7,17 @@ import {
   NonEmptyStringResolver,
 } from 'graphql-scalars';
 import { GraphQLScalarType, Kind } from 'graphql';
-import { AcceptLanguage } from 'server/DataSources/MongoDB/Translations/acceptLanguage.js';
+import { isCanonical } from 'server/DataSources/MongoDB/Locales/Model.js';
 
-function acceptLanguage(value: unknown): AcceptLanguage {
-  const tag = Object.values(AcceptLanguage).find((language) => {
-    return language === value;
-  });
-
-  if (!tag) {
-    throw new TypeError(`${String(value)} is not an AcceptLanguage.`);
+function acceptLanguage(value: unknown): string {
+  if (typeof value !== 'string' || !isCanonical(value)) {
+    throw new TypeError(`${String(value)} is not a canonical BCP 47 language tag.`);
   }
 
-  return tag;
+  return value;
 }
 
-const AcceptLanguageResolver = new GraphQLScalarType<AcceptLanguage, string>({
+const AcceptLanguageResolver = new GraphQLScalarType<string, string>({
   name: 'AcceptLanguage',
   description: 'A language the site is written in, as an Accept-Language tag: `en-US`, `zh-Hant`.',
   serialize: acceptLanguage,
