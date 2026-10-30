@@ -5,8 +5,13 @@ import { chatGroq, isGroqTextConfigured, resolveGroqTextModel } from 'server/Dat
 import { chatOpenAi, isOpenAiTextConfigured } from 'server/DataSources/AI/text/openai.js';
 import type { TextChatOptions } from 'server/DataSources/AI/text/types.js';
 
-// Small enough that a chunk finishes inside the failover's 30 second limit for text.
-const CHUNK_CHARACTERS = 3000;
+// Large enough for a whole namespace in one request, since free tiers count requests. `design-docs`, the largest, is about 100,000.
+const CHUNK_CHARACTERS = 120_000;
+// gpt-4o-mini's most. Gemini and Groq allow 65,536, and Groq adds its reasoning headroom to what it's asked for.
+const OPENAI_MAX_TOKENS = 16_384;
+
+const RATE_LIMIT_WAIT_MS = 60_000;
+const RATE_LIMIT_WAITS = 3;
 
 const PLURAL = /_(zero|one|two|few|many|other)$/;
 const TOKEN = /\{\{\s*\w+\s*\}\}|\$t\([^)]*\)|\{\w+\}|`[^`]*`|\]\([^)]*\)|\*\*|<\/?[\w-]+\s*\/?>/g;
@@ -63,7 +68,7 @@ async function ask(
   const options: TextChatOptions = {
     system: system(acceptLanguage, namespace, prompt),
     user: JSON.stringify(strings, null, 2),
-    maxTokens: 8192,
+    maxTokens: 60_000,
     temperature: 0.2,
   };
 
@@ -82,7 +87,7 @@ async function ask(
         name: 'openai:gpt-4o-mini',
         isConfigured: isOpenAiTextConfigured,
         run: () => {
-          return chatOpenAi(options);
+          return chatOpenAi({ ...options, maxTokens: OPENAI_MAX_TOKENS });
         },
       },
       {
@@ -93,7 +98,7 @@ async function ask(
         },
       },
     ],
-    'description',
+    'translation',
   );
 
   return parse(reply);
@@ -151,8 +156,11 @@ export async function translateWithModel(
   const translated = new Map<string, string>();
   let limited = false;
 
-  for (const part of chunk(strings)) {
+  const parts = chunk(strings);
+
+  for (const part of parts) {
     let pending = part;
+    let waits = 0;
 
     for (let attempt = 0; attempt < 2 && Object.keys(pending).length > 0; attempt += 1) {
       let answer: Record<string, unknown> = {};
@@ -161,11 +169,31 @@ export async function translateWithModel(
         answer = await ask(acceptLanguage, namespace, pending, prompt);
       } catch (error) {
         if (error instanceof ProviderLimitError) {
+          if (error.retryable && waits < RATE_LIMIT_WAITS) {
+            waits += 1;
+            attempt -= 1;
+            console.log(`${acceptLanguage}/${namespace}: waiting a minute for the rate limit.`);
+            await new Promise((resolve) => {
+              setTimeout(resolve, RATE_LIMIT_WAIT_MS);
+            });
+            continue;
+          }
+
           limited = true;
           break;
         }
 
         console.warn(`${acceptLanguage}/${namespace}: ${error instanceof Error ? error.message : String(error)}`);
+
+        // A reply cut off at the model's output limit isn't valid JSON, so this part goes again in two halves.
+        const fields = Object.entries(pending);
+
+        if (error instanceof SyntaxError && fields.length > 1) {
+          const middle = Math.ceil(fields.length / 2);
+
+          parts.push(Object.fromEntries(fields.slice(0, middle)), Object.fromEntries(fields.slice(middle)));
+          pending = {};
+        }
       }
 
       const valid = check(pending, answer);

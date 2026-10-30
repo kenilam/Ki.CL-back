@@ -15,11 +15,12 @@ export type ProviderAttempt<T> = {
  * open - the platform's own fetch limits are minutes long. A timeout moves
  * straight to the next provider: one that hung once tends to hang again.
  */
-const TIMEOUT_MS: Record<'image' | 'description' | 'vision', number> = {
+const TIMEOUT_MS = {
   description: 30_000,
+  translation: 300_000,
   vision: 45_000,
   image: 90_000,
-};
+} as const;
 
 class ProviderTimeoutError extends Error {}
 
@@ -42,6 +43,8 @@ function withTimeout<T>(promise: Promise<T>, ms: number, provider: string): Prom
 const DEFAULT_MAX_RETRIES = 3;
 /** Rate-limit (retryable) - one short retry, then next agent’s quota. */
 const RATE_LIMIT_MAX_RETRIES = 2;
+/** The longest a per-minute limit takes to refill. */
+const RATE_LIMIT_WINDOW_MS = 65_000;
 
 /** Skip agents that already hit non-retryable budget this process. */
 const exhaustedUntilMs = new Map<string, number>();
@@ -84,13 +87,24 @@ export function anyProviderAvailable(
   );
 }
 
-/** Parse "Please retry in 48.4s" style hints when present. */
+/** How long until the first of these providers can be tried again. */
+function soonestRetryMs(
+  providers: Pick<ProviderAttempt<unknown>, 'name'>[],
+): number {
+  return Math.min(
+    ...providers.map((provider) => {
+      return (exhaustedUntilMs.get(provider.name) ?? 0) - Date.now();
+    }),
+  );
+}
+
+/** Parse "Please retry in 48.4s" and "try again in 1m12.5s" style hints when present. */
 function retryAfterMsFromMessage(message: string): number | null {
-  const match = message.match(/retry in\s+(\d+(?:\.\d+)?)\s*s/i);
+  const match = message.match(/(?:retry|try again) in\s+(?:(\d+)m)?(\d+(?:\.\d+)?)\s*s/i);
   if (!match) {
     return null;
   }
-  const seconds = Number(match[1]);
+  const seconds = Number(match[1] ?? 0) * 60 + Number(match[2]);
   if (!Number.isFinite(seconds) || seconds <= 0) {
     return null;
   }
@@ -144,7 +158,7 @@ async function withRetries<T>(
         // Retryable rate limit: brief wait, then leave this agent’s quota.
         if (attempt >= RATE_LIMIT_MAX_RETRIES) {
           const retryAfter = retryAfterMsFromMessage(lastError.message);
-          if (retryAfter != null && retryAfter <= 15_000) {
+          if (retryAfter != null && retryAfter <= RATE_LIMIT_WINDOW_MS) {
             markProviderExhausted(provider, Date.now() + retryAfter);
           }
           throw lastError;
@@ -187,7 +201,7 @@ async function withRetries<T>(
  */
 export async function runProviderFailover<T>(
   providers: ProviderAttempt<T>[],
-  kind: 'image' | 'description' | 'vision',
+  kind: keyof typeof TIMEOUT_MS,
 ): Promise<T> {
   const configured = providers.filter((provider) => provider.isConfigured());
   if (configured.length === 0) {
@@ -207,7 +221,7 @@ export async function runProviderFailover<T>(
   if (available.length === 0) {
     throw new ProviderLimitError(
       `All ${kind} providers exhausted quota`,
-      false,
+      soonestRetryMs(configured) <= RATE_LIMIT_WINDOW_MS,
       configured.map((provider) => provider.name).join('|'),
       // Nothing was attempted, so nothing is known about why. Treat it as the
       // recoverable case: a cooldown is what put us here, and cooldowns end.
@@ -257,6 +271,11 @@ export async function runProviderFailover<T>(
     );
   }
 
-  throw errors[errors.length - 1]
+  const refilling = errors.find((error) => {
+    return error instanceof ProviderLimitError && error.retryable;
+  });
+
+  throw refilling
+    ?? errors[errors.length - 1]
     ?? new Error(`${kind} generation failed`);
 }
