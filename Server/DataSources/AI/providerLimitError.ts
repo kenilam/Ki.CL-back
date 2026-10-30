@@ -28,10 +28,21 @@ export class ProviderLimitError extends Error {
 /** @deprecated Use ProviderLimitError */
 export const OpenAiLimitError = ProviderLimitError;
 
+/**
+ * Refills within the minute. Gemini words this like a spent quota, on a
+ * free_tier metric, so it has to be told apart from one first.
+ */
+function isPerMinuteLimit(message: string): boolean {
+  return /per[\s_-]?min/i.test(message)
+    && !/per[\s_-]?day/i.test(message)
+    && !/limit:\s*0\b/.test(message);
+}
+
 export function isBudgetOrRateLimitError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
     isBudgetError(message)
+    || isPerMinuteLimit(message)
     || lower.includes('rate limit')
     || lower.includes('rate_limit')
     || lower.includes('too many requests')
@@ -61,6 +72,10 @@ export function isCreditExhaustedError(message: string): boolean {
 }
 
 export function isBudgetError(message: string): boolean {
+  if (isPerMinuteLimit(message)) {
+    return false;
+  }
+
   const lower = message.toLowerCase();
   return (
     /*
@@ -78,6 +93,7 @@ export function isBudgetError(message: string): boolean {
     || lower.includes('exceeded your current quota')
     || lower.includes('quota exceeded')
     || lower.includes('resource_exhausted')
+    || /per[\s_-]?day/.test(lower)
     || lower.includes('free_tier')
     // Gemini/AI Studio: model not on free tier (limit: 0), not a soft RPM.
     || /limit:\s*0\b/.test(lower)
