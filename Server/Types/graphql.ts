@@ -1,4 +1,3 @@
-import { AcceptLanguage } from 'server/DataSources/MongoDB/Translations/acceptLanguage.js';
 import { DateTime } from '^/Codegen/scalars.js';
 import { EmailAddress } from '^/Codegen/scalars.js';
 import { JWT } from '^/Codegen/scalars.js';
@@ -17,7 +16,7 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  AcceptLanguage: { input: AcceptLanguage; output: AcceptLanguage; }
+  AcceptLanguage: { input: string; output: string; }
   DateTime: { input: DateTime; output: DateTime; }
   EmailAddress: { input: EmailAddress; output: EmailAddress; }
   JWT: { input: JWT; output: JWT; }

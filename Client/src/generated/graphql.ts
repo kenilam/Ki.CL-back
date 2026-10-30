@@ -3,7 +3,6 @@
 type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 /** Internal type. DO NOT USE DIRECTLY. */
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-import { AcceptLanguage } from './acceptLanguage';
 import { DateTimeString, EmailAddress, UUID } from '../scalars';
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export type ActivateInput = {
@@ -361,7 +360,7 @@ export type Kicl_TaxonVisualUpdatedSubscription = { TaxonVisualUpdated: { status
 export type Kicl_AcceptLanguagesUpdatedSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
-export type Kicl_AcceptLanguagesUpdatedSubscription = { AcceptLanguagesUpdated: Array<{ acceptLanguage: AcceptLanguage, complete: boolean, translating: boolean }> };
+export type Kicl_AcceptLanguagesUpdatedSubscription = { AcceptLanguagesUpdated: Array<{ acceptLanguage: string, complete: boolean, translating: boolean }> };
 
 
 export const Kicl_AssetDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"kicl_Asset"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"Asset"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"generator"}}]}}]}}]} as unknown as DocumentNode<Kicl_AssetQuery, Kicl_AssetQueryVariables>;

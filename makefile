@@ -70,10 +70,27 @@ translations.drop:
 	@npx tsx Server/Scripts/translations.ts drop "$(NAMESPACE)"
 
 # Translates the en-US strings that are new or changed into every other
-# AcceptLanguage, or the ones named: make translations.translate LANGUAGES="fr ja".
+# locale, or the ones named: make translations.translate LANGUAGES="fr ja".
 # Run it after seeding. A string that fails is reported and tried again next run.
 translations.translate:
 	@npx tsx Server/Scripts/translations.ts translate $$LANGUAGES
+
+# The languages the site is translated into, one row of `locales` each. TAG and
+# PROMPT reach the script through the environment, so nothing in them runs as
+# shell. `seed` writes the languages the site started with.
+#   make locales.add TAG=it-CH PROMPT="An optional note for the translation prompt."
+#   make locales.remove TAG=it-CH
+locales.list:
+	@npx tsx Server/Scripts/locales.ts list
+
+locales.seed:
+	@npx tsx Server/Scripts/locales.ts seed
+
+locales.add:
+	@npx tsx Server/Scripts/locales.ts add "$$TAG" "$$PROMPT"
+
+locales.remove:
+	@npx tsx Server/Scripts/locales.ts remove "$$TAG"
 
 # Renames language to accept-language (en becomes en-US). Run it before the first
 # seed of a release, and with FINISH=--finish a release later.

@@ -1,10 +1,36 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { AcceptLanguage, matchAcceptLanguage } from 'server/DataSources/MongoDB/Translations/acceptLanguage.js';
+import { SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
 import { availableAcceptLanguages } from 'server/DataSources/MongoDB/Translations/cache.js';
 
-const storage = new AsyncLocalStorage<AcceptLanguage[]>();
+const storage = new AsyncLocalStorage<string[]>();
 
-export function acceptLanguages(header: string | undefined): AcceptLanguage[] {
+export function matchAcceptLanguage(tag: string, languages: string[]): string | undefined {
+  let asked: Intl.Locale;
+
+  try {
+    asked = new Intl.Locale(tag).maximize();
+  } catch {
+    return undefined;
+  }
+
+  const sameRegion = languages.find((language) => {
+    const locale = new Intl.Locale(language).maximize();
+
+    return locale.language === asked.language && locale.script === asked.script && locale.region === asked.region;
+  });
+
+  if (sameRegion) {
+    return sameRegion;
+  }
+
+  return languages.find((language) => {
+    const locale = new Intl.Locale(language).maximize();
+
+    return locale.language === asked.language && locale.script === asked.script;
+  });
+}
+
+export function acceptLanguages(header: string | undefined): string[] {
   const ranges = (header ?? '').split(',').map((range) => {
     const [tag = '', ...parameters] = range.split(';').map((part) => {
       return part.trim();
@@ -18,9 +44,7 @@ export function acceptLanguages(header: string | undefined): AcceptLanguage[] {
   });
 
   // Matched among the available languages only, so `es-MX` falls back to `es` before the next range.
-  const available = Object.values(AcceptLanguage).filter((language) => {
-    return availableAcceptLanguages().has(language);
-  });
+  const available = [...availableAcceptLanguages()];
 
   const matched = ranges
     .filter(({ tag, q }) => {
@@ -36,13 +60,13 @@ export function acceptLanguages(header: string | undefined): AcceptLanguage[] {
       return language !== undefined;
     });
 
-  return [...new Set([...matched, AcceptLanguage.EnUs])];
+  return [...new Set([...matched, SOURCE])];
 }
 
-export function currentAcceptLanguages(): AcceptLanguage[] {
-  return storage.getStore() ?? [AcceptLanguage.EnUs];
+export function currentAcceptLanguages(): string[] {
+  return storage.getStore() ?? [SOURCE];
 }
 
-export function withAcceptLanguages<T>(languages: AcceptLanguage[], run: () => T): T {
+export function withAcceptLanguages<T>(languages: string[], run: () => T): T {
   return storage.run(languages, run);
 }

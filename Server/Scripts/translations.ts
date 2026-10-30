@@ -19,16 +19,18 @@ import 'dotenv/config';
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
-import { AcceptLanguage } from 'server/DataSources/MongoDB/Translations/acceptLanguage.js';
+import { Locales, SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
 import { Translations } from 'server/DataSources/MongoDB/Translations/Model.js';
 import { TranslationRuns } from 'server/DataSources/MongoDB/TranslationRuns/Model.js';
 import { translateWithModel } from './translateWithModel.js';
 
 const USAGE = 'Usage: translations.ts seed|diff|prune <dir> | drop <namespace> | translate [accept-language...] | migrate [--finish]';
 
-const TRANSLATED = Object.values(AcceptLanguage).filter((acceptLanguage) => {
-  return acceptLanguage !== AcceptLanguage.EnUs;
-});
+type Locale = { tag: string; prompt?: string };
+
+async function translatedLocales(): Promise<Locale[]> {
+  return Locales.find({ tag: { $ne: SOURCE } }, 'tag prompt').sort({ tag: 1 }).lean();
+}
 
 const PLURAL = /^(.+)_(zero|one|two|few|many|other)$/;
 
@@ -70,11 +72,11 @@ function readFiles(directory: string): File[] {
   });
 
   const other = folders.find(({ name }) => {
-    return name !== AcceptLanguage.EnUs;
+    return name !== SOURCE;
   });
 
   if (other) {
-    throw new Error(`${join(root, other.name)}: only ${AcceptLanguage.EnUs} is kept in files. The other languages are translated into the database.`);
+    throw new Error(`${join(root, other.name)}: only ${SOURCE} is kept in files. The other languages are translated into the database.`);
   }
 
   const files = folders.flatMap(({ name: folder }) => {
@@ -95,7 +97,7 @@ function readFiles(directory: string): File[] {
   });
 
   if (!files.length) {
-    throw new Error(`No ${AcceptLanguage.EnUs}/<namespace>.json files in ${root}.`);
+    throw new Error(`No ${SOURCE}/<namespace>.json files in ${root}.`);
   }
 
   return files;
@@ -148,13 +150,13 @@ function wanted(english: Map<string, string>, acceptLanguage: string): Wanted {
 
 async function translated(namespace: string) {
   return Translations.find(
-    { 'accept-language': { $ne: AcceptLanguage.EnUs }, namespace },
+    { 'accept-language': { $ne: SOURCE }, namespace },
     'accept-language field source',
   ).lean();
 }
 
-async function translate(acceptLanguages: AcceptLanguage[]): Promise<void> {
-  const rows = await Translations.find({ 'accept-language': AcceptLanguage.EnUs }, 'namespace field value').lean();
+async function translate(locales: Locale[]): Promise<void> {
+  const rows = await Translations.find({ 'accept-language': SOURCE }, 'namespace field value').lean();
   const namespaces = new Map<string, Map<string, string>>();
 
   for (const { namespace, field, value } of rows) {
@@ -167,14 +169,14 @@ async function translate(acceptLanguages: AcceptLanguage[]): Promise<void> {
   let failures = 0;
   let limited = false;
 
-  for (const acceptLanguage of acceptLanguages) {
+  for (const locale of locales) {
     try {
-      const result = await translateLanguage(acceptLanguage, namespaces);
+      const result = await translateLanguage(locale, namespaces);
 
       failures += result.failures;
       limited = result.limited;
     } finally {
-      await TranslationRuns.deleteOne({ 'accept-language': acceptLanguage });
+      await TranslationRuns.deleteOne({ 'accept-language': locale.tag });
     }
 
     if (limited) {
@@ -194,12 +196,12 @@ async function translate(acceptLanguages: AcceptLanguage[]): Promise<void> {
 }
 
 // Touched before each namespace, so the site's spinner stops for a run that died.
-async function markRun(acceptLanguage: AcceptLanguage): Promise<void> {
+async function markRun(acceptLanguage: string): Promise<void> {
   await TranslationRuns.updateOne({ 'accept-language': acceptLanguage }, { $set: { 'accept-language': acceptLanguage } }, { upsert: true });
 }
 
 async function translateLanguage(
-  acceptLanguage: AcceptLanguage,
+  { tag: acceptLanguage, prompt }: Locale,
   namespaces: Map<string, Map<string, string>>,
 ): Promise<{ failures: number; limited: boolean }> {
   let failures = 0;
@@ -229,7 +231,7 @@ async function translateLanguage(
 
     await markRun(acceptLanguage);
 
-    const { translated: written, failed, limited } = await translateWithModel(acceptLanguage, namespace, stale);
+    const { translated: written, failed, limited } = await translateWithModel(acceptLanguage, namespace, stale, prompt);
 
     if (written.size) {
       await Translations.bulkWrite(
@@ -276,7 +278,7 @@ async function migrate(finish: boolean): Promise<void> {
   }
 
   const { modifiedCount } = await Translations.collection.updateMany({ 'accept-language': { $exists: false } }, [
-    { $set: { 'accept-language': { $cond: [{ $eq: ['$language', 'en'] }, AcceptLanguage.EnUs, '$language'] } } },
+    { $set: { 'accept-language': { $cond: [{ $eq: ['$language', 'en'] }, SOURCE, '$language'] } } },
   ]);
 
   const dropped = await Translations.syncIndexes();
@@ -288,24 +290,29 @@ async function run(): Promise<void> {
   const [command = '', target, ...rest] = process.argv.slice(2);
 
   if (command === 'translate') {
-    const tags = [target, ...rest];
+    const tags = [target, ...rest].filter((tag) => {
+      return tag !== undefined;
+    });
+
+    await connectDatabase();
+
+    const locales = await translatedLocales();
 
     const unknown = tags.find((tag) => {
-      return tag !== undefined && !TRANSLATED.some((acceptLanguage) => {
-        return acceptLanguage === tag;
+      return !locales.some((locale) => {
+        return locale.tag === tag;
       });
     });
 
     if (unknown) {
-      throw new Error(`${unknown} is not one of ${TRANSLATED.join(', ')}.`);
+      throw new Error(`${unknown} is not one of ${locales.map((locale) => locale.tag).join(', ')}.`);
     }
 
-    const asked = TRANSLATED.filter((acceptLanguage) => {
-      return tags.includes(acceptLanguage);
+    const asked = locales.filter((locale) => {
+      return tags.includes(locale.tag);
     });
 
-    await connectDatabase();
-    await translate(asked.length ? asked : TRANSLATED);
+    await translate(asked.length ? asked : locales);
     console.log(`Done (${mongoose.connection.name}).`);
     return;
   }
@@ -326,6 +333,7 @@ async function run(): Promise<void> {
 
   await connectDatabase();
   const database = mongoose.connection.name;
+  const locales = await translatedLocales();
 
   if (command === 'drop') {
     const { deletedCount } = await Translations.deleteMany({ namespace: target });
@@ -337,8 +345,8 @@ async function run(): Promise<void> {
   let behind = 0;
 
   for (const { fields, namespace } of files) {
-    const name = `${AcceptLanguage.EnUs}/${namespace}`;
-    const rows = await Translations.find({ 'accept-language': AcceptLanguage.EnUs, namespace }, 'field value').lean();
+    const name = `${SOURCE}/${namespace}`;
+    const rows = await Translations.find({ 'accept-language': SOURCE, namespace }, 'field value').lean();
     const stored = new Map(rows.map((row) => {
       return [row.field, row.value];
     }));
@@ -356,7 +364,7 @@ async function run(): Promise<void> {
       );
 
       const others = await translated(namespace);
-      const untranslated = TRANSLATED.flatMap((acceptLanguage) => {
+      const untranslated = locales.flatMap(({ tag: acceptLanguage }) => {
         const sources = new Map(
           others
             .filter((row) => {
@@ -387,14 +395,14 @@ async function run(): Promise<void> {
         ...changed.map(([field, value]) => {
           return {
             updateOne: {
-              filter: { 'accept-language': AcceptLanguage.EnUs, namespace, field },
+              filter: { 'accept-language': SOURCE, namespace, field },
               update: { $set: { value } },
               upsert: true,
             },
           };
         }),
         ...removed.map((field) => {
-          return { deleteOne: { filter: { 'accept-language': AcceptLanguage.EnUs, namespace, field } } };
+          return { deleteOne: { filter: { 'accept-language': SOURCE, namespace, field } } };
         }),
       ]);
     }
@@ -420,6 +428,21 @@ async function run(): Promise<void> {
     }
 
     console.log(`${name}: ${changed.length} written, ${removed.length + orphans} removed, ${fields.size - changed.length} unchanged`);
+  }
+
+  if (command === 'prune') {
+    const { deletedCount } = await Translations.deleteMany({
+      'accept-language': {
+        $nin: [
+          SOURCE,
+          ...locales.map((locale) => {
+            return locale.tag;
+          }),
+        ],
+      },
+    });
+
+    console.log(`Removed ${deletedCount} string(s) of locales that were removed.`);
   }
 
   if (command === 'diff' && behind) {

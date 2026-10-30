@@ -1,11 +1,11 @@
 import mongoose from 'mongoose';
+import { Locales, SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
 import { TranslationRuns } from 'server/DataSources/MongoDB/TranslationRuns/Model.js';
-import { AcceptLanguage } from './acceptLanguage.js';
 import { Translations } from './Model.js';
 
 export type Translation = { namespace: string; field: string; value: string };
 export type AcceptLanguageStatus = {
-  acceptLanguage: AcceptLanguage;
+  acceptLanguage: string;
   complete: boolean;
   translating: boolean;
 };
@@ -30,8 +30,8 @@ function keyOf(acceptLanguage: string, namespace: string): string {
   return `${acceptLanguage}:${namespace}`;
 }
 
-function statusesOf(grouped: Store, namespaces: Set<string>, running: Set<string>): AcceptLanguageStatus[] {
-  return Object.values(AcceptLanguage).map((acceptLanguage) => {
+function statusesOf(tags: string[], grouped: Store, namespaces: Set<string>, running: Set<string>): AcceptLanguageStatus[] {
+  return tags.map((acceptLanguage) => {
     // Compared without plural endings: Chinese has only `_other` where English has `_one` and `_other`.
     const complete = [...namespaces].every((namespace) => {
       const translated = new Set(
@@ -40,7 +40,7 @@ function statusesOf(grouped: Store, namespaces: Set<string>, running: Set<string
         }),
       );
 
-      return [...(grouped.get(keyOf(AcceptLanguage.EnUs, namespace))?.values.keys() ?? [])].every((field) => {
+      return [...(grouped.get(keyOf(SOURCE, namespace))?.values.keys() ?? [])].every((field) => {
         return translated.has(field.replace(PLURAL, ''));
       });
     });
@@ -58,8 +58,9 @@ function load(): Promise<Store> {
     TranslationRuns.find({ updatedAt: { $gt: new Date(Date.now() - RUN_STALE_MS) } }, 'accept-language')
       .read('nearest')
       .lean(),
+    Locales.find({}, 'tag').sort({ tag: 1 }).read('nearest').lean(),
   ])
-    .then(([rows, runs]) => {
+    .then(([rows, runs, locales]) => {
       const grouped: Store = new Map();
       const namespaces = new Set<string>();
 
@@ -71,7 +72,7 @@ function load(): Promise<Store> {
         entry.values.set(field, value);
         grouped.set(key, entry);
 
-        if (acceptLanguage === AcceptLanguage.EnUs) {
+        if (acceptLanguage === SOURCE) {
           namespaces.add(namespace);
         }
       }
@@ -82,7 +83,14 @@ function load(): Promise<Store> {
         }),
       );
 
-      statuses = statusesOf(grouped, namespaces, running);
+      statuses = statusesOf(
+        locales.map((locale) => {
+          return locale.tag;
+        }),
+        grouped,
+        namespaces,
+        running,
+      );
       store = grouped;
       loadedAt = Date.now();
       return grouped;
@@ -181,7 +189,7 @@ export async function findAcceptLanguageStatuses(): Promise<AcceptLanguageStatus
 /** The languages a request may be answered in: each fully translated one, and always `en-US`. */
 export function availableAcceptLanguages(): Set<string> {
   return new Set([
-    AcceptLanguage.EnUs,
+    SOURCE,
     ...statuses
       .filter(({ complete }) => {
         return complete;
