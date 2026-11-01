@@ -42,6 +42,7 @@ export function createSocketClient(url: string): Client {
     keepAlive: PING_MS,
     // A subscription that gives up shows as a failure the visitor can't act on.
     retryAttempts: Infinity,
+    shouldRetry: () => true,
     retryWait: (retries) =>
       new Promise((resolve) => {
         const timer = setTimeout(resolve, Math.min(1000 * 2 ** retries, MAX_RETRY_WAIT_MS));
