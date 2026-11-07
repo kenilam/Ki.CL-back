@@ -53,8 +53,6 @@ export interface IImageAgentThread extends Document {
   /** The step the agent is on while THINKING; null otherwise. */
   activity: string | null;
   messages: ImageAgentThreadMessage[];
-  /** When the owner cleared the notification for the last turn. A new turn sets it back to null. */
-  dismissedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -86,7 +84,6 @@ const ImageAgentThreadSchema = new Schema<IImageAgentThread>(
     asked: { type: Number, default: 0 },
     activity: { type: String, default: null },
     messages: { type: [MessageSchema], default: [] },
-    dismissedAt: { type: Date, default: null },
   },
   {
     timestamps: true,

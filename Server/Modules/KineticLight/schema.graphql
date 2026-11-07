@@ -185,7 +185,7 @@ type KineticLightSong {
 }
 
 type Query {
-  """The caller's sheet readings that haven't been dismissed, newest first."""
+  """The caller's sheets still being read, newest first."""
   kineticLightReadings: [KineticLightReading!]!
   """The caller's songs that are ready to play, newest first."""
   kineticLightSongs: [KineticLightSong!]!
@@ -211,11 +211,6 @@ type Mutation {
   already has an arrangement comes back as it is.
   """
   kineticLightArrange(id: ID!, outline: KineticLightOutline!): KineticLightReading!
-  """
-  Marks a finished reading as seen, so it leaves KineticLightReadings. The
-  song and its link stay until it expires.
-  """
-  kineticLightDismiss(id: ID!): ID!
 }
 
 type Subscription {

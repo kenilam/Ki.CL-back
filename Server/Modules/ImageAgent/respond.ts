@@ -29,6 +29,7 @@ import {
 import { ContentRejectedError, runImageAgent } from './agent/run.js';
 import { checkRules, governPrompt } from './govern/index.js';
 import { planning, progressAfter } from './narrate.js';
+import { notifyThread } from './notify.js';
 import { publishImageAgentThreadUpdated } from './pubsub.js';
 import { toResult, visible, type LeanImageAgentThread } from './types.js';
 
@@ -54,6 +55,7 @@ async function publish(threadId: string): Promise<void> {
   const doc = await ImageAgentThreads.findById(threadId).lean<LeanImageAgentThread | null>();
   if (doc) {
     publishImageAgentThreadUpdated(toResult(doc));
+    await notifyThread(toResult(doc));
   }
 }
 

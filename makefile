@@ -72,6 +72,12 @@ kinetic-light.migrate:
 kinetic-light.examples:
 	@npx tsx Server/Scripts/kineticLight.ts examples $(IDS)
 
+# Notifications: make notifications.migrate moves the readings and image agent
+# turns nobody dismissed into the notifications collection, and drops their
+# dismissedAt. Safe to run again. MONGODB_DATABASE picks the database.
+notifications.migrate:
+	@npx tsx Server/Scripts/notifications.ts
+
 # Contact form: make contact.forget EMAIL=someone@example.com
 # Deletes every message kept under that address, for a deletion request.
 contact.forget:

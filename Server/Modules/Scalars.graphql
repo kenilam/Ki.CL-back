@@ -5,3 +5,4 @@ scalar UUID
 scalar URL
 scalar NonEmptyString
 scalar AcceptLanguage
+scalar JSONObject

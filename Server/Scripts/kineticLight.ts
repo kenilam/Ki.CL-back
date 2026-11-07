@@ -9,7 +9,7 @@
  * `migrate` titles a song from its file name when it has no title, drops the
  * file name, removes it 30 days after it was made, and syncs the indexes,
  * which drops the old TTL index on `createdAt`. `examples` takes songs off
- * their owner, marks them seen and keeps them for 99 years.
+ * their owner and keeps them for 99 years.
  */
 import 'dotenv/config';
 import { Types } from 'mongoose';
@@ -66,7 +66,6 @@ async function examples(database: string, ids: string[]): Promise<void> {
           example: true,
           ownerGUID: null,
           expiresAt: until,
-          dismissedAt: { $ifNull: ['$dismissedAt', '$$NOW'] },
         },
       },
     ],

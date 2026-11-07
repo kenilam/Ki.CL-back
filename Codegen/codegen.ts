@@ -8,6 +8,7 @@ const SCALAR_MAP_SERVER = {
   URL: '^/Codegen/scalars.js#URL',
   NonEmptyString: '^/Codegen/scalars.js#NonEmptyString',
   AcceptLanguage: 'string',
+  JSONObject: 'Record<string, string | number>',
 };
 
 const SCALAR_MAP_CLIENT = {
@@ -18,6 +19,7 @@ const SCALAR_MAP_CLIENT = {
   URL: '../scalars#URL',
   NonEmptyString: '../scalars#NonEmptyString',
   AcceptLanguage: 'string',
+  JSONObject: 'Record<string, string | number>',
 };
 
 const config: CodegenConfig = {

@@ -19,6 +19,7 @@ export type Scalars = {
   AcceptLanguage: { input: string; output: string; }
   DateTime: { input: DateTime; output: DateTime; }
   EmailAddress: { input: EmailAddress; output: EmailAddress; }
+  JSONObject: { input: Record<string, string | number>; output: Record<string, string | number>; }
   JWT: { input: JWT; output: JWT; }
   NonEmptyString: { input: NonEmptyString; output: NonEmptyString; }
   URL: { input: URL; output: URL; }
@@ -393,11 +394,6 @@ export type Mutation = {
   deleteMe?: Maybe<Scalars['Boolean']['output']>;
   exchangeToken?: Maybe<Scalars['Boolean']['output']>;
   /**
-   * Marks a conversation's ended turn as seen, so it leaves
-   * ImageAgentNotifications until its next turn.
-   */
-  imageAgentDismiss: Scalars['ID']['output'];
-  /**
    * Go back to one of the person's messages and ask it again. Everything from
    * that message on leaves the conversation, and the message is sent again.
    * Without `messageId`, the person's last message.
@@ -416,11 +412,6 @@ export type Mutation = {
    */
   kineticLightArrange: KineticLightReading;
   /**
-   * Marks a finished reading as seen, so it leaves KineticLightReadings. The
-   * song and its link stay until it expires.
-   */
-  kineticLightDismiss: Scalars['ID']['output'];
-  /**
    * Starts reading the notes and chord symbols in an image or PDF of sheet music,
    * and answers at once with the reading as READING. KineticLightReadingUpdated
    * pushes it when it's done. A caller has one reading at a time.
@@ -428,6 +419,8 @@ export type Mutation = {
   kineticLightRead: KineticLightReading;
   /** Keeps a MIDI or MusicXML file as a song, so it has a link. */
   kineticLightSave: KineticLightReading;
+  /** Takes the caller's notifications out of their list, and returns their ids. */
+  notificationsDismiss: Array<Scalars['ID']['output']>;
   /** Sets the password kept with the request, once it has been confirmed. */
   passwordChangeComplete?: Maybe<Scalars['Boolean']['output']>;
   /** Called from the emailed link. Any session may call it: the secret is the proof. */
@@ -458,11 +451,6 @@ export type MutationDeleteMeArgs = {
 };
 
 
-export type MutationImageAgentDismissArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
 export type MutationImageAgentRetryArgs = {
   messageId?: InputMaybe<Scalars['ID']['input']>;
   threadId: Scalars['ID']['input'];
@@ -481,11 +469,6 @@ export type MutationKineticLightArrangeArgs = {
 };
 
 
-export type MutationKineticLightDismissArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
 export type MutationKineticLightReadArgs = {
   file: KineticLightFile;
 };
@@ -493,6 +476,11 @@ export type MutationKineticLightReadArgs = {
 
 export type MutationKineticLightSaveArgs = {
   song: KineticLightSongInput;
+};
+
+
+export type MutationNotificationsDismissArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 
@@ -528,6 +516,34 @@ export type MutationSocialSignInArgs = {
 
 export type MutationUpdateMeArgs = {
   updateMe: UpdateMeInput;
+};
+
+/**
+ * Work that carries on after its page is left: a sheet reading, an image agent
+ * turn, a Tree of Life plate or a password change. There is one for each record
+ * a visitor is told about, written again at each step. The site links it from
+ * `collection`, the record's Mongo collection, and `documentId`.
+ */
+export type Notification = {
+  __typename?: 'Notification';
+  collection: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  dismissedAt?: Maybe<Scalars['DateTime']['output']>;
+  documentId: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  message: NotificationText;
+  title: NotificationText;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/**
+ * Words translated where they're shown: an i18next key in the host's `common`
+ * namespace, or `api:` and a key in the API's, with the values it takes.
+ */
+export type NotificationText = {
+  __typename?: 'NotificationText';
+  key: Scalars['String']['output'];
+  values: Scalars['JSONObject']['output'];
 };
 
 export type PasswordChange = {
@@ -579,11 +595,6 @@ export type Query = {
    */
   imageAgentGallery: Array<Asset>;
   /**
-   * The caller's conversations with a turn running, or whose last turn ended and
-   * hasn't been dismissed, most recently active first.
-   */
-  imageAgentNotifications: Array<ImageAgentThread>;
-  /**
    * The caller's conversations that already cover most of what `text` asks for,
    * closest first, at most three. For offering to continue one instead of
    * starting over.
@@ -597,11 +608,13 @@ export type Query = {
   kineticLightExamples: Array<KineticLightSong>;
   /** A song by its id, for anyone with the link. Null once it has expired. */
   kineticLightReading?: Maybe<KineticLightReading>;
-  /** The caller's sheet readings that haven't been dismissed, newest first. */
+  /** The caller's sheets still being read, newest first. */
   kineticLightReadings: Array<KineticLightReading>;
   /** The caller's songs that are ready to play, newest first. */
   kineticLightSongs: Array<KineticLightSong>;
   me?: Maybe<MePayload>;
+  /** The caller's notifications that haven't been dismissed, newest first. */
+  notifications: Array<Notification>;
   /** The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up. */
   passwordChange?: Maybe<PasswordChange>;
   /** Whether the emailed link can still be confirmed. Any session may ask: the secret is the proof. */
@@ -733,6 +746,8 @@ export type Subscription = {
   imageAgentThreadUpdated: ImageAgentThread;
   /** Pushes each of the caller's readings as it fills in and when it finishes. */
   kineticLightReadingUpdated: KineticLightReading;
+  /** Pushes each of the caller's notifications when it's written or dismissed. */
+  notificationUpdated: Notification;
   /** The request's status now and on every change, until it is confirmed or expires. */
   passwordChangeUpdated: PasswordChange;
   /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
@@ -962,6 +977,7 @@ export type ResolversTypes = ResolversObject<{
   ImageAgentThread: ResolverTypeWrapper<ImageAgentThread>;
   ImageAgentThreadStatus: ImageAgentThreadStatus;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  JSONObject: ResolverTypeWrapper<Scalars['JSONObject']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
   KineticLightAllowance: ResolverTypeWrapper<KineticLightAllowance>;
   KineticLightArrangement: ResolverTypeWrapper<KineticLightArrangement>;
@@ -981,6 +997,8 @@ export type ResolversTypes = ResolversObject<{
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   NonEmptyString: ResolverTypeWrapper<Scalars['NonEmptyString']['output']>;
+  Notification: ResolverTypeWrapper<Notification>;
+  NotificationText: ResolverTypeWrapper<NotificationText>;
   PasswordChange: ResolverTypeWrapper<PasswordChange>;
   PasswordChangeCompleteInput: PasswordChangeCompleteInput;
   PasswordChangeConfirmInput: PasswordChangeConfirmInput;
@@ -1025,6 +1043,7 @@ export type ResolversParentTypes = ResolversObject<{
   ImageAgentScore: ImageAgentScore;
   ImageAgentThread: ImageAgentThread;
   Int: Scalars['Int']['output'];
+  JSONObject: Scalars['JSONObject']['output'];
   JWT: Scalars['JWT']['output'];
   KineticLightAllowance: KineticLightAllowance;
   KineticLightArrangement: KineticLightArrangement;
@@ -1039,6 +1058,8 @@ export type ResolversParentTypes = ResolversObject<{
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
   NonEmptyString: Scalars['NonEmptyString']['output'];
+  Notification: Notification;
+  NotificationText: NotificationText;
   PasswordChange: PasswordChange;
   PasswordChangeCompleteInput: PasswordChangeCompleteInput;
   PasswordChangeConfirmInput: PasswordChangeConfirmInput;
@@ -1126,6 +1147,10 @@ export type ImageAgentThreadResolvers<ContextType = Context, ParentType extends 
   style?: Resolver<Maybe<ResolversTypes['ImageAgentStyle']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
 }>;
+
+export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+  name: 'JSONObject';
+}
 
 export interface JwtScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JWT'], any> {
   name: 'JWT';
@@ -1215,13 +1240,12 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   contact?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationContactArgs, 'contact'>>;
   deleteMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMeArgs, 'deleteMe'>>;
   exchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  imageAgentDismiss?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationImageAgentDismissArgs, 'id'>>;
   imageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
   imageAgentSend?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentSendArgs, 'text'>>;
   kineticLightArrange?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightArrangeArgs, 'id' | 'outline'>>;
-  kineticLightDismiss?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationKineticLightDismissArgs, 'id'>>;
   kineticLightRead?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightReadArgs, 'file'>>;
   kineticLightSave?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightSaveArgs, 'song'>>;
+  notificationsDismiss?: Resolver<Array<ResolversTypes['ID']>, ParentType, ContextType, RequireFields<MutationNotificationsDismissArgs, 'ids'>>;
   passwordChangeComplete?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeCompleteArgs, 'passwordChangeComplete'>>;
   passwordChangeConfirm?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeConfirmArgs, 'passwordChangeConfirm'>>;
   passwordChangeRequest?: Resolver<ResolversTypes['PasswordChange'], ParentType, ContextType, RequireFields<MutationPasswordChangeRequestArgs, 'passwordChangeRequest'>>;
@@ -1236,6 +1260,22 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {
   name: 'NonEmptyString';
 }
+
+export type NotificationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Notification'] = ResolversParentTypes['Notification']> = ResolversObject<{
+  collection?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  dismissedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  documentId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['NotificationText'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['NotificationText'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+}>;
+
+export type NotificationTextResolvers<ContextType = Context, ParentType extends ResolversParentTypes['NotificationText'] = ResolversParentTypes['NotificationText']> = ResolversObject<{
+  key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  values?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
+}>;
 
 export type PasswordChangeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PasswordChange'] = ResolversParentTypes['PasswordChange']> = ResolversObject<{
   expiresAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
@@ -1252,7 +1292,6 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   imageAgentAllowance?: Resolver<ResolversTypes['ImageAgentAllowance'], ParentType, ContextType>;
   imageAgentGallery?: Resolver<Array<ResolversTypes['Asset']>, ParentType, ContextType, Partial<QueryImageAgentGalleryArgs>>;
-  imageAgentNotifications?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType>;
   imageAgentSimilar?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentSimilarArgs, 'text'>>;
   imageAgentThread?: Resolver<Maybe<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentThreadArgs, 'id'>>;
   imageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
@@ -1262,6 +1301,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   kineticLightReadings?: Resolver<Array<ResolversTypes['KineticLightReading']>, ParentType, ContextType>;
   kineticLightSongs?: Resolver<Array<ResolversTypes['KineticLightSong']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
+  notifications?: Resolver<Array<ResolversTypes['Notification']>, ParentType, ContextType>;
   passwordChange?: Resolver<Maybe<ResolversTypes['PasswordChange']>, ParentType, ContextType>;
   passwordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'passwordChangeLink'>>;
   taxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
@@ -1275,6 +1315,7 @@ export type SubscriptionResolvers<ContextType = Context, ParentType extends Reso
   acceptLanguagesUpdated?: SubscriptionResolver<Array<ResolversTypes['AcceptLanguageStatus']>, "acceptLanguagesUpdated", ParentType, ContextType>;
   imageAgentThreadUpdated?: SubscriptionResolver<ResolversTypes['ImageAgentThread'], "imageAgentThreadUpdated", ParentType, ContextType, RequireFields<SubscriptionImageAgentThreadUpdatedArgs, 'id'>>;
   kineticLightReadingUpdated?: SubscriptionResolver<ResolversTypes['KineticLightReading'], "kineticLightReadingUpdated", ParentType, ContextType>;
+  notificationUpdated?: SubscriptionResolver<ResolversTypes['Notification'], "notificationUpdated", ParentType, ContextType>;
   passwordChangeUpdated?: SubscriptionResolver<ResolversTypes['PasswordChange'], "passwordChangeUpdated", ParentType, ContextType, RequireFields<SubscriptionPasswordChangeUpdatedArgs, 'id'>>;
   taxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "taxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
 }>;
@@ -1342,6 +1383,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ImageAgentMessage?: ImageAgentMessageResolvers<ContextType>;
   ImageAgentScore?: ImageAgentScoreResolvers<ContextType>;
   ImageAgentThread?: ImageAgentThreadResolvers<ContextType>;
+  JSONObject?: GraphQLScalarType;
   JWT?: GraphQLScalarType;
   KineticLightAllowance?: KineticLightAllowanceResolvers<ContextType>;
   KineticLightArrangement?: KineticLightArrangementResolvers<ContextType>;
@@ -1353,6 +1395,8 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   NonEmptyString?: GraphQLScalarType;
+  Notification?: NotificationResolvers<ContextType>;
+  NotificationText?: NotificationTextResolvers<ContextType>;
   PasswordChange?: PasswordChangeResolvers<ContextType>;
   Portfolio?: PortfolioResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

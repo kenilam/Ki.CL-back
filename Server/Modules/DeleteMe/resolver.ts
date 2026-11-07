@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { DeleteMeSchema } from './validation.js';
 import { ContactMessages } from 'server/DataSources/MongoDB/ContactMessages/Model.js';
+import { Notifications } from 'server/DataSources/MongoDB/Notifications/Model.js';
 import { PasswordChanges } from 'server/DataSources/MongoDB/PasswordChanges/Model.js';
 import { PortfolioAccess } from 'server/DataSources/MongoDB/PortfolioAccess/Model.js';
 import { Registrations } from 'server/DataSources/MongoDB/Registrations/Model.js';
@@ -40,6 +41,7 @@ export default {
        */
       await UserTokens.deleteMany({ userGUID });
       await PasswordChanges.deleteMany({ userGUID });
+      await Notifications.deleteMany({ ownerGUID: userGUID });
       await PortfolioAccess.deleteMany({ userGUID });
       await Registrations.deleteMany({ userGUID });
       // Messages sent from the contact form, signed in or under this address.
