@@ -2,25 +2,25 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import { generatePassword } from 'server/DataSources/MongoDB/Utilities/generatePassword.js';
 
 export interface IRegistration extends Document {
-  RegistrationGUID: string;
-  Secret: string;
-  UserGUID: string;
+  registrationGUID: string;
+  secret: string;
+  userGUID: string;
   createdAt: Date;
 }
 
 const RegistrationSchema = new Schema<IRegistration>(
   {
-    RegistrationGUID: {
+    registrationGUID: {
       type: String,
       required: true,
       unique: true,
       index: true,
     },
-    Secret: {
+    secret: {
       type: String,
       required: true,
     },
-    UserGUID: {
+    userGUID: {
       type: String,
       required: true,
       unique: true,
@@ -29,13 +29,14 @@ const RegistrationSchema = new Schema<IRegistration>(
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
+    collection: 'registrations',
   },
 );
 
 RegistrationSchema.pre('validate', async function () {
-  if (this.isModified('Secret')) {
-    const { hash } = await generatePassword({ password: this.Secret });
-    this.Secret = hash;
+  if (this.isModified('secret')) {
+    const { hash } = await generatePassword({ password: this.secret });
+    this.secret = hash;
   }
 });
 

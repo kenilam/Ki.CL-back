@@ -22,6 +22,7 @@ const SecretSchema = new Schema<ISecret>(
   },
   {
     timestamps: true,
+    collection: 'secrets',
   },
 );
 

@@ -1,7 +1,7 @@
 import { Kind, parse, type OperationDefinitionNode } from 'graphql';
 
 const WHITE_LISTED_OPERATIONS = process.env.WHITE_LIST_OPERATION?.split(',') || [];
-const AUTH_OPERATIONS = ['Register', 'Activate', 'SignIn', 'SocialSignIn', 'RefreshToken'];
+const AUTH_OPERATIONS = ['register', 'activate', 'signIn', 'socialSignIn', 'refreshToken'];
 const INTROSPECTION_FIELDS = ['__schema', '__type'];
 
 /** Allowed alongside any root field; it names the root type and reads nothing. */

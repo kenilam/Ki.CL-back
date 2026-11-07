@@ -4,10 +4,10 @@ enum Provider {
 }
 
 type Mutation {
-  SocialSignIn(SocialSignIn: SocialSignInInput!): Boolean
+  socialSignIn(socialSignIn: SocialSignInInput!): Boolean
 }
 
 input SocialSignInInput {
-  Provider: Provider!
-  Token: String!
+  provider: Provider!
+  token: String!
 }

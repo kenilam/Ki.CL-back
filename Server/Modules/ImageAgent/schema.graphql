@@ -113,22 +113,27 @@ type ImageAgentAllowance {
 }
 
 type Query {
-  ImageAgentThread(id: ID!): ImageAgentThread
+  imageAgentThread(id: ID!): ImageAgentThread
   """The caller's conversations, most recently active first."""
-  ImageAgentThreads(limit: Int): [ImageAgentThread!]!
-  ImageAgentAllowance: ImageAgentAllowance!
+  imageAgentThreads(limit: Int): [ImageAgentThread!]!
+  imageAgentAllowance: ImageAgentAllowance!
+  """
+  The caller's conversations with a turn running, or whose last turn ended and
+  hasn't been dismissed, most recently active first.
+  """
+  imageAgentNotifications: [ImageAgentThread!]!
   """
   The caller's conversations that already cover most of what `text` asks for,
   closest first, at most three. For offering to continue one instead of
   starting over.
   """
-  ImageAgentSimilar(text: String!): [ImageAgentThread!]!
+  imageAgentSimilar(text: String!): [ImageAgentThread!]!
   """
   The best-scored pictures from anyone's conversations, highest first.
   Only the asset: no text, owner or conversation.
   At most 24; 12 when `limit` is not given.
   """
-  ImageAgentGallery(limit: Int): [Asset!]!
+  imageAgentGallery(limit: Int): [Asset!]!
 }
 
 type Mutation {
@@ -137,16 +142,21 @@ type Mutation {
   given. Returns as soon as the message is recorded; the reply arrives on
   ImageAgentThreadUpdated.
   """
-  ImageAgentSend(threadId: ID, text: String!): ImageAgentThread!
+  imageAgentSend(threadId: ID, text: String!): ImageAgentThread!
   """
   Go back to one of the person's messages and ask it again. Everything from
   that message on leaves the conversation, and the message is sent again.
   Without `messageId`, the person's last message.
   """
-  ImageAgentRetry(threadId: ID!, messageId: ID): ImageAgentThread!
+  imageAgentRetry(threadId: ID!, messageId: ID): ImageAgentThread!
+  """
+  Marks a conversation's ended turn as seen, so it leaves
+  ImageAgentNotifications until its next turn.
+  """
+  imageAgentDismiss(id: ID!): ID!
 }
 
 type Subscription {
   """Pushes the whole conversation on every change."""
-  ImageAgentThreadUpdated(id: ID!): ImageAgentThread!
+  imageAgentThreadUpdated(id: ID!): ImageAgentThread!
 }

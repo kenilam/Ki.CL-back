@@ -3,6 +3,7 @@ build:
 	yarn run build
 	@echo done
 
+.PHONY: client
 client:
 	@echo ⌛ building client...
 	yarn workspace @ki-cl/client run build
@@ -22,6 +23,16 @@ lint:
 	@echo ⌛ linting...
 	yarn run lint
 	@echo done
+
+omr.install:
+	@echo ⌛ installing the sheet reader...
+	python3.12 -m venv Omr/.venv
+	Omr/.venv/bin/pip install -q -r Omr/requirements.txt
+	Omr/.venv/bin/homr --init
+	@echo done
+
+omr.run:
+	Omr/.venv/bin/python Omr/server.py
 
 run:
 	@echo ⌛ running development...
@@ -46,6 +57,20 @@ portfolio.revoke:
 
 portfolio.list:
 	@npx tsx Server/Scripts/portfolioAccess.ts list "$(PIECE)"
+
+# One naming for the database: snake_case plural collections and camelCase
+# fields. Safe to run again. MONGODB_DATABASE picks the database.
+mongo.naming:
+	@npx tsx Server/Scripts/naming.ts
+
+# Kinetic Light songs: make kinetic-light.migrate brings every song to the
+# current shape, then make kinetic-light.examples IDS="<id> <id>" makes songs
+# examples every visitor can play. MONGODB_DATABASE picks the database.
+kinetic-light.migrate:
+	@npx tsx Server/Scripts/kineticLight.ts migrate
+
+kinetic-light.examples:
+	@npx tsx Server/Scripts/kineticLight.ts examples $(IDS)
 
 # Contact form: make contact.forget EMAIL=someone@example.com
 # Deletes every message kept under that address, for a deletion request.

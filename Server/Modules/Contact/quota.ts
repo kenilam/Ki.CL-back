@@ -22,12 +22,12 @@ export function retentionMs(): number {
  * must not be a way to send someone more of those. One message for every
  * limit, so it does not say which one was reached.
  */
-export async function assertWithinQuota(input: { UserGUID: string; Email: string }): Promise<void> {
+export async function assertWithinQuota(input: { userGUID: string; email: string }): Promise<void> {
   const createdAt = { $gte: new Date(Date.now() - DAY_MS) };
 
   const [fromSession, toAddress, overall] = await Promise.all([
-    ContactMessages.countDocuments({ UserGUID: input.UserGUID, createdAt }),
-    ContactMessages.countDocuments({ Email: input.Email, createdAt }),
+    ContactMessages.countDocuments({ userGUID: input.userGUID, createdAt }),
+    ContactMessages.countDocuments({ email: input.email, createdAt }),
     ContactMessages.countDocuments({ createdAt }),
   ]);
 

@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { message } from 'server/Helpers/Validation/message.js';
 
 export const ContactSchema = v.object({
-  Email: v.pipe(
+  email: v.pipe(
     v.string(),
     v.trim(),
     v.toLowerCase(),
@@ -10,7 +10,7 @@ export const ContactSchema = v.object({
     // The longest address a mail server accepts.
     v.maxLength(254, message('validation_email')),
   ),
-  Message: v.pipe(
+  message: v.pipe(
     v.string(),
     v.trim(),
     v.minLength(1, message('validation_message_required')),

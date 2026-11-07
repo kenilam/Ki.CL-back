@@ -1,13 +1,13 @@
-query kicl_Asset($id: ID!) {
-  Asset(id: $id) {
+query kicl_asset($id: ID!) {
+  asset(id: $id) {
     id
     url
     generator
   }
 }
 
-query kicl_ImageAgentThread($id: ID!) {
-  ImageAgentThread(id: $id) {
+query kicl_imageAgentThread($id: ID!) {
+  imageAgentThread(id: $id) {
     id
     status
     brief
@@ -43,8 +43,8 @@ query kicl_ImageAgentThread($id: ID!) {
   }
 }
 
-query kicl_ImageAgentThreads($limit: Int) {
-  ImageAgentThreads(limit: $limit) {
+query kicl_imageAgentThreads($limit: Int) {
+  imageAgentThreads(limit: $limit) {
     id
     status
     brief
@@ -80,8 +80,8 @@ query kicl_ImageAgentThreads($limit: Int) {
   }
 }
 
-query kicl_ImageAgentAllowance {
-  ImageAgentAllowance {
+query kicl_imageAgentAllowance {
+  imageAgentAllowance {
     remaining
     limit
     nextAllowedAt
@@ -109,8 +109,8 @@ query kicl_ImageAgentAllowance {
   }
 }
 
-query kicl_ImageAgentSimilar($text: String!) {
-  ImageAgentSimilar(text: $text) {
+query kicl_imageAgentNotifications {
+  imageAgentNotifications {
     id
     status
     brief
@@ -132,44 +132,188 @@ query kicl_ImageAgentSimilar($text: String!) {
   }
 }
 
-query kicl_ImageAgentGallery($limit: Int) {
-  ImageAgentGallery(limit: $limit) {
+query kicl_imageAgentSimilar($text: String!) {
+  imageAgentSimilar(text: $text) {
+    id
+    status
+    brief
+    style
+    activity
+    messages {
+      id
+      role
+      kind
+      text
+      assetId
+      rejection
+      exhaustion
+      choices
+      at
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_imageAgentGallery($limit: Int) {
+  imageAgentGallery(limit: $limit) {
     id
     url
     generator
   }
 }
 
-query kicl_Me {
-  Me {
-    UserGUID
-    Email
-    FirstName
-    LastName
-    Avatar
-    Active
+query kicl_kineticLightReadings {
+  kineticLightReadings {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_kineticLightSongs {
+  kineticLightSongs {
+    id
+    title
+    source
+    createdAt
+  }
+}
+
+query kicl_kineticLightExamples {
+  kineticLightExamples {
+    id
+    title
+    source
+    createdAt
+  }
+}
+
+query kicl_kineticLightAllowance {
+  kineticLightAllowance {
+    remaining
+    limit
+    nextAllowedAt
+    busy
+  }
+}
+
+query kicl_kineticLightReading($id: ID!) {
+  kineticLightReading(id: $id) {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        pattern {
+          kick
+          snare
+          hat
+          openHat
+          ride
+          lowTom
+          highTom
+        }
+        fill {
+          kick
+          snare
+          hat
+          openHat
+          ride
+          lowTom
+          highTom
+        }
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+query kicl_me {
+  me {
+    userGUID
+    email
+    firstName
+    lastName
+    avatar
+    active
     aud
-    Portfolios {
-      PortfolioGUID
-      Path
+    portfolios {
+      portfolioGUID
+      path
     }
   }
 }
 
-query kicl_PasswordChange {
-  PasswordChange {
+query kicl_passwordChange {
+  passwordChange {
     id
     status
     expiresAt
   }
 }
 
-query kicl_PasswordChangeLink($PasswordChangeLink: PasswordChangeConfirmInput!) {
-  PasswordChangeLink(PasswordChangeLink: $PasswordChangeLink)
+query kicl_passwordChangeLink($passwordChangeLink: PasswordChangeConfirmInput!) {
+  passwordChangeLink(passwordChangeLink: $passwordChangeLink)
 }
 
-query kicl_TaxonSearch($query: String!, $limit: Int = 10) {
-  TaxonSearch(query: $query, limit: $limit) {
+query kicl_taxonSearch($query: String!, $limit: Int = 10) {
+  taxonSearch(query: $query, limit: $limit) {
     nodeId
     ottId
     name
@@ -178,8 +322,8 @@ query kicl_TaxonSearch($query: String!, $limit: Int = 10) {
   }
 }
 
-query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
-  TaxonVisual(ottId: $ottId, name: $name, rank: $rank) {
+query kicl_taxonVisual($ottId: Int!, $name: String!, $rank: String) {
+  taxonVisual(ottId: $ottId, name: $name, rank: $rank) {
     status
     ottId
     nodeId
@@ -194,16 +338,16 @@ query kicl_TaxonVisual($ottId: Int!, $name: String!, $rank: String) {
   }
 }
 
-query kicl_Translations($namespaces: [String!]!) {
-  Translations(namespaces: $namespaces) {
+query kicl_translations($namespaces: [String!]!) {
+  translations(namespaces: $namespaces) {
     namespace
     field
     value
   }
 }
 
-query kicl_TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
-  TreeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
+query kicl_treeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
+  treeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
     nodeId
     ottId
     name
@@ -543,8 +687,8 @@ query kicl_TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3
   }
 }
 
-query kicl_TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
-  TreeOfLifeSubtrees(ottIds: $ottIds, nodeIds: $nodeIds, heightLimit: $heightLimit) {
+query kicl_treeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
+  treeOfLifeSubtrees(ottIds: $ottIds, nodeIds: $nodeIds, heightLimit: $heightLimit) {
     nodeId
     ottId
     name
@@ -884,24 +1028,24 @@ query kicl_TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit
   }
 }
 
-mutation kicl_Activate($Activate: ActivateInput!) {
-  Activate(Activate: $Activate)
+mutation kicl_activate($activate: ActivateInput!) {
+  activate(activate: $activate)
 }
 
-mutation kicl_Contact($Contact: ContactInput!) {
-  Contact(Contact: $Contact)
+mutation kicl_contact($contact: ContactInput!) {
+  contact(contact: $contact)
 }
 
-mutation kicl_DeleteMe($DeleteMe: DeleteMeInput!) {
-  DeleteMe(DeleteMe: $DeleteMe)
+mutation kicl_deleteMe($deleteMe: DeleteMeInput!) {
+  deleteMe(deleteMe: $deleteMe)
 }
 
-mutation kicl_ExchangeToken {
-  ExchangeToken
+mutation kicl_exchangeToken {
+  exchangeToken
 }
 
-mutation kicl_ImageAgentSend($threadId: ID, $text: String!) {
-  ImageAgentSend(threadId: $threadId, text: $text) {
+mutation kicl_imageAgentSend($threadId: ID, $text: String!) {
+  imageAgentSend(threadId: $threadId, text: $text) {
     id
     status
     brief
@@ -937,8 +1081,8 @@ mutation kicl_ImageAgentSend($threadId: ID, $text: String!) {
   }
 }
 
-mutation kicl_ImageAgentRetry($threadId: ID!, $messageId: ID) {
-  ImageAgentRetry(threadId: $threadId, messageId: $messageId) {
+mutation kicl_imageAgentRetry($threadId: ID!, $messageId: ID) {
+  imageAgentRetry(threadId: $threadId, messageId: $messageId) {
     id
     status
     brief
@@ -974,48 +1118,188 @@ mutation kicl_ImageAgentRetry($threadId: ID!, $messageId: ID) {
   }
 }
 
-mutation kicl_PasswordChangeRequest($PasswordChangeRequest: PasswordChangeRequestInput!) {
-  PasswordChangeRequest(PasswordChangeRequest: $PasswordChangeRequest) {
+mutation kicl_imageAgentDismiss($id: ID!) {
+  imageAgentDismiss(id: $id)
+}
+
+mutation kicl_kineticLightRead($file: KineticLightFile!) {
+  kineticLightRead(file: $file) {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+mutation kicl_kineticLightSave($song: KineticLightSongInput!) {
+  kineticLightSave(song: $song) {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+mutation kicl_kineticLightArrange($id: ID!, $outline: KineticLightOutline!) {
+  kineticLightArrange(id: $id, outline: $outline) {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        pattern {
+          kick
+          snare
+          hat
+          openHat
+          ride
+          lowTom
+          highTom
+        }
+        fill {
+          kick
+          snare
+          hat
+          openHat
+          ride
+          lowTom
+          highTom
+        }
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+mutation kicl_kineticLightDismiss($id: ID!) {
+  kineticLightDismiss(id: $id)
+}
+
+mutation kicl_passwordChangeRequest($passwordChangeRequest: PasswordChangeRequestInput!) {
+  passwordChangeRequest(passwordChangeRequest: $passwordChangeRequest) {
     id
     status
     expiresAt
   }
 }
 
-mutation kicl_PasswordChangeConfirm($PasswordChangeConfirm: PasswordChangeConfirmInput!) {
-  PasswordChangeConfirm(PasswordChangeConfirm: $PasswordChangeConfirm)
+mutation kicl_passwordChangeConfirm($passwordChangeConfirm: PasswordChangeConfirmInput!) {
+  passwordChangeConfirm(passwordChangeConfirm: $passwordChangeConfirm)
 }
 
-mutation kicl_PasswordChangeComplete($PasswordChangeComplete: PasswordChangeCompleteInput!) {
-  PasswordChangeComplete(PasswordChangeComplete: $PasswordChangeComplete)
+mutation kicl_passwordChangeComplete($passwordChangeComplete: PasswordChangeCompleteInput!) {
+  passwordChangeComplete(passwordChangeComplete: $passwordChangeComplete)
 }
 
-mutation kicl_RefreshToken {
-  RefreshToken
+mutation kicl_refreshToken {
+  refreshToken
 }
 
-mutation kicl_Register($Register: RegisterInput!) {
-  Register(Register: $Register)
+mutation kicl_register($register: RegisterInput!) {
+  register(register: $register)
 }
 
-mutation kicl_SignIn($SignIn: SignInInput!) {
-  SignIn(SignIn: $SignIn)
+mutation kicl_signIn($signIn: SignInInput!) {
+  signIn(signIn: $signIn)
 }
 
-mutation kicl_SignOut {
-  SignOut
+mutation kicl_signOut {
+  signOut
 }
 
-mutation kicl_SocialSignIn($SocialSignIn: SocialSignInInput!) {
-  SocialSignIn(SocialSignIn: $SocialSignIn)
+mutation kicl_socialSignIn($socialSignIn: SocialSignInInput!) {
+  socialSignIn(socialSignIn: $socialSignIn)
 }
 
-mutation kicl_UpdateMe($UpdateMe: UpdateMeInput!) {
-  UpdateMe(UpdateMe: $UpdateMe)
+mutation kicl_updateMe($updateMe: UpdateMeInput!) {
+  updateMe(updateMe: $updateMe)
 }
 
-subscription kicl_ImageAgentThreadUpdated($id: ID!) {
-  ImageAgentThreadUpdated(id: $id) {
+subscription kicl_imageAgentThreadUpdated($id: ID!) {
+  imageAgentThreadUpdated(id: $id) {
     id
     status
     brief
@@ -1051,16 +1335,54 @@ subscription kicl_ImageAgentThreadUpdated($id: ID!) {
   }
 }
 
-subscription kicl_PasswordChangeUpdated($id: ID!) {
-  PasswordChangeUpdated(id: $id) {
+subscription kicl_kineticLightReadingUpdated {
+  kineticLightReadingUpdated {
+    id
+    source
+    status
+    stage
+    bars
+    notes
+    failure
+    musicxml
+    midi
+    title
+    tempo
+    beatsPerBar
+    chords {
+      bar
+      beat
+      symbol
+    }
+    arrangement {
+      voice
+      beat
+      speed
+      hue
+      glow
+      steps
+      sections {
+        from
+        to
+        crash
+      }
+    }
+    mine
+    createdAt
+    updatedAt
+  }
+}
+
+subscription kicl_passwordChangeUpdated($id: ID!) {
+  passwordChangeUpdated(id: $id) {
     id
     status
     expiresAt
   }
 }
 
-subscription kicl_TaxonVisualUpdated($ottId: Int!) {
-  TaxonVisualUpdated(ottId: $ottId) {
+subscription kicl_taxonVisualUpdated($ottId: Int!) {
+  taxonVisualUpdated(ottId: $ottId) {
     status
     ottId
     nodeId
@@ -1075,8 +1397,8 @@ subscription kicl_TaxonVisualUpdated($ottId: Int!) {
   }
 }
 
-subscription kicl_AcceptLanguagesUpdated {
-  AcceptLanguagesUpdated {
+subscription kicl_acceptLanguagesUpdated {
+  acceptLanguagesUpdated {
     acceptLanguage
     complete
     translating

@@ -24,10 +24,10 @@ function inbox(): string {
 
 export default {
   Mutation: {
-    Contact: async (_: unknown, args: { Contact: unknown }, context: Context) => {
-      const UserGUID = context.tokenPayload?.UserGUID;
+    contact: async (_: unknown, args: { contact: unknown }, context: Context) => {
+      const userGUID = context.tokenPayload?.userGUID;
 
-      if (!UserGUID) {
+      if (!userGUID) {
         throw Unauthenticated();
       }
 
@@ -36,21 +36,21 @@ export default {
         throw CaptchaRequired();
       }
 
-      const { Email, Message } = validate(ContactSchema, args.Contact);
+      const { email, message } = validate(ContactSchema, args.contact);
       const to = inbox();
 
-      await assertWithinQuota({ UserGUID, Email });
+      await assertWithinQuota({ userGUID, email });
 
       const doc = await ContactMessages.create({
-        ContactMessageGUID: randomUUID(),
-        UserGUID,
-        Email,
-        Message,
-        ExpiresAt: new Date(Date.now() + retentionMs()),
+        contactMessageGUID: randomUUID(),
+        userGUID,
+        email,
+        message,
+        expiresAt: new Date(Date.now() + retentionMs()),
       });
 
       try {
-        await Gmail.send({ to, replyTo: Email, ...Gmail.emails.contactMessage({ Email, Message }) });
+        await Gmail.send({ to, replyTo: email, ...Gmail.emails.contactMessage({ email, message }) });
       } catch (error) {
         // Not kept, so trying again is not counted against the sender.
         await doc.deleteOne();
@@ -59,7 +59,7 @@ export default {
 
       // The message has arrived either way, so a failed acknowledgement doesn't fail the request.
       await Gmail.send({
-        to: Email,
+        to: email,
         ...Gmail.emails.contactReceived(),
       }).catch((error) => console.error('Contact: acknowledgement not sent', error));
 

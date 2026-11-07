@@ -25,6 +25,39 @@ export function isGeminiVisionConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY?.trim());
 }
 
+function textOf(payload: GeminiResponse): string {
+  return payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
+}
+
+async function readStream(response: Response, onText: (text: string) => void): Promise<string> {
+  const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = '';
+  let text = '';
+
+  if (!reader) {
+    return text;
+  }
+
+  for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
+    const events = (buffer + chunk.value).split(/\r?\n\r?\n/);
+    buffer = events.pop() ?? '';
+
+    for (const event of events) {
+      const data = event.split(/\r?\n/).filter((line) => line.startsWith('data:')).map((line) => line.slice(5)).join('');
+      const payload = data.trim() ? (JSON.parse(data) as GeminiResponse) : null;
+
+      if (payload?.error) {
+        throw new Error(payload.error.message ?? payload.error.status ?? 'Gemini vision stream failed');
+      }
+
+      text += payload ? textOf(payload) : '';
+      onText(text);
+    }
+  }
+
+  return text;
+}
+
 export async function chatGeminiVision(
   options: VisionChatOptions & { model: string },
 ): Promise<string> {
@@ -35,9 +68,10 @@ export async function chatGeminiVision(
 
   const { model } = options;
   const provider = `gemini:${model}`;
+  const method = options.onText ? 'streamGenerateContent?alt=sse&' : 'generateContent?';
   const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-    + `?key=${encodeURIComponent(apiKey)}`;
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:${method}`
+    + `key=${encodeURIComponent(apiKey)}`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -78,9 +112,9 @@ export async function chatGeminiVision(
     }),
   });
 
-  const payload = (await response.json()) as GeminiResponse;
-
   if (!response.ok) {
+    const body: unknown = await response.json().catch(() => ({}));
+    const payload = (Array.isArray(body) ? body[0] : body) as GeminiResponse;
     const message = payload.error?.message
       ?? payload.error?.status
       ?? `Gemini vision HTTP ${response.status}`;
@@ -88,10 +122,9 @@ export async function chatGeminiVision(
     throw new Error(message);
   }
 
-  const text = payload.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text ?? '')
-    .join('')
-    .trim();
+  const text = options.onText
+    ? (await readStream(response, options.onText)).trim()
+    : textOf((await response.json()) as GeminiResponse).trim();
 
   if (!text) {
     throw new Error('Gemini vision returned no text');

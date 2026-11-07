@@ -37,7 +37,7 @@ function throwOtolMiss(miss: {
  */
 export default {
   Query: {
-    TreeOfLifeSubtree: async (
+    treeOfLifeSubtree: async (
       _: unknown,
       args: { ottId?: number | null; nodeId?: string | null; heightLimit?: number | null },
       context: Context,
@@ -64,7 +64,7 @@ export default {
       throw NotFound(translate('api', 'error_otol_subtree_not_found_for_id'));
     },
 
-    TreeOfLifeSubtrees: async (
+    treeOfLifeSubtrees: async (
       _: unknown,
       args: {
         ottIds?: number[] | null;

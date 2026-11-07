@@ -1,5 +1,7 @@
 # Dependencies
 node_modules/
+Omr/.venv/
+Omr/__pycache__/
 
 # Build output
 dist/

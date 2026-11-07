@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import jwt from 'jsonwebtoken';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
 import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
 import { CaptchaRequired, Unavailable } from 'server/Errors/index.js';
-import { parseCookies, type TokenPayload } from 'server/Helpers/auth.js';
+import { parseCookies, verifyToken, type TokenPayload } from 'server/Helpers/auth.js';
 import { turnstileToken, verifyTurnstile } from 'server/Helpers/turnstile.js';
 import { translate } from 'server/Helpers/translate.js';
 
@@ -14,16 +13,12 @@ const TURNSTILE_ACTION = 'exchange-token';
 
 const LOG = '[ExchangeToken]';
 
-type Identity = Pick<TokenPayload, 'UserGUID' | 'aud' | 'human'>;
+type Identity = Pick<TokenPayload, 'userGUID' | 'aud' | 'human'>;
 
 function verify(token: string | undefined, key: string): Identity | null {
-  if (!token) return null;
-  try {
-    const { UserGUID, aud, human } = jwt.verify(token, key) as Identity;
-    return { UserGUID, aud, human };
-  } catch {
-    return null;
-  }
+  const payload = verifyToken(token, key);
+
+  return payload && { userGUID: payload.userGUID, aud: payload.aud, human: payload.human };
 }
 
 /**
@@ -49,10 +44,10 @@ async function passedTurnstile(context: Pick<Context, 'headers'>): Promise<boole
 }
 
 async function issue(context: Pick<Context, 'headers' | 'res'>, identity: Identity): Promise<void> {
-  const { AccessToken, RefreshToken } = await generateUserToken(identity);
+  const { accessToken, refreshToken } = await generateUserToken(identity);
 
-  setAccessTokenCookie(context.res, AccessToken);
-  setRefreshTokenCookie(context.res, RefreshToken);
+  setAccessTokenCookie(context.res, accessToken);
+  setRefreshTokenCookie(context.res, refreshToken);
   setAudCookie(context.res, identity.aud);
 }
 
@@ -75,7 +70,7 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
    */
   const verified = verify(cookies.access_token, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
   const current =
-    verified?.aud === 'user' && !(await UserTokens.exists({ UserGUID: verified.UserGUID }))
+    verified?.aud === 'user' && !(await UserTokens.exists({ userGUID: verified.userGUID }))
       ? null
       : verified;
   if (current) {
@@ -104,7 +99,7 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
   const refreshed = verify(cookies.refresh_token, process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!);
   const renewable =
     refreshed?.aud === 'anon' ||
-    (refreshed?.aud === 'user' && Boolean(await UserTokens.exists({ Token: cookies.refresh_token })));
+    (refreshed?.aud === 'user' && Boolean(await UserTokens.exists({ token: cookies.refresh_token })));
   if (refreshed && renewable) {
     await issue(context, refreshed);
     return true;
@@ -117,6 +112,6 @@ export async function exchangeToken(context: Pick<Context, 'headers' | 'res'>): 
    * without `human`, and the visitor comes back here to earn it.
    */
   const human = await passedTurnstile(context);
-  await issue(context, { UserGUID: randomUUID(), aud: 'anon', human });
+  await issue(context, { userGUID: randomUUID(), aud: 'anon', human });
   return true;
 }

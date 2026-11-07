@@ -2,27 +2,27 @@ import mongoose, { Schema, type Document } from 'mongoose';
 
 /** One user's access to one portfolio piece. */
 export interface IPortfolioAccess extends Document {
-  PortfolioGUID: string;
-  UserGUID: string;
+  portfolioGUID: string;
+  userGUID: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const PortfolioAccessSchema = new Schema<IPortfolioAccess>(
   {
-    PortfolioGUID: {
+    portfolioGUID: {
       type: String,
       required: true,
       index: true,
     },
-    UserGUID: {
+    userGUID: {
       type: String,
       required: true,
       index: true,
     },
   },
   {
-    collection: 'portfolio-access',
+    collection: 'portfolio_access',
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
@@ -30,19 +30,19 @@ const PortfolioAccessSchema = new Schema<IPortfolioAccess>(
 );
 
 // A user has access to a piece once.
-PortfolioAccessSchema.index({ PortfolioGUID: 1, UserGUID: 1 }, { unique: true });
+PortfolioAccessSchema.index({ portfolioGUID: 1, userGUID: 1 }, { unique: true });
 
-PortfolioAccessSchema.virtual('Portfolio', {
+PortfolioAccessSchema.virtual('portfolio', {
   ref: 'Portfolios',
-  localField: 'PortfolioGUID',
-  foreignField: 'PortfolioGUID',
+  localField: 'portfolioGUID',
+  foreignField: 'portfolioGUID',
   justOne: true,
 });
 
-PortfolioAccessSchema.virtual('User', {
+PortfolioAccessSchema.virtual('user', {
   ref: 'Users',
-  localField: 'UserGUID',
-  foreignField: 'UserGUID',
+  localField: 'userGUID',
+  foreignField: 'userGUID',
   justOne: true,
 });
 

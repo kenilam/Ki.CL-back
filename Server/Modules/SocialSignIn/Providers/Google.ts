@@ -1,10 +1,10 @@
 import { translate } from 'server/Helpers/translate.js';
 
 interface GoogleUserInfo {
-  Email: string;
-  FirstName: string | null;
-  LastName: string | null;
-  Avatar: string | null;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  avatar: string | null;
 }
 
 export async function verifyGoogleToken(token: string): Promise<GoogleUserInfo> {
@@ -32,9 +32,9 @@ export async function verifyGoogleToken(token: string): Promise<GoogleUserInfo> 
   }
 
   return {
-    Email: data.email,
-    FirstName: data.given_name || null,
-    LastName: data.family_name || null,
-    Avatar: data.picture || null,
+    email: data.email,
+    firstName: data.given_name || null,
+    lastName: data.family_name || null,
+    avatar: data.picture || null,
   };
 }

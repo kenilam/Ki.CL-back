@@ -10,34 +10,34 @@ import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
-    SignIn: async (_: unknown, args: { SignIn: unknown }, context: Context) => {
-      const input = validate(SignInSchema, args.SignIn);
+    signIn: async (_: unknown, args: { signIn: unknown }, context: Context) => {
+      const input = validate(SignInSchema, args.signIn);
 
       const user = await Users.findOne(
-        { Email: input.Email },
-        'Email Password UserGUID Active',
+        { email: input.email },
+        'email password userGUID active',
       );
 
       if (!user) {
         throw BadUserInput(translate('api', 'error_credentials'));
       }
 
-      if (!user.Active) {
+      if (!user.active) {
         throw Forbidden(translate('api', 'error_account_inactive'));
       }
 
-      const isValidPassword = await bcrypt.compare(input.Password, user.Password);
+      const isValidPassword = await bcrypt.compare(input.password, user.password);
       if (!isValidPassword) {
         throw BadUserInput(translate('api', 'error_credentials'));
       }
 
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID: user.UserGUID,
+      const { accessToken, refreshToken } = await generateUserToken({
+        userGUID: user.userGUID,
         aud: 'user',
       });
 
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
+      setAccessTokenCookie(context.res, accessToken);
+      setRefreshTokenCookie(context.res, refreshToken);
       setAudCookie(context.res, 'user');
       clearApiKeyCookie(context.res);
 

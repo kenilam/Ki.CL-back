@@ -28,6 +28,7 @@ import type { IncomingMessage } from 'node:http';
 
 const PORT = Number(process.env.PORT) || 3100;
 const GOOGLE_STORAGE_PROXY = process.env.GOOGLE_STORAGE_PROXY || '/assets';
+const GRAPHQL_BODY_LIMIT = '12mb';
 
 const app = express();
 const httpServer = createServer(app);
@@ -151,7 +152,7 @@ async function start() {
     securityHeaders,
     cookieParser(),
     corsMiddleware,
-    express.json(),
+    express.json({ limit: GRAPHQL_BODY_LIMIT }),
     acceptLanguage,
     authenticate,
     expressMiddleware(server, {
@@ -163,7 +164,7 @@ async function start() {
     securityHeaders,
     cookieParser(),
     corsMiddleware,
-    express.json(),
+    express.json({ limit: GRAPHQL_BODY_LIMIT }),
     acceptLanguage,
     apiProxy,
     authenticate,

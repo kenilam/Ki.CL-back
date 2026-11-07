@@ -12,10 +12,10 @@ import type { Context } from 'server/Context/index.js';
 import { translate } from 'server/Helpers/translate.js';
 
 interface SocialUserInfo {
-  Email: string;
-  FirstName: string | null;
-  LastName: string | null;
-  Avatar?: string | null;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  avatar?: string | null;
 }
 
 async function getProviderUserInfo(provider: string, token: string): Promise<SocialUserInfo> {
@@ -31,32 +31,32 @@ async function getProviderUserInfo(provider: string, token: string): Promise<Soc
 
 export default {
   Mutation: {
-    SocialSignIn: async (_: unknown, args: { SocialSignIn: unknown }, context: Context) => {
-      const input = validate(SocialSignInSchema, args.SocialSignIn);
+    socialSignIn: async (_: unknown, args: { socialSignIn: unknown }, context: Context) => {
+      const input = validate(SocialSignInSchema, args.socialSignIn);
 
-      const userInfo = await getProviderUserInfo(input.Provider, input.Token);
+      const userInfo = await getProviderUserInfo(input.provider, input.token);
 
-      let user = await Users.findOne({ Email: userInfo.Email });
+      let user = await Users.findOne({ email: userInfo.email });
 
       if (!user) {
-        const UserGUID = randomUUID();
-        const { hash: Password } = await generatePassword();
+        const userGUID = randomUUID();
+        const { hash: password } = await generatePassword();
 
         user = await Users.create({
-          UserGUID,
-          Email: userInfo.Email,
-          Password,
-          FirstName: userInfo.FirstName,
-          LastName: userInfo.LastName,
-          Avatar: userInfo.Avatar || null,
-          Active: true,
-          SocialProviders: [
-            { Provider: input.Provider, ProviderId: userInfo.Email },
+          userGUID,
+          email: userInfo.email,
+          password,
+          firstName: userInfo.firstName,
+          lastName: userInfo.lastName,
+          avatar: userInfo.avatar || null,
+          active: true,
+          socialProviders: [
+            { provider: input.provider, providerId: userInfo.email },
           ],
         });
       } else {
-        const hasProvider = user.SocialProviders?.some(
-          (sp) => sp.Provider === input.Provider,
+        const hasProvider = user.socialProviders?.some(
+          (sp) => sp.provider === input.provider,
         );
 
         if (!hasProvider) {
@@ -64,21 +64,21 @@ export default {
             { _id: user._id },
             {
               $push: {
-                SocialProviders: { Provider: input.Provider, ProviderId: userInfo.Email },
+                socialProviders: { provider: input.provider, providerId: userInfo.email },
               },
-              $set: { Active: true },
+              $set: { active: true },
             },
           );
         }
       }
 
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID: user.UserGUID,
+      const { accessToken, refreshToken } = await generateUserToken({
+        userGUID: user.userGUID,
         aud: 'user',
       });
 
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
+      setAccessTokenCookie(context.res, accessToken);
+      setRefreshTokenCookie(context.res, refreshToken);
       setAudCookie(context.res, 'user');
       clearApiKeyCookie(context.res);
 

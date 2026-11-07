@@ -1,8 +1,8 @@
 type Mutation {
-  SignIn(SignIn: SignInInput!): Boolean
+  signIn(signIn: SignInInput!): Boolean
 }
 
 input SignInInput {
-  Email: EmailAddress!
-  Password: String!
+  email: EmailAddress!
+  password: String!
 }

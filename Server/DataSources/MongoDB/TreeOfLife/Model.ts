@@ -140,7 +140,7 @@ const TreeOfLifeNodeSchema = new Schema<ITreeOfLifeNode>(
   },
   {
     timestamps: true,
-    collection: 'tree-of-life',
+    collection: 'tree_of_life',
   },
 );
 

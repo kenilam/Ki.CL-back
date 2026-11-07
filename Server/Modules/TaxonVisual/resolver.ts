@@ -414,7 +414,7 @@ async function runRegeneration(
 
 export default {
   Query: {
-    TaxonVisual: async (
+    taxonVisual: async (
       _: unknown,
       args: { ottId: number; name: string; rank?: string | null },
     ): Promise<TaxonVisualResult> => {
@@ -553,7 +553,7 @@ export default {
   },
 
   Subscription: {
-    TaxonVisualUpdated: {
+    taxonVisualUpdated: {
       subscribe: withFilter(
         (_parent, args) => {
           const ottId = args?.ottId;
@@ -576,9 +576,9 @@ export default {
           return iterator;
         },
         (
-          payload: { TaxonVisualUpdated?: TaxonVisualResult } | undefined,
+          payload: { taxonVisualUpdated?: TaxonVisualResult } | undefined,
           variables: { ottId?: number } | undefined,
-        ) => payload?.TaxonVisualUpdated?.ottId === variables?.ottId,
+        ) => payload?.taxonVisualUpdated?.ottId === variables?.ottId,
       ),
     },
   },

@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { translate } from 'server/Helpers/translate.js';
 
 interface AppleUserInfo {
-  Email: string;
-  FirstName: string | null;
-  LastName: string | null;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
 }
 
 interface AppleJwtPayload {
@@ -28,8 +28,8 @@ export async function verifyAppleToken(token: string): Promise<AppleUserInfo> {
   }
 
   return {
-    Email: decoded.email,
-    FirstName: null,
-    LastName: null,
+    email: decoded.email,
+    firstName: null,
+    lastName: null,
   };
 }

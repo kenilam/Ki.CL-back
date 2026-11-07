@@ -1,0 +1,224 @@
+"""
+The attached image or PDF. `data` is its bytes in base64. `name` is the file's
+name: the song's title until the reader finds one, and a hint for finding it.
+The name itself isn't kept.
+"""
+input KineticLightFile {
+  name: NonEmptyString!
+  data: String!
+}
+
+"""
+A MIDI or MusicXML file the browser has read, to keep behind a link, with the
+title the browser read from it: `midi` is the MIDI file in base64, `musicxml`
+the MusicXML text. Give one of them.
+"""
+input KineticLightSongInput {
+  title: NonEmptyString!
+  midi: String
+  musicxml: String
+}
+
+"""
+What a model is told about a song so it can arrange it. `steps` is how many
+steps a beat is split into: 2 for eighth notes, 3 for triplets, 4 for
+sixteenths. `bars` has one string for each bar, with one character for each
+step: `b` where a note below middle C starts, `x` where another note starts,
+and `.` where none does.
+"""
+input KineticLightOutline {
+  title: NonEmptyString!
+  """Quarter-note beats per minute."""
+  tempo: Float!
+  beatsPerBar: Int!
+  steps: Int!
+  bars: [String!]!
+}
+
+enum KineticLightVoice {
+  GRAND
+  SIXTEEN
+  UPRIGHT
+  WURLITZER
+  SYNTH
+}
+
+"""
+The drums a song starts with: none, the acoustic kit, the same kit recorded
+lo-fi, hand percussion, or the LinnDrum and TR-808 drum machines.
+"""
+enum KineticLightBeat {
+  NONE
+  KIT
+  LOFI
+  PERCUSSION
+  LINNDRUM
+  MACHINE
+}
+
+"""
+One bar of drums, one string for each drum with one character for each step:
+`X` an accented hit, `x` a hit, `.` nothing. On the drum machine, `snare` is
+played as a clap. In hand percussion, `kick` is a low conga, `snare` a conga
+slap, `hat` and `openHat` a shaker, `ride` a high bongo, `highTom` a high
+conga, `lowTom` a low bongo, and `crash` a big low conga.
+"""
+type KineticLightPattern {
+  kick: String!
+  snare: String!
+  hat: String!
+  openHat: String!
+  ride: String!
+  lowTom: String!
+  highTom: String!
+}
+
+"""
+Bars `from` to `to`, counted from 1, that share a drum pattern. With no
+`pattern` the drums rest. `fill` replaces the pattern on the section's last bar.
+"""
+type KineticLightSection {
+  from: Int!
+  to: Int!
+  pattern: KineticLightPattern
+  fill: KineticLightPattern
+  """A crash on the section's first beat."""
+  crash: Boolean!
+}
+
+"""
+How a song starts, chosen by a model from the song's outline: the piano, the
+drums, the scene's settings and a drum part in sections. `speed` runs from 3
+to 20, `hue` from 0 to 1 and `glow` from 0 to 3, as in the player's settings.
+"""
+type KineticLightArrangement {
+  voice: KineticLightVoice!
+  beat: KineticLightBeat!
+  speed: Float!
+  hue: Float!
+  glow: Float!
+  """The outline's `steps`, which the patterns are written in."""
+  steps: Int!
+  sections: [KineticLightSection!]!
+}
+
+"""A chord symbol printed above the staff. `bar` and `beat` count from 1, in quarter notes."""
+type KineticLightChord {
+  bar: Int!
+  beat: Float!
+  symbol: String!
+}
+
+"""Where a song came from: a sheet the API read, or a MIDI or MusicXML file."""
+enum KineticLightSource {
+  SHEET
+  FILE
+}
+
+enum KineticLightStatus {
+  READING
+  READY
+  FAILED
+}
+
+"""What a reading is busy with: the notes on the staff, then the chord symbols."""
+enum KineticLightStage {
+  NOTES
+  CHORDS
+}
+
+"""
+A song behind a link, kept for 30 days, or for good when it's an example: a
+sheet the API read, or a MIDI or MusicXML file. For a sheet, the notes come
+from the sheet reader and everything else from a vision model. While READING,
+the counts, title, tempo and chords fill in as each reader gets to them, and
+`musicxml` waits for the end. When READY, a field is null, or `chords` empty,
+when its reader failed or found nothing.
+"""
+type KineticLightReading {
+  id: ID!
+  source: KineticLightSource!
+  status: KineticLightStatus!
+  """Null once the reading has finished."""
+  stage: KineticLightStage
+  """Bars the sheet reader found."""
+  bars: Int
+  """Pitched notes the sheet reader found."""
+  notes: Int
+  """Why the read failed, in the visitor's language. Null unless FAILED."""
+  failure: String
+  """The notes on the staff, as MusicXML."""
+  musicxml: String
+  """The MIDI file, in base64."""
+  midi: String
+  """The file's name without its extension, until a reader finds the title."""
+  title: String!
+  """Quarter-note beats per minute."""
+  tempo: Float
+  beatsPerBar: Int
+  chords: [KineticLightChord!]!
+  """Null until the owner has asked a model to arrange the song."""
+  arrangement: KineticLightArrangement
+  """The caller made this song, so they can ask for an arrangement."""
+  mine: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Sheets the caller may still read today."""
+type KineticLightAllowance {
+  """Also 0 while the service is at its own limit."""
+  remaining: Int!
+  limit: Int!
+  """Set while the caller has to wait before the next read."""
+  nextAllowedAt: DateTime
+  """One of the caller's sheets is being read. A new one is refused until it ends."""
+  busy: Boolean!
+}
+
+"""A song in a list, without its notes."""
+type KineticLightSong {
+  id: ID!
+  title: String!
+  source: KineticLightSource!
+  createdAt: DateTime!
+}
+
+type Query {
+  """The caller's sheet readings that haven't been dismissed, newest first."""
+  kineticLightReadings: [KineticLightReading!]!
+  """The caller's songs that are ready to play, newest first."""
+  kineticLightSongs: [KineticLightSong!]!
+  """The example songs every visitor can play, in the order they were added."""
+  kineticLightExamples: [KineticLightSong!]!
+  kineticLightAllowance: KineticLightAllowance!
+  """A song by its id, for anyone with the link. Null once it has expired."""
+  kineticLightReading(id: ID!): KineticLightReading
+}
+
+type Mutation {
+  """
+  Starts reading the notes and chord symbols in an image or PDF of sheet music,
+  and answers at once with the reading as READING. KineticLightReadingUpdated
+  pushes it when it's done. A caller has one reading at a time.
+  """
+  kineticLightRead(file: KineticLightFile!): KineticLightReading!
+  """Keeps a MIDI or MusicXML file as a song, so it has a link."""
+  kineticLightSave(song: KineticLightSongInput!): KineticLightReading!
+  """
+  Asks a model to choose how the caller's song starts and to write its drums,
+  from an outline the browser made of it. A song is arranged once: one that
+  already has an arrangement comes back as it is.
+  """
+  kineticLightArrange(id: ID!, outline: KineticLightOutline!): KineticLightReading!
+  """
+  Marks a finished reading as seen, so it leaves KineticLightReadings. The
+  song and its link stay until it expires.
+  """
+  kineticLightDismiss(id: ID!): ID!
+}
+
+type Subscription {
+  """Pushes each of the caller's readings as it fills in and when it finishes."""
+  kineticLightReadingUpdated: KineticLightReading!
+}

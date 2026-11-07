@@ -17,7 +17,7 @@ function literal(text: string): string {
 
 export default {
   Query: {
-    TaxonSearch: async (_: unknown, args: unknown): Promise<TaxonSearchResult[]> => {
+    taxonSearch: async (_: unknown, args: unknown): Promise<TaxonSearchResult[]> => {
       const { query, limit } = validate(TaxonSearchSchema, args);
 
       /*

@@ -4,6 +4,6 @@ import { exchangeToken } from './exchange.js';
 
 export default {
   Mutation: {
-    ExchangeToken: (_: unknown, __: unknown, context: Context) => exchangeToken(context),
+    exchangeToken: (_: unknown, __: unknown, context: Context) => exchangeToken(context),
   },
 };

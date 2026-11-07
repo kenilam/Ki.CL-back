@@ -24,10 +24,10 @@ extend type Query {
   Runs without a session: the site needs its words before it can start one,
   and they are public.
   """
-  Translations(namespaces: [String!]!): [Translation!]!
+  translations(namespaces: [String!]!): [Translation!]!
 }
 
 type Subscription {
   """Every language's status now, and again whenever one changes."""
-  AcceptLanguagesUpdated: [AcceptLanguageStatus!]!
+  acceptLanguagesUpdated: [AcceptLanguageStatus!]!
 }

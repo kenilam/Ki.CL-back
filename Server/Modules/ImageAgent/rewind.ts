@@ -69,6 +69,7 @@ export async function rewindTo(
         style: job?.style ?? null,
         asked,
         activity: null,
+        dismissedAt: null,
       },
     },
   );
