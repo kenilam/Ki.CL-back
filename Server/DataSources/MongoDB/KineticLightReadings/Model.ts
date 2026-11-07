@@ -36,7 +36,6 @@ export interface IKineticLightReading extends Document {
   chords: KineticLightReadingChord[];
   arrangement: KineticLightArrangement | null;
   example: boolean;
-  dismissedAt: Date | null;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -68,7 +67,6 @@ const KineticLightReadingSchema = new Schema<IKineticLightReading>(
     chords: { type: [ChordSchema], default: [] },
     arrangement: { type: Schema.Types.Mixed, default: null },
     example: { type: Boolean, default: false },
-    dismissedAt: { type: Date, default: null },
     expiresAt: { type: Date, required: true, default: () => new Date(Date.now() + KEEP_MS) },
   },
   {

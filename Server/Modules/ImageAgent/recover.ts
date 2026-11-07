@@ -12,6 +12,7 @@ import {
   ImageAgentRole,
   ImageAgentThreadStatus,
 } from 'server/Types/graphql.js';
+import { notifyThread } from './notify.js';
 import { publishImageAgentThreadUpdated } from './pubsub.js';
 import { toResult, type LeanImageAgentThread } from './types.js';
 
@@ -117,5 +118,6 @@ export async function recoverStalled(scope: {
 
     console.warn(`${LOG} recovered stalled thread=${String(thread._id)} status=${thread.status}`);
     publishImageAgentThreadUpdated(toResult(cleared ?? closed));
+    await notifyThread(toResult(cleared ?? closed));
   }));
 }

@@ -1,0 +1,40 @@
+"""
+Words translated where they're shown: an i18next key in the host's `common`
+namespace, or `api:` and a key in the API's, with the values it takes.
+"""
+type NotificationText {
+  key: String!
+  values: JSONObject!
+}
+
+"""
+Work that carries on after its page is left: a sheet reading, an image agent
+turn, a Tree of Life plate or a password change. There is one for each record
+a visitor is told about, written again at each step. The site links it from
+`collection`, the record's Mongo collection, and `documentId`.
+"""
+type Notification {
+  id: ID!
+  collection: String!
+  documentId: String!
+  title: NotificationText!
+  message: NotificationText!
+  dismissedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Query {
+  """The caller's notifications that haven't been dismissed, newest first."""
+  notifications: [Notification!]!
+}
+
+type Mutation {
+  """Takes the caller's notifications out of their list, and returns their ids."""
+  notificationsDismiss(ids: [ID!]!): [ID!]!
+}
+
+type Subscription {
+  """Pushes each of the caller's notifications when it's written or dismissed."""
+  notificationUpdated: Notification!
+}

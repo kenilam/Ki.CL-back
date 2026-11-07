@@ -15,6 +15,7 @@ import { translate } from 'server/Helpers/translate.js';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { KineticLightSource, KineticLightStage, KineticLightStatus } from 'server/Types/graphql.js';
 import { arrange } from './arrange.js';
+import { notifyReading } from './notify.js';
 import { KINETIC_LIGHT_READING_UPDATED, kineticLightPubSub } from './pubsub.js';
 import { allowanceFor, assertWithinQuota, assertWithinSaveQuota } from './quota.js';
 import { recoverStalled } from './recover.js';
@@ -90,7 +91,7 @@ export default {
 
       await recoverStalled(owner);
 
-      const readings = await KineticLightReadings.find({ ownerGUID: owner, dismissedAt: null })
+      const readings = await KineticLightReadings.find({ ownerGUID: owner, status: KineticLightStatus.Reading })
         .sort({ createdAt: -1 })
         .lean();
 
@@ -164,6 +165,8 @@ export default {
 
       const reading = await start(owner, file.name);
 
+      await notifyReading(toResult(reading));
+
       runReading(reading._id, file.name, bytes, mime).catch((error: Error) => {
         console.error(`[KineticLight] "${file.name}" was not read: ${error.message}`);
       });
@@ -193,7 +196,6 @@ export default {
         status: KineticLightStatus.Ready,
         midi: song.midi ?? null,
         musicxml: song.musicxml ?? null,
-        dismissedAt: new Date(),
       });
 
       return toResult(reading);
@@ -227,25 +229,6 @@ export default {
         .lean();
 
       return toResult(arranged ?? (await KineticLightReadings.findById(song._id).lean()) ?? song);
-    },
-    kineticLightDismiss: async (_: unknown, args: { id: string }, context: Context) => {
-      const owner = requireOwner(context);
-
-      if (!Types.ObjectId.isValid(args.id)) {
-        return args.id;
-      }
-
-      await KineticLightReadings.updateOne(
-        {
-          _id: args.id,
-          ownerGUID: owner,
-          status: { $ne: KineticLightStatus.Reading },
-          dismissedAt: null,
-        },
-        { dismissedAt: new Date() },
-      );
-
-      return args.id;
     },
   },
   Subscription: {

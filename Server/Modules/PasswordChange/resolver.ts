@@ -14,6 +14,7 @@ import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'serve
 import { Gmail } from 'server/DataSources/Google/index.js';
 import { BadUserInput, TooManyRequests, Unauthenticated, Unavailable } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';
+import { notifyChange } from './notify.js';
 import { COMPLETE_MS, COOLDOWN_MS, LINK_MS, toResult, watch } from './status.js';
 import { translate } from 'server/Helpers/translate.js';
 import { PasswordChangeStatus } from 'server/Types/graphql.js';
@@ -130,6 +131,8 @@ export default {
         ...Gmail.emails.passwordChangeConfirm({ link: `${url}#${id}.${secret}`, minutes: LINK_MS / 60_000 }),
       });
 
+      await notifyChange(userGUID, id, 'waiting');
+
       return toResult(id, doc);
     },
 
@@ -170,6 +173,7 @@ export default {
       const saved = doc && (await Users.updateOne({ userGUID, active: true }, { password: doc.password }));
 
       if (!saved?.matchedCount) {
+        await notifyChange(userGUID, input.id, 'failed');
         throw BadUserInput(translate('api', 'error_password_change_unconfirmed'));
       }
 
@@ -189,6 +193,8 @@ export default {
         to: email,
         ...Gmail.emails.passwordChanged(),
       }).catch((error) => console.error('PasswordChange: notice not sent', error));
+
+      await notifyChange(userGUID, input.id, 'done');
 
       return true;
     },

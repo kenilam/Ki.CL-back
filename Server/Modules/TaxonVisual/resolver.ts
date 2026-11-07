@@ -1,6 +1,8 @@
 import { withFilter } from 'graphql-subscriptions';
 import { Types } from 'mongoose';
 
+import type { Context } from 'server/Context/index.js';
+import { settlePlate, waitForPlate } from 'server/DataSources/MongoDB/Notifications/settle.js';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { TaxonVisualExhaustion, TaxonVisualStatus } from 'server/Types/graphql.js';
@@ -225,6 +227,7 @@ async function runGeneration(
       visualScore,
       status: TaxonVisualStatus.Ready,
     }));
+    await settlePlate(nodeId, TaxonVisualStatus.Ready);
   } catch (error) {
     const status = failureStatus(error);
     const message = error instanceof Error ? error.message : 'Image generation failed';
@@ -253,6 +256,7 @@ async function runGeneration(
       status,
       error: message,
     }));
+    await settlePlate(nodeId, status);
   } finally {
     generatingOttIds.delete(ottId);
   }
@@ -417,6 +421,7 @@ export default {
     taxonVisual: async (
       _: unknown,
       args: { ottId: number; name: string; rank?: string | null },
+      context: Context,
     ): Promise<TaxonVisualResult> => {
       const input = validate(TaxonVisualSchema, args);
       const ottId = input.ottId;
@@ -433,7 +438,12 @@ export default {
       const resolvedName = existing.name?.trim() || name;
       const resolvedRank = existing.rank?.trim() || rank;
 
+      const owner = context.tokenPayload?.userGUID;
+      const wait = () => (owner ? waitForPlate(owner, nodeId, resolvedName) : Promise.resolve());
+
       if (generatingOttIds.has(ottId) || status === TaxonVisualStatus.Pending) {
+        await wait();
+
         return toResult({
           ottId,
           nodeId,
@@ -537,6 +547,7 @@ export default {
         },
       );
 
+      await wait();
       void runGeneration(ottId, nodeId, resolvedName, resolvedRank);
 
       return {

@@ -109,29 +109,6 @@ query kicl_imageAgentAllowance {
   }
 }
 
-query kicl_imageAgentNotifications {
-  imageAgentNotifications {
-    id
-    status
-    brief
-    style
-    activity
-    messages {
-      id
-      role
-      kind
-      text
-      assetId
-      rejection
-      exhaustion
-      choices
-      at
-    }
-    createdAt
-    updatedAt
-  }
-}
-
 query kicl_imageAgentSimilar($text: String!) {
   imageAgentSimilar(text: $text) {
     id
@@ -297,6 +274,25 @@ query kicl_me {
       portfolioGUID
       path
     }
+  }
+}
+
+query kicl_notifications {
+  notifications {
+    id
+    collection
+    documentId
+    title {
+      key
+      values
+    }
+    message {
+      key
+      values
+    }
+    dismissedAt
+    createdAt
+    updatedAt
   }
 }
 
@@ -1118,10 +1114,6 @@ mutation kicl_imageAgentRetry($threadId: ID!, $messageId: ID) {
   }
 }
 
-mutation kicl_imageAgentDismiss($id: ID!) {
-  imageAgentDismiss(id: $id)
-}
-
 mutation kicl_kineticLightRead($file: KineticLightFile!) {
   kineticLightRead(file: $file) {
     id
@@ -1254,8 +1246,8 @@ mutation kicl_kineticLightArrange($id: ID!, $outline: KineticLightOutline!) {
   }
 }
 
-mutation kicl_kineticLightDismiss($id: ID!) {
-  kineticLightDismiss(id: $id)
+mutation kicl_notificationsDismiss($ids: [ID!]!) {
+  notificationsDismiss(ids: $ids)
 }
 
 mutation kicl_passwordChangeRequest($passwordChangeRequest: PasswordChangeRequestInput!) {
@@ -1368,6 +1360,25 @@ subscription kicl_kineticLightReadingUpdated {
       }
     }
     mine
+    createdAt
+    updatedAt
+  }
+}
+
+subscription kicl_notificationUpdated {
+  notificationUpdated {
+    id
+    collection
+    documentId
+    title {
+      key
+      values
+    }
+    message {
+      key
+      values
+    }
+    dismissedAt
     createdAt
     updatedAt
   }

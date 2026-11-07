@@ -12,6 +12,7 @@ import {
   ImageAgentThreadStatus,
 } from 'server/Types/graphql.js';
 import { allowanceFor, assertWithinQuota, normalisePrompt } from './govern/index.js';
+import { notifyThread } from './notify.js';
 import { IMAGE_AGENT_THREAD_UPDATED, imageAgentPubSub } from './pubsub.js';
 import { recoverStalled } from './recover.js';
 import { respond } from './respond.js';
@@ -80,16 +81,6 @@ export default {
       const docs = await ImageAgentThreads.find({ ownerGUID: owner })
         .sort({ updatedAt: -1 })
         .limit(input.limit ?? 20)
-        .lean<LeanImageAgentThread[]>();
-      return docs.map(toResult);
-    },
-
-    imageAgentNotifications: async (_: unknown, __: unknown, context: Context) => {
-      const owner = requireOwner(context);
-      await recoverStalled({ ownerGUID: owner });
-      // `$type` rather than null, which also matches threads from before the field and would notify all of them.
-      const docs = await ImageAgentThreads.find({ ownerGUID: owner, dismissedAt: { $type: 'null' } })
-        .sort({ updatedAt: -1 })
         .lean<LeanImageAgentThread[]>();
       return docs.map(toResult);
     },
@@ -168,7 +159,7 @@ export default {
           { _id: input.threadId, ownerGUID: owner, status: ImageAgentThreadStatus.Idle },
           {
             $push: { messages: said },
-            $set: { status: ImageAgentThreadStatus.Thinking, dismissedAt: null },
+            $set: { status: ImageAgentThreadStatus.Thinking },
           },
         );
         if (updated.matchedCount === 0) {
@@ -184,12 +175,14 @@ export default {
         id = String(created._id);
       }
 
-      void respond(id, owner, text);
-
       const doc = await loadThread(id, owner);
       if (!doc) {
         throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
       }
+
+      await notifyThread(toResult(doc));
+      void respond(id, owner, text);
+
       return toResult(doc);
     },
 
@@ -226,31 +219,17 @@ export default {
         throw BadUserInput(translate('api', 'image_agent_error_nothing_to_retry'));
       }
 
-      void respond(id, owner, text);
-
       const doc = await loadThread(id, owner);
       if (!doc) {
         throw NotFound(translate('api', 'image_agent_error_thread_not_found'));
       }
+
+      await notifyThread(toResult(doc));
+      void respond(id, owner, text);
+
       return toResult(doc);
     },
 
-    imageAgentDismiss: async (_: unknown, args: { id: string }, context: Context) => {
-      const owner = requireOwner(context);
-      const { id } = validate(ThreadSchema, args);
-
-      await ImageAgentThreads.updateOne(
-        {
-          _id: id,
-          ownerGUID: owner,
-          status: ImageAgentThreadStatus.Idle,
-          dismissedAt: { $type: 'null' },
-        },
-        { dismissedAt: new Date() },
-      );
-
-      return id;
-    },
   },
 
   Subscription: {

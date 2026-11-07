@@ -6,6 +6,7 @@ import {
   type IKineticLightReading,
 } from 'server/DataSources/MongoDB/KineticLightReadings/Model.js';
 import { KineticLightStage, KineticLightStatus } from 'server/Types/graphql.js';
+import { notifyReading } from './notify.js';
 import { readNotes, type Sheet } from './omr.js';
 import { publishReadingUpdated } from './pubsub.js';
 import { readChords, type Chords } from './read.js';
@@ -61,6 +62,7 @@ export async function runReading(id: Types.ObjectId, name: string, bytes: Buffer
 
         if (reading) {
           publishReadingUpdated(toResult(reading));
+          await notifyReading(toResult(reading));
         }
       })
       .catch((error: Error) => {
