@@ -1,5 +1,5 @@
 import type { ProviderAttempt } from 'server/DataSources/AI/failover.js';
-import type { TextChatOptions } from './types.js';
+import type { TextChatOptions } from 'server/DataSources/AI/types.js';
 import {
   chatGemini,
   generateDescriptionGemini,

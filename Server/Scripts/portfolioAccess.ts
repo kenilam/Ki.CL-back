@@ -13,7 +13,7 @@ import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 import { PortfolioAccess } from 'server/DataSources/MongoDB/PortfolioAccess/Model.js';
-import { usersOf } from 'server/DataSources/MongoDB/PortfolioAccess/relations.js';
+import { usersOf } from 'server/DataSources/MongoDB/portfolioRelations.js';
 import { Portfolios } from 'server/DataSources/MongoDB/Portfolios/Model.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 

@@ -1,6 +1,7 @@
 import mongoose, { Schema, type Document, Types } from 'mongoose';
 
-import type { ImageAgentScore, ImageAgentStyle } from 'server/Types/graphql.js';
+import type { ImageAgentStyle } from 'server/Types/graphql.js';
+import { ImageAgentScoreSchema, type ImageAgentJobScore } from 'server/DataSources/MongoDB/imageAgentScore.js';
 
 /**
  * Status of a drawing. Internal: the API shows the conversation, and a job is
@@ -30,8 +31,6 @@ export const ImageAgentStepKind = {
 export type ImageAgentStepKind =
   (typeof ImageAgentStepKind)[keyof typeof ImageAgentStepKind];
 
-export type ImageAgentJobScore = Omit<ImageAgentScore, '__typename'>;
-
 export type ImageAgentJobStep = {
   kind: ImageAgentStepKind;
   detail: string | null;
@@ -60,19 +59,6 @@ export interface IImageAgentJob extends Document {
   updatedAt: Date;
 }
 
-const ScoreSchema = new Schema<ImageAgentJobScore>(
-  {
-    relevance: { type: Number, required: true },
-    quality: { type: Number, required: true },
-    styleMatch: { type: Number, required: true },
-    composition: { type: Number, required: true },
-    overall: { type: Number, required: true },
-    pass: { type: Boolean, required: true },
-    suggestions: { type: [String], default: [] },
-  },
-  { _id: false },
-);
-
 const StepSchema = new Schema<ImageAgentJobStep>(
   {
     kind: { type: String, required: true },
@@ -92,7 +78,7 @@ const ImageAgentJobSchema = new Schema<IImageAgentJob>(
     error: { type: String, default: null },
     imagePrompt: { type: String, default: null },
     assetId: { type: Schema.Types.ObjectId, ref: 'Assets', default: null },
-    score: { type: ScoreSchema, default: null },
+    score: { type: ImageAgentScoreSchema, default: null },
     attempts: { type: Number, default: 0 },
     steps: { type: [StepSchema], default: [] },
   },
@@ -108,5 +94,3 @@ ImageAgentJobSchema.index({ ownerGUID: 1, createdAt: -1 });
 export const ImageAgentJobs =
   (mongoose.models.ImageAgentJobs as mongoose.Model<IImageAgentJob>)
   || mongoose.model<IImageAgentJob>('ImageAgentJobs', ImageAgentJobSchema);
-
-export { ScoreSchema as ImageAgentScoreSchema };

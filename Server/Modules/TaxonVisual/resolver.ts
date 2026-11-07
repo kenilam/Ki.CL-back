@@ -2,7 +2,7 @@ import { withFilter } from 'graphql-subscriptions';
 import { Types } from 'mongoose';
 
 import type { Context } from 'server/Context/index.js';
-import { settlePlate, waitForPlate } from 'server/DataSources/MongoDB/Notifications/settle.js';
+import { settlePlate, waitForPlate } from 'server/DataSources/MongoDB/settleNotifications.js';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { TaxonVisualExhaustion, TaxonVisualStatus } from 'server/Types/graphql.js';

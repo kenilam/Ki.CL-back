@@ -1,7 +1,7 @@
 import {
   ImageAgentStepKind,
-  type ImageAgentJobScore,
 } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
+import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/imageAgentScore.js';
 import { runProviderFailover } from 'server/DataSources/AI/failover.js';
 import { buildImageProviders } from 'server/DataSources/AI/image/index.js';
 import type { GeneratedImage } from 'server/DataSources/AI/image/types.js';

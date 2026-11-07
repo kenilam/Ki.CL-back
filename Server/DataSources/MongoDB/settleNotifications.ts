@@ -1,8 +1,8 @@
 import { PasswordChanges } from 'server/DataSources/MongoDB/PasswordChanges/Model.js';
 import { TreeOfLifeNodes } from 'server/DataSources/MongoDB/TreeOfLife/Model.js';
 import { TaxonVisualStatus } from 'server/Types/graphql.js';
-import { Notifications, type INotification } from './Model.js';
-import { notify, text } from './notify.js';
+import { Notifications, type INotification } from 'server/DataSources/MongoDB/Notifications/Model.js';
+import { notify, text } from 'server/DataSources/MongoDB/Notifications/notify.js';
 
 const PLATES = TreeOfLifeNodes.collection.collectionName;
 const PASSWORD_CHANGES = PasswordChanges.collection.collectionName;

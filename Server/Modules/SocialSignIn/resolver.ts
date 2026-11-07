@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { validate } from 'server/Helpers/Validation/validate.js';
 import { SocialSignInSchema } from './validation.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
-import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
+import { generateUserToken } from 'server/DataSources/MongoDB/UserTokens/generateUserToken.js';
 import { generatePassword } from 'server/DataSources/MongoDB/Utilities/generatePassword.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie, clearApiKeyCookie } from 'server/Helpers/cookies.js';
 import { verifyGoogleToken } from './Providers/Google.js';

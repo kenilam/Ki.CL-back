@@ -1,5 +1,5 @@
 import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
-import type { OpenAIChatResponse, TextChatOptions } from './types.js';
+import type { OpenAIChatResponse, TextChatOptions } from 'server/DataSources/AI/types.js';
 
 const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
 const DEFAULT_MODEL = 'gpt-4o-mini';

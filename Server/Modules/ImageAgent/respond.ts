@@ -4,8 +4,8 @@ import {
   ImageAgentJobs,
   ImageAgentJobStatus,
   ImageAgentStepKind,
-  type ImageAgentJobScore,
 } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
+import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/imageAgentScore.js';
 import {
   ImageAgentThreads,
   type ImageAgentThreadMessage,

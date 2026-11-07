@@ -1,6 +1,6 @@
 import { throwIfProviderLimitError } from 'server/DataSources/AI/providerLimitError.js';
 import { parseModelList } from 'server/DataSources/AI/modelList.js';
-import type { GeminiResponse, TextChatOptions } from './types.js';
+import type { GeminiResponse, TextChatOptions } from 'server/DataSources/AI/types.js';
 
 /**
  * Quality → capacity within Google (last org in the text pipeline).

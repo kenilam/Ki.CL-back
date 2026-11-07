@@ -1,4 +1,4 @@
-import type { TextChatOptions } from 'server/DataSources/AI/text/types.js';
+import type { TextChatOptions } from 'server/DataSources/AI/types.js';
 
 export type VisionChatOptions = TextChatOptions & {
   /** Raw image or PDF bytes - encoded per provider, never stored. */

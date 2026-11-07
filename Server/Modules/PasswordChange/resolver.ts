@@ -9,7 +9,7 @@ import {
 import { PasswordChanges } from 'server/DataSources/MongoDB/PasswordChanges/Model.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 import { generatePassword } from 'server/DataSources/MongoDB/Utilities/generatePassword.js';
-import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
+import { generateUserToken } from 'server/DataSources/MongoDB/UserTokens/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import { Gmail } from 'server/DataSources/Google/index.js';
 import { BadUserInput, TooManyRequests, Unauthenticated, Unavailable } from 'server/Errors/index.js';

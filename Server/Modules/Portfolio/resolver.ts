@@ -1,4 +1,4 @@
-import { portfoliosOf } from 'server/DataSources/MongoDB/PortfolioAccess/relations.js';
+import { portfoliosOf } from 'server/DataSources/MongoDB/portfolioRelations.js';
 import type { Context } from 'server/Context/index.js';
 import type { MePayload } from 'server/Types/graphql.js';
 

@@ -1,5 +1,5 @@
-import { storedTranslation } from 'server/DataSources/MongoDB/Translations/cache.js';
-import { SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { storedTranslation } from 'server/DataSources/MongoDB/translationsCache.js';
+import { SOURCE } from 'server/Helpers/language.js';
 import { currentAcceptLanguages } from 'server/Helpers/acceptLanguage.js';
 import api from 'server/locales/en-US/api.json' with { type: 'json' };
 import email from 'server/locales/en-US/email.json' with { type: 'json' };
