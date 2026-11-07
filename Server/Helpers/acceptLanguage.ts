@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
-import { availableAcceptLanguages } from 'server/DataSources/MongoDB/Translations/cache.js';
+import { SOURCE } from 'server/Helpers/language.js';
+import { availableAcceptLanguages } from 'server/DataSources/MongoDB/translationsCache.js';
 
 const storage = new AsyncLocalStorage<string[]>();
 

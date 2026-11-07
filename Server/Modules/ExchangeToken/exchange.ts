@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
-import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
+import { generateUserToken } from 'server/DataSources/MongoDB/UserTokens/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import type { Context } from 'server/Context/index.js';
 import { CaptchaRequired, Unavailable } from 'server/Errors/index.js';

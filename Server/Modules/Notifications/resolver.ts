@@ -10,7 +10,7 @@ import {
   toResult,
   type NotificationResult,
 } from 'server/DataSources/MongoDB/Notifications/notify.js';
-import { settleFor } from 'server/DataSources/MongoDB/Notifications/settle.js';
+import { settleFor } from 'server/DataSources/MongoDB/settleNotifications.js';
 import { Unauthenticated } from 'server/Errors/index.js';
 
 function requireOwner(context?: Context): string {

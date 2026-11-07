@@ -1,6 +1,6 @@
 import { Portfolios, type IPortfolio } from 'server/DataSources/MongoDB/Portfolios/Model.js';
 import { Users, type IUser } from 'server/DataSources/MongoDB/Users/Model.js';
-import { PortfolioAccess } from './Model.js';
+import { PortfolioAccess } from 'server/DataSources/MongoDB/PortfolioAccess/Model.js';
 
 /*
  * Users and portfolios meet in `portfolio-access`, one row per user and

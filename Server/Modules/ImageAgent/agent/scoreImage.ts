@@ -1,4 +1,4 @@
-import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
+import type { ImageAgentJobScore } from 'server/DataSources/MongoDB/imageAgentScore.js';
 import { parseModelJson } from 'server/Helpers/parseModelJson.js';
 import { imageContentType } from 'server/Helpers/imageFormat.js';
 import { runProviderFailover } from 'server/DataSources/AI/failover.js';

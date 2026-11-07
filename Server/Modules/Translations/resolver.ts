@@ -5,7 +5,7 @@ import {
   findAcceptLanguageStatuses,
   findTranslations,
   type AcceptLanguageStatus,
-} from 'server/DataSources/MongoDB/Translations/cache.js';
+} from 'server/DataSources/MongoDB/translationsCache.js';
 import { TranslationsSchema } from './validation.js';
 
 const POLL_MS = 15_000;

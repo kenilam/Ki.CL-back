@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import { Locales, SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { Locales } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { SOURCE } from 'server/Helpers/language.js';
 import { TranslationRuns } from 'server/DataSources/MongoDB/TranslationRuns/Model.js';
-import { Translations } from './Model.js';
+import { Translations } from 'server/DataSources/MongoDB/Translations/Model.js';
 
 export type Translation = { namespace: string; field: string; value: string };
 export type AcceptLanguageStatus = {

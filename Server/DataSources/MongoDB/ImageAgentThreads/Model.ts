@@ -8,10 +8,7 @@ import type {
   ImageAgentStyle,
   ImageAgentThreadStatus,
 } from 'server/Types/graphql.js';
-import {
-  ImageAgentScoreSchema,
-  type ImageAgentJobScore,
-} from 'server/DataSources/MongoDB/ImageAgentJobs/Model.js';
+import { ImageAgentScoreSchema, type ImageAgentJobScore } from 'server/DataSources/MongoDB/imageAgentScore.js';
 
 export type ImageAgentThreadMessage = {
   id: string;

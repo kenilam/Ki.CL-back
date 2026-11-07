@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import mongoose, { Schema, type Document } from 'mongoose';
 
-export const SOURCE = 'en-US';
-
 export interface ILocale extends Document<string> {
   tag: string;
   prompt?: string;

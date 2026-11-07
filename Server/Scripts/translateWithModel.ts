@@ -3,7 +3,7 @@ import { ProviderLimitError } from 'server/DataSources/AI/providerLimitError.js'
 import { chatGemini, isGeminiTextConfigured, resolveGeminiTextModels } from 'server/DataSources/AI/text/gemini.js';
 import { chatGroq, isGroqTextConfigured, resolveGroqTextModel } from 'server/DataSources/AI/text/groq.js';
 import { chatOpenAi, isOpenAiTextConfigured } from 'server/DataSources/AI/text/openai.js';
-import type { TextChatOptions } from 'server/DataSources/AI/text/types.js';
+import type { TextChatOptions } from 'server/DataSources/AI/types.js';
 
 // Large enough for a whole namespace in one request, since free tiers count requests. `design-docs`, the largest, is about 100,000.
 const CHUNK_CHARACTERS = 120_000;

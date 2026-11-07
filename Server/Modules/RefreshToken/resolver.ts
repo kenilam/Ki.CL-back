@@ -1,5 +1,5 @@
 import { UserTokens } from 'server/DataSources/MongoDB/UserTokens/Model.js';
-import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
+import { generateUserToken } from 'server/DataSources/MongoDB/UserTokens/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie } from 'server/Helpers/cookies.js';
 import { Unauthenticated } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';

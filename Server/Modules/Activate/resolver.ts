@@ -3,7 +3,7 @@ import { validate } from 'server/Helpers/Validation/validate.js';
 import { ActivateSchema } from './validation.js';
 import { Users } from 'server/DataSources/MongoDB/Users/Model.js';
 import { Registrations } from 'server/DataSources/MongoDB/Registrations/Model.js';
-import { generateUserToken } from 'server/DataSources/MongoDB/Utilities/generateUserToken.js';
+import { generateUserToken } from 'server/DataSources/MongoDB/UserTokens/generateUserToken.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, setAudCookie, clearApiKeyCookie } from 'server/Helpers/cookies.js';
 import { BadUserInput, NotFound } from 'server/Errors/index.js';
 import type { Context } from 'server/Context/index.js';

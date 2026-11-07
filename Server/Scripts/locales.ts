@@ -14,7 +14,8 @@
  */
 import 'dotenv/config';
 import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
-import { isCanonical, Locales, SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { isCanonical, Locales } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { SOURCE } from 'server/Helpers/language.js';
 import { Translations } from 'server/DataSources/MongoDB/Translations/Model.js';
 
 const USAGE = 'Usage: locales.ts list | seed | add <tag> [prompt] | remove <tag>';

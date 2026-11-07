@@ -1,4 +1,4 @@
-import { SOURCE } from 'server/DataSources/MongoDB/Locales/Model.js';
+import { SOURCE } from 'server/Helpers/language.js';
 import { withAcceptLanguages } from 'server/Helpers/acceptLanguage.js';
 import { render, t } from './render.js';
 

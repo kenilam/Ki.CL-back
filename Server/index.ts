@@ -21,7 +21,7 @@ import { apiProxy } from './Middleware/apiProxy.js';
 import { acceptLanguage } from './Middleware/acceptLanguage.js';
 import { sessionRoute } from './Modules/ExchangeToken/route.js';
 import { connectDatabase, mongoose, pingPrimary } from './DataSources/MongoDB/index.js';
-import { loadTranslations } from './DataSources/MongoDB/Translations/cache.js';
+import { loadTranslations } from 'server/DataSources/MongoDB/translationsCache.js';
 import { createGoogleStorageAssetHandler } from './DataSources/Google/Storage/assetHandler.js';
 import { loadCerts } from './Helpers/certs.js';
 import type { IncomingMessage } from 'node:http';
