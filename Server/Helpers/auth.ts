@@ -59,18 +59,15 @@ export function validateApiKey(token: string): boolean {
 }
 
 /**
- * Verify a JWT and return its payload, or null. Tokens issued before the
- * fields were renamed carry `UserGUID`, which is read as `userGUID` until
- * the last of them expires, 9 days after the rename's release.
+ * Verify a JWT and return its payload, or null.
  */
 export function verifyToken(token: string | undefined, key: string): TokenPayload | null {
   if (!token) return null;
 
   try {
-    const payload = jwt.verify(token, key) as TokenPayload & { UserGUID?: string };
-    const userGUID = payload.userGUID ?? payload.UserGUID;
+    const payload = jwt.verify(token, key) as TokenPayload;
 
-    return userGUID ? { ...payload, userGUID } : null;
+    return payload.userGUID ? payload : null;
   } catch {
     return null;
   }
