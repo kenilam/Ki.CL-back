@@ -3,7 +3,7 @@ import { validateApiToken } from 'server/Middleware/apiToken.js';
 import { getAccessTokenExpiry } from 'server/Helpers/tokenExpiry.js';
 
 export interface TokenPayload {
-  UserGUID: string;
+  userGUID: string;
   aud: 'anon' | 'user';
   /** Passed a Turnstile check when the identity was issued. */
   human?: boolean;
@@ -59,17 +59,26 @@ export function validateApiKey(token: string): boolean {
 }
 
 /**
- * Verify an access_token JWT. Returns payload or null.
+ * Verify a JWT and return its payload, or null. Tokens issued before the
+ * fields were renamed carry `UserGUID`, which is read as `userGUID` until
+ * the last of them expires, 9 days after the rename's release.
  */
-export function verifyAccessToken(token: string | undefined): TokenPayload | null {
+export function verifyToken(token: string | undefined, key: string): TokenPayload | null {
   if (!token) return null;
 
   try {
-    return jwt.verify(
-      token,
-      process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!,
-    ) as TokenPayload;
+    const payload = jwt.verify(token, key) as TokenPayload & { UserGUID?: string };
+    const userGUID = payload.userGUID ?? payload.UserGUID;
+
+    return userGUID ? { ...payload, userGUID } : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Verify an access_token JWT. Returns payload or null.
+ */
+export function verifyAccessToken(token: string | undefined): TokenPayload | null {
+  return verifyToken(token, process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!);
 }

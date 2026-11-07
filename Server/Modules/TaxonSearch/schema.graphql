@@ -32,5 +32,5 @@ extend type Query {
   still works, and the cost of the remote call is paid only when it buys
   something.
   """
-  TaxonSearch(query: String!, limit: Int = 10): [TaxonSearchResult!]!
+  taxonSearch(query: String!, limit: Int = 10): [TaxonSearchResult!]!
 }

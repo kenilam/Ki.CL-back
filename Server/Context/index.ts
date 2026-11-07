@@ -7,7 +7,7 @@ import { createAssetLoaders } from 'server/DataSources/MongoDB/Assets/loaders.js
 import { createTreeOfLifeLoaders } from 'server/DataSources/MongoDB/TreeOfLife/loaders.js';
 import { parseCookies, verifyAccessToken, type TokenPayload } from 'server/Helpers/auth.js';
 
-export type AuthenticatedUser = Pick<IUser, 'UserGUID' | 'Email' | 'Active'>;
+export type AuthenticatedUser = Pick<IUser, 'userGUID' | 'email' | 'active'>;
 
 export interface Context {
   headers: Record<string, string | string[] | undefined>;
@@ -16,7 +16,7 @@ export interface Context {
   user: AuthenticatedUser | null;
   operationName: string | undefined;
   isWhitelisted: boolean;
-  tokenPayload: Pick<TokenPayload, 'UserGUID' | 'aud' | 'human'> | null;
+  tokenPayload: Pick<TokenPayload, 'userGUID' | 'aud' | 'human'> | null;
   loaders: ReturnType<typeof createLoaders>;
 }
 
@@ -33,19 +33,19 @@ async function resolveUser(
   if (tokenPayload?.aud !== 'user') return null;
 
   const userRecord = await Users.findOne(
-    { UserGUID: tokenPayload.UserGUID, Active: true },
-    'UserGUID Email Active',
+    { userGUID: tokenPayload.userGUID, active: true },
+    'userGUID email active',
   );
 
   if (!userRecord) return null;
 
-  const tokenRecord = await UserTokens.findOne({ UserGUID: tokenPayload.UserGUID });
+  const tokenRecord = await UserTokens.findOne({ userGUID: tokenPayload.userGUID });
   if (!tokenRecord) return null;
 
   return {
-    UserGUID: userRecord.UserGUID,
-    Email: userRecord.Email,
-    Active: userRecord.Active,
+    userGUID: userRecord.userGUID,
+    email: userRecord.email,
+    active: userRecord.active,
   };
 }
 

@@ -4,7 +4,7 @@ type Query {
   `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
   Warm Mongo rows skip OTOL (known leaf or existing child edges).
   """
-  TreeOfLifeSubtree(
+  treeOfLifeSubtree(
     ottId: Int
     nodeId: String
     heightLimit: Int = 3
@@ -16,7 +16,7 @@ type Query {
   `[...ottId roots, ...nodeId roots]` (nullable slots on hard miss).
   Max 16 ids combined. Uses Mongo DataLoader batching + warm-path.
   """
-  TreeOfLifeSubtrees(
+  treeOfLifeSubtrees(
     ottIds: [Int!]
     nodeIds: [String!]
     heightLimit: Int = 3

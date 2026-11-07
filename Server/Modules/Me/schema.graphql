@@ -1,13 +1,13 @@
 type Query {
-  Me: MePayload
+  me: MePayload
 }
 
 type MePayload {
-  UserGUID: UUID
-  Email: EmailAddress
-  FirstName: String
-  LastName: String
-  Avatar: String
-  Active: Boolean
+  userGUID: UUID
+  email: EmailAddress
+  firstName: String
+  lastName: String
+  avatar: String
+  active: Boolean
   aud: String
 }

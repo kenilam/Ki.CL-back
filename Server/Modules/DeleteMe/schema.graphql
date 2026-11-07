@@ -1,7 +1,7 @@
 type Mutation {
-  DeleteMe(DeleteMe: DeleteMeInput!): Boolean
+  deleteMe(deleteMe: DeleteMeInput!): Boolean
 }
 
 input DeleteMeInput {
-  CurrentPassword: String!
+  currentPassword: String!
 }

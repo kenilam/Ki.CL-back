@@ -18,15 +18,15 @@ export type PasswordChangeResult = Omit<PasswordChange, '__typename' | 'expiresA
 };
 
 export function toResult(id: string, doc: IPasswordChange | null): PasswordChangeResult {
-  if (!doc || doc.ExpiresAt.getTime() <= Date.now()) {
-    return { id, status: PasswordChangeStatus.Expired, expiresAt: doc?.ExpiresAt ?? new Date() };
+  if (!doc || doc.expiresAt.getTime() <= Date.now()) {
+    return { id, status: PasswordChangeStatus.Expired, expiresAt: doc?.expiresAt ?? new Date() };
   }
 
-  return { id, status: doc.Confirmed ? PasswordChangeStatus.Confirmed : PasswordChangeStatus.Pending, expiresAt: doc.ExpiresAt };
+  return { id, status: doc.confirmed ? PasswordChangeStatus.Confirmed : PasswordChangeStatus.Pending, expiresAt: doc.expiresAt };
 }
 
-const read = async (id: string, UserGUID: string) =>
-  toResult(id, await PasswordChanges.findOne({ PasswordChangeGUID: id, UserGUID }));
+const read = async (id: string, userGUID: string) =>
+  toResult(id, await PasswordChanges.findOne({ passwordChangeGUID: id, userGUID }));
 
 /**
  * The request's status, read from Mongo every two seconds and passed on when
@@ -38,8 +38,8 @@ const read = async (id: string, UserGUID: string) =>
  */
 export function watch(
   id: string,
-  UserGUID: string,
-): AsyncIterableIterator<{ PasswordChangeUpdated: PasswordChangeResult }> {
+  userGUID: string,
+): AsyncIterableIterator<{ passwordChangeUpdated: PasswordChangeResult }> {
   let last: PasswordChangeStatus | undefined;
   let closed = false;
 
@@ -48,11 +48,11 @@ export function watch(
   return {
     async next() {
       while (!closed && last !== PasswordChangeStatus.Confirmed && last !== PasswordChangeStatus.Expired) {
-        const result = await read(id, UserGUID);
+        const result = await read(id, userGUID);
 
         if (result.status !== last) {
           last = result.status;
-          return { value: { PasswordChangeUpdated: result }, done: false };
+          return { value: { passwordChangeUpdated: result }, done: false };
         }
 
         await new Promise((resolve) => setTimeout(resolve, POLL_MS));

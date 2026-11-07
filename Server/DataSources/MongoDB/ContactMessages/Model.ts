@@ -1,49 +1,50 @@
 import mongoose, { Schema, type Document } from 'mongoose';
 
 export interface IContactMessage extends Document {
-  ContactMessageGUID: string;
+  contactMessageGUID: string;
   /** The session that sent it. The limits count by this. */
-  UserGUID: string;
+  userGUID: string;
   /** The address the sender asked to be answered at, lower case. */
-  Email: string;
-  Message: string;
-  ExpiresAt: Date;
+  email: string;
+  message: string;
+  expiresAt: Date;
   createdAt: Date;
 }
 
 const ContactMessageSchema = new Schema<IContactMessage>(
   {
-    ContactMessageGUID: {
+    contactMessageGUID: {
       type: String,
       required: true,
       unique: true,
       index: true,
     },
-    UserGUID: {
+    userGUID: {
       type: String,
       required: true,
       index: true,
     },
-    Email: {
+    email: {
       type: String,
       required: true,
       index: true,
     },
-    Message: {
+    message: {
       type: String,
       required: true,
     },
-    ExpiresAt: {
+    expiresAt: {
       type: Date,
       required: true,
     },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
+    collection: 'contact_messages',
   },
 );
 
 // Mongo removes a message once its retention has passed. The privacy line on the form states the period.
-ContactMessageSchema.index({ ExpiresAt: 1 }, { expireAfterSeconds: 0 });
+ContactMessageSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const ContactMessages = mongoose.models.ContactMessages as mongoose.Model<IContactMessage> || mongoose.model<IContactMessage>('ContactMessages', ContactMessageSchema);

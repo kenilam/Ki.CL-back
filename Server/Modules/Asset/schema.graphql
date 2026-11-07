@@ -9,5 +9,5 @@ type Asset {
 }
 
 type Query {
-  Asset(id: ID!): Asset
+  asset(id: ID!): Asset
 }

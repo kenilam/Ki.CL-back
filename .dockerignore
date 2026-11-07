@@ -21,3 +21,6 @@ Client/src/generated
 
 *.log
 .DS_Store
+
+# The sheet reader is its own service, with its own image.
+Omr

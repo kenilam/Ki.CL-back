@@ -1,10 +1,10 @@
 type Mutation {
-  Register(Register: RegisterInput!): Boolean
+  register(register: RegisterInput!): Boolean
 }
 
 input RegisterInput {
-  Email: EmailAddress!
-  Password: String!
-  FirstName: String
-  LastName: String
+  email: EmailAddress!
+  password: String!
+  firstName: String
+  lastName: String
 }

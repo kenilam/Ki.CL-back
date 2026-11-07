@@ -2,7 +2,7 @@ import type { Context } from 'server/Context/index.js';
 
 export default {
   Query: {
-    Asset: async (
+    asset: async (
       _: unknown,
       args: { id: string },
       context: Context,

@@ -1,41 +1,42 @@
 import mongoose, { Schema, type Document } from 'mongoose';
 
 export interface IUserToken extends Document {
-  UserGUID: string;
-  Token: string;
-  CreatedAt: Date;
-  LastSignedInAt: Date;
-  LastSignedOutAt?: Date;
+  userGUID: string;
+  token: string;
+  createdAt: Date;
+  lastSignedInAt: Date;
+  lastSignedOutAt?: Date;
 }
 
 const UserTokenSchema = new Schema<IUserToken>(
   {
-    UserGUID: {
+    userGUID: {
       type: String,
       required: true,
       unique: true,
       index: true,
     },
-    Token: {
+    token: {
       type: String,
       required: true,
       unique: true,
     },
-    CreatedAt: {
+    createdAt: {
       type: Date,
       default: () => new Date(),
     },
-    LastSignedInAt: {
+    lastSignedInAt: {
       type: Date,
       default: () => new Date(),
     },
-    LastSignedOutAt: {
+    lastSignedOutAt: {
       type: Date,
       default: null,
     },
   },
   {
     timestamps: false,
+    collection: 'user_tokens',
   },
 );
 

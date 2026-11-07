@@ -10,7 +10,7 @@ import { TranslationsSchema } from './validation.js';
 
 const POLL_MS = 15_000;
 
-type Update = { AcceptLanguagesUpdated: AcceptLanguageStatus[] };
+type Update = { acceptLanguagesUpdated: AcceptLanguageStatus[] };
 
 // An iterator rather than a generator: graphql-ws calls return() when the client leaves, which a generator waiting on a timer would only see at its next yield.
 function acceptLanguageUpdates(): AsyncIterableIterator<Update> {
@@ -27,7 +27,7 @@ function acceptLanguageUpdates(): AsyncIterableIterator<Update> {
 
         if (snapshot !== last) {
           last = snapshot;
-          return { done: false, value: { AcceptLanguagesUpdated: statuses } };
+          return { done: false, value: { acceptLanguagesUpdated: statuses } };
         }
 
         await new Promise<void>((resolve) => {
@@ -54,7 +54,7 @@ function acceptLanguageUpdates(): AsyncIterableIterator<Update> {
 
 export default {
   Query: {
-    Translations: async (_: unknown, args: unknown, { res }: Context) => {
+    translations: async (_: unknown, args: unknown, { res }: Context) => {
       const { namespaces } = validate(TranslationsSchema, args);
       const { translations, contentLanguages } = await findTranslations(currentAcceptLanguages(), namespaces);
 
@@ -66,7 +66,7 @@ export default {
     },
   },
   Subscription: {
-    AcceptLanguagesUpdated: {
+    acceptLanguagesUpdated: {
       subscribe: () => {
         return acceptLanguageUpdates();
       },

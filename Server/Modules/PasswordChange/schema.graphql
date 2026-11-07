@@ -2,33 +2,33 @@ type Query {
   """
   The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up.
   """
-  PasswordChange: PasswordChange
+  passwordChange: PasswordChange
   """
   Whether the emailed link can still be confirmed. Any session may ask: the secret is the proof.
   """
-  PasswordChangeLink(PasswordChangeLink: PasswordChangeConfirmInput!): Boolean!
+  passwordChangeLink(passwordChangeLink: PasswordChangeConfirmInput!): Boolean!
 }
 
 type Mutation {
   """
   Checks the current password, keeps the new one hashed, and emails the signed-in user a link to confirm the change.
   """
-  PasswordChangeRequest(PasswordChangeRequest: PasswordChangeRequestInput!): PasswordChange!
+  passwordChangeRequest(passwordChangeRequest: PasswordChangeRequestInput!): PasswordChange!
   """
   Called from the emailed link. Any session may call it: the secret is the proof.
   """
-  PasswordChangeConfirm(PasswordChangeConfirm: PasswordChangeConfirmInput!): Boolean
+  passwordChangeConfirm(passwordChangeConfirm: PasswordChangeConfirmInput!): Boolean
   """
   Sets the password kept with the request, once it has been confirmed.
   """
-  PasswordChangeComplete(PasswordChangeComplete: PasswordChangeCompleteInput!): Boolean
+  passwordChangeComplete(passwordChangeComplete: PasswordChangeCompleteInput!): Boolean
 }
 
 type Subscription {
   """
   The request's status now and on every change, until it is confirmed or expires.
   """
-  PasswordChangeUpdated(id: ID!): PasswordChange!
+  passwordChangeUpdated(id: ID!): PasswordChange!
 }
 
 type PasswordChange {
@@ -44,8 +44,8 @@ enum PasswordChangeStatus {
 }
 
 input PasswordChangeRequestInput {
-  CurrentPassword: String!
-  Password: String!
+  currentPassword: String!
+  password: String!
 }
 
 input PasswordChangeConfirmInput {

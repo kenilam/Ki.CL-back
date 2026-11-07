@@ -5,21 +5,21 @@ import mongoose, { Schema, type Document } from 'mongoose';
  * `moonshot`. Who may open it is in `portfolio-access`.
  */
 export interface IPortfolio extends Document {
-  PortfolioGUID: string;
-  Path: string;
+  portfolioGUID: string;
+  path: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 const PortfolioSchema = new Schema<IPortfolio>(
   {
-    PortfolioGUID: {
+    portfolioGUID: {
       type: String,
       required: true,
       unique: true,
       index: true,
     },
-    Path: {
+    path: {
       type: String,
       required: true,
       unique: true,
@@ -28,7 +28,7 @@ const PortfolioSchema = new Schema<IPortfolio>(
     },
   },
   {
-    collection: 'portfolio',
+    collection: 'portfolios',
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
@@ -36,10 +36,10 @@ const PortfolioSchema = new Schema<IPortfolio>(
 );
 
 /** This piece's access rows. `usersOf()` follows them to the users. */
-PortfolioSchema.virtual('Access', {
+PortfolioSchema.virtual('access', {
   ref: 'PortfolioAccess',
-  localField: 'PortfolioGUID',
-  foreignField: 'PortfolioGUID',
+  localField: 'portfolioGUID',
+  foreignField: 'portfolioGUID',
 });
 
 export const Portfolios = mongoose.models.Portfolios as mongoose.Model<IPortfolio> || mongoose.model<IPortfolio>('Portfolios', PortfolioSchema);

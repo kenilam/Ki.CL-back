@@ -10,7 +10,7 @@ import { connectDatabase, mongoose } from 'server/DataSources/MongoDB/index.js';
 
 async function main() {
   await connectDatabase();
-  const col = mongoose.connection.db!.collection('tree-of-life');
+  const col = mongoose.connection.db!.collection('tree_of_life');
 
   const indexes = await col.indexes();
   console.log('Before:', indexes.map((idx) => ({

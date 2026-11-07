@@ -22,7 +22,7 @@ async function run(): Promise<void> {
 
   await connectDatabase();
 
-  const { deletedCount } = await ContactMessages.deleteMany({ Email: email });
+  const { deletedCount } = await ContactMessages.deleteMany({ email: email });
 
   console.log(`${deletedCount} message(s) from ${email} deleted (${mongoose.connection.name}).`);
 }

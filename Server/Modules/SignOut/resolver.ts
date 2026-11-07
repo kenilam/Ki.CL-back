@@ -4,9 +4,9 @@ import type { Context } from 'server/Context/index.js';
 
 export default {
   Mutation: {
-    SignOut: async (_: unknown, __: unknown, context: Context) => {
+    signOut: async (_: unknown, __: unknown, context: Context) => {
       if (context.tokenPayload?.aud === 'user') {
-        await UserTokens.deleteOne({ UserGUID: context.tokenPayload.UserGUID });
+        await UserTokens.deleteOne({ userGUID: context.tokenPayload.userGUID });
       }
 
       clearAuthCookies(context.res);

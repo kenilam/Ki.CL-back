@@ -11,7 +11,7 @@ const TranslationRunSchema = new Schema<ITranslationRun>(
     'accept-language': { type: String, required: true, unique: true },
   },
   {
-    collection: 'translation-runs',
+    collection: 'translation_runs',
     timestamps: true,
   },
 );

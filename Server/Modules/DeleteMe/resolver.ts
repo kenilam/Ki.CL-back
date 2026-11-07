@@ -15,22 +15,22 @@ import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
-    DeleteMe: async (_: unknown, args: { DeleteMe: unknown }, context: Context) => {
+    deleteMe: async (_: unknown, args: { deleteMe: unknown }, context: Context) => {
       if (!context.user) {
         throw Unauthenticated();
       }
 
-      const input = validate(DeleteMeSchema, args.DeleteMe);
-      const { Email, UserGUID } = context.user;
+      const input = validate(DeleteMeSchema, args.deleteMe);
+      const { email, userGUID } = context.user;
 
-      const user = await Users.findOne({ UserGUID }, 'Password');
+      const user = await Users.findOne({ userGUID }, 'password');
 
       if (!user) {
         throw Unauthenticated(translate('api', 'error_user_not_found'));
       }
 
       // The session alone isn't enough to delete an account.
-      if (!(await bcrypt.compare(input.CurrentPassword, user.Password))) {
+      if (!(await bcrypt.compare(input.currentPassword, user.password))) {
         throw BadUserInput(translate('api', 'error_password_incorrect'));
       }
 
@@ -38,15 +38,15 @@ export default {
        * The tokens go first: if a later step fails, the session has still
        * ended. The user goes last, so they can sign in and try again.
        */
-      await UserTokens.deleteMany({ UserGUID });
-      await PasswordChanges.deleteMany({ UserGUID });
-      await PortfolioAccess.deleteMany({ UserGUID });
-      await Registrations.deleteMany({ UserGUID });
+      await UserTokens.deleteMany({ userGUID });
+      await PasswordChanges.deleteMany({ userGUID });
+      await PortfolioAccess.deleteMany({ userGUID });
+      await Registrations.deleteMany({ userGUID });
       // Messages sent from the contact form, signed in or under this address.
-      await ContactMessages.deleteMany({ $or: [{ UserGUID }, { Email: Email.toLowerCase() }] });
+      await ContactMessages.deleteMany({ $or: [{ userGUID }, { email: email.toLowerCase() }] });
       // What they said to the image agent, and the pictures it drew for them.
-      await forgetOwner(UserGUID);
-      await Users.deleteOne({ UserGUID });
+      await forgetOwner(userGUID);
+      await Users.deleteOne({ userGUID });
 
       clearAuthCookies(context.res);
 

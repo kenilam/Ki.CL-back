@@ -2,10 +2,10 @@ type Mutation {
   """
   Sends a message to the site's owner and acknowledges it at the sender's address. Needs a session that passed the Turnstile check.
   """
-  Contact(Contact: ContactInput!): Boolean
+  contact(contact: ContactInput!): Boolean
 }
 
 input ContactInput {
-  Email: EmailAddress!
-  Message: String!
+  email: EmailAddress!
+  message: String!
 }

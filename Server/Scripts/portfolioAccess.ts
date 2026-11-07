@@ -31,23 +31,23 @@ async function run(): Promise<void> {
   const database = mongoose.connection.name;
 
   if (command === 'list') {
-    const portfolio = await Portfolios.findOne({ Path: path });
-    const users = portfolio ? await usersOf(portfolio.PortfolioGUID) : [];
+    const portfolio = await Portfolios.findOne({ path: path });
+    const users = portfolio ? await usersOf(portfolio.portfolioGUID) : [];
 
-    console.log(`${path} in ${database}: ${users.map((user) => user.Email).join(', ') || 'nobody'}`);
+    console.log(`${path} in ${database}: ${users.map((user) => user.email).join(', ') || 'nobody'}`);
     return;
   }
 
   if (command === 'remove') {
-    const portfolio = await Portfolios.findOne({ Path: path });
+    const portfolio = await Portfolios.findOne({ path: path });
 
     if (!portfolio) {
       console.log(`No ${path} in ${database}.`);
       return;
     }
 
-    const { deletedCount } = await PortfolioAccess.deleteMany({ PortfolioGUID: portfolio.PortfolioGUID });
-    await Portfolios.deleteOne({ PortfolioGUID: portfolio.PortfolioGUID });
+    const { deletedCount } = await PortfolioAccess.deleteMany({ portfolioGUID: portfolio.portfolioGUID });
+    await Portfolios.deleteOne({ portfolioGUID: portfolio.portfolioGUID });
 
     console.log(`Removed ${path} and ${deletedCount} access row(s) from ${database}.`);
     return;
@@ -57,7 +57,7 @@ async function run(): Promise<void> {
     throw new Error(USAGE);
   }
 
-  const user = await Users.findOne({ Email: email.trim().toLowerCase() }, 'UserGUID Email');
+  const user = await Users.findOne({ email: email.trim().toLowerCase() }, 'userGUID email');
 
   if (!user) {
     throw new Error(`No user ${email} in ${database}.`);
@@ -66,30 +66,30 @@ async function run(): Promise<void> {
   if (command === 'grant') {
     // The piece is created on its first grant.
     const portfolio = await Portfolios.findOneAndUpdate(
-      { Path: path },
-      { $setOnInsert: { PortfolioGUID: randomUUID(), Path: path } },
+      { path: path },
+      { $setOnInsert: { portfolioGUID: randomUUID(), path: path } },
       { new: true, upsert: true },
     );
 
     await PortfolioAccess.updateOne(
-      { PortfolioGUID: portfolio.PortfolioGUID, UserGUID: user.UserGUID },
-      { $setOnInsert: { PortfolioGUID: portfolio.PortfolioGUID, UserGUID: user.UserGUID } },
+      { portfolioGUID: portfolio.portfolioGUID, userGUID: user.userGUID },
+      { $setOnInsert: { portfolioGUID: portfolio.portfolioGUID, userGUID: user.userGUID } },
       { upsert: true },
     );
 
-    console.log(`${user.Email} can open ${path} (${database}).`);
+    console.log(`${user.email} can open ${path} (${database}).`);
     return;
   }
 
-  const portfolio = await Portfolios.findOne({ Path: path });
+  const portfolio = await Portfolios.findOne({ path: path });
   const { deletedCount } = portfolio
-    ? await PortfolioAccess.deleteOne({ PortfolioGUID: portfolio.PortfolioGUID, UserGUID: user.UserGUID })
+    ? await PortfolioAccess.deleteOne({ portfolioGUID: portfolio.portfolioGUID, userGUID: user.userGUID })
     : { deletedCount: 0 };
 
   console.log(
     deletedCount
-      ? `${user.Email} can no longer open ${path} (${database}).`
-      : `${user.Email} had no access to ${path} (${database}).`,
+      ? `${user.email} can no longer open ${path} (${database}).`
+      : `${user.email} had no access to ${path} (${database}).`,
   );
 }
 

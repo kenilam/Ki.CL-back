@@ -17,15 +17,22 @@ const MAX_DEPTH = 2;
 /**
  * Fields that need more than two levels. A conversation holds messages, and a
  * message holds its picture one level further down, so the default depth would
- * stop just before the picture.
+ * stop just before the picture. A Kinetic Light song's arrangement holds
+ * sections, and each section its drum patterns, one level further again.
  */
 const DEPTH_BY_FIELD: Record<string, number> = {
-  ImageAgentAllowance: 3,
-  ImageAgentRetry: 3,
-  ImageAgentSend: 3,
-  ImageAgentThread: 3,
-  ImageAgentThreadUpdated: 3,
-  ImageAgentThreads: 3,
+  imageAgentAllowance: 3,
+  imageAgentRetry: 3,
+  imageAgentSend: 3,
+  imageAgentThread: 3,
+  imageAgentThreadUpdated: 3,
+  imageAgentThreads: 3,
+  kineticLightArrange: 4,
+  kineticLightRead: 3,
+  kineticLightReading: 4,
+  kineticLightReadingUpdated: 3,
+  kineticLightReadings: 3,
+  kineticLightSave: 3,
 };
 
 const depthFor = (fieldName: string): number => DEPTH_BY_FIELD[fieldName] ?? MAX_DEPTH;
@@ -149,8 +156,8 @@ function buildTreeOfLifeSubtreeOperation(): string {
   const rootFields = buildTreeOfLifeRootFields('    ');
   const descendants = buildTreeOfLifeDescendantsSelection(TREE_OF_LIFE_DEPTH, '    ');
 
-  return `query ${PREFIX}TreeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
-  TreeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
+  return `query ${PREFIX}treeOfLifeSubtree($ottId: Int, $nodeId: String, $heightLimit: Int = 3) {
+  treeOfLifeSubtree(ottId: $ottId, nodeId: $nodeId, heightLimit: $heightLimit) {
 ${rootFields}
     descendants {
 ${descendants}
@@ -163,8 +170,8 @@ function buildTreeOfLifeSubtreesOperation(): string {
   const rootFields = buildTreeOfLifeRootFields('    ');
   const descendants = buildTreeOfLifeDescendantsSelection(TREE_OF_LIFE_DEPTH, '    ');
 
-  return `query ${PREFIX}TreeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
-  TreeOfLifeSubtrees(ottIds: $ottIds, nodeIds: $nodeIds, heightLimit: $heightLimit) {
+  return `query ${PREFIX}treeOfLifeSubtrees($ottIds: [Int!], $nodeIds: [String!], $heightLimit: Int = 3) {
+  treeOfLifeSubtrees(ottIds: $ottIds, nodeIds: $nodeIds, heightLimit: $heightLimit) {
 ${rootFields}
     descendants {
 ${descendants}
@@ -187,11 +194,11 @@ if (queryType) {
     if (fieldName.startsWith('_')) continue;
 
     // Recursive TreeOfLifeNode needs an explicit deep selection set.
-    if (fieldName === 'TreeOfLifeSubtree') {
+    if (fieldName === 'treeOfLifeSubtree') {
       operations.push(buildTreeOfLifeSubtreeOperation());
       continue;
     }
-    if (fieldName === 'TreeOfLifeSubtrees') {
+    if (fieldName === 'treeOfLifeSubtrees') {
       operations.push(buildTreeOfLifeSubtreesOperation());
       continue;
     }

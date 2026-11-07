@@ -2,17 +2,17 @@ import mongoose, { Schema, type Document } from 'mongoose';
 import { generatePassword } from 'server/DataSources/MongoDB/Utilities/generatePassword.js';
 
 export interface IUser extends Document {
-  UserGUID: string;
-  UserName: string;
-  Email: string;
-  Password: string;
-  FirstName?: string | null;
-  LastName?: string | null;
-  Active: boolean;
-  Avatar?: string | null;
-  SocialProviders: Array<{
-    Provider: string;
-    ProviderId: string;
+  userGUID: string;
+  userName: string;
+  email: string;
+  password: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  active: boolean;
+  avatar?: string | null;
+  socialProviders: Array<{
+    provider: string;
+    providerId: string;
   }>;
   createdAt: Date;
   updatedAt: Date;
@@ -20,72 +20,73 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    UserGUID: {
+    userGUID: {
       type: String,
       required: true,
       unique: true,
       index: true,
     },
-    UserName: {
+    userName: {
       type: String,
       required: true,
     },
-    Email: {
+    email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
       trim: true,
     },
-    Password: {
+    password: {
       type: String,
       required: true,
     },
-    FirstName: {
+    firstName: {
       type: String,
       default: null,
     },
-    LastName: {
+    lastName: {
       type: String,
       default: null,
     },
-    Active: {
+    active: {
       type: Boolean,
       default: false,
     },
-    Avatar: {
+    avatar: {
       type: String,
       default: null,
     },
-    SocialProviders: [
+    socialProviders: [
       {
-        Provider: { type: String, required: true },
-        ProviderId: { type: String, required: true },
+        provider: { type: String, required: true },
+        providerId: { type: String, required: true },
       },
     ],
   },
   {
     timestamps: true,
+    collection: 'users',
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   },
 );
 
 /** This user's portfolio access rows. `portfoliosOf()` follows them to the pieces. */
-UserSchema.virtual('Access', {
+UserSchema.virtual('access', {
   ref: 'PortfolioAccess',
-  localField: 'UserGUID',
-  foreignField: 'UserGUID',
+  localField: 'userGUID',
+  foreignField: 'userGUID',
 });
 
 UserSchema.pre('validate', async function () {
-  if (!this.UserName) {
-    this.UserName = this.Email;
+  if (!this.userName) {
+    this.userName = this.email;
   }
 
-  if (this.isModified('Password')) {
-    const { hash } = await generatePassword({ password: this.Password });
-    this.Password = hash;
+  if (this.isModified('password')) {
+    const { hash } = await generatePassword({ password: this.password });
+    this.password = hash;
   }
 });
 

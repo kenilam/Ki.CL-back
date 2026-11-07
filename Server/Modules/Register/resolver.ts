@@ -12,44 +12,44 @@ import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
-    Register: async (_: unknown, args: { Register: unknown }, context: Context) => {
-      const input = validate(RegisterSchema, args.Register);
+    register: async (_: unknown, args: { register: unknown }, context: Context) => {
+      const input = validate(RegisterSchema, args.register);
 
-      const existingUser = await Users.findOne({ Email: input.Email });
+      const existingUser = await Users.findOne({ email: input.email });
       if (existingUser) {
         throw ExistingRecord(translate('api', 'error_account_exists'));
       }
 
-      const UserGUID = randomUUID();
-      const RegistrationGUID = randomUUID();
-      const { password: Secret } = await generatePassword();
+      const userGUID = randomUUID();
+      const registrationGUID = randomUUID();
+      const { password: secret } = await generatePassword();
 
       await Users.create({
-        UserGUID,
-        Email: input.Email,
-        Password: input.Password,
-        FirstName: input.FirstName || null,
-        LastName: input.LastName || null,
-        Active: false,
+        userGUID,
+        email: input.email,
+        password: input.password,
+        firstName: input.firstName || null,
+        lastName: input.lastName || null,
+        active: false,
       });
 
       await Registrations.create({
-        RegistrationGUID,
-        Secret,
-        UserGUID,
+        registrationGUID,
+        secret,
+        userGUID,
       });
 
       // TODO: Send activation email with Secret link
-      // const link = `${process.env.MAILER_REGISTRATION_ACTIVATION_URL}?RegistrationGUID=${RegistrationGUID}&Secret=${Secret}&UserGUID=${UserGUID}`;
+      // const link = `${process.env.MAILER_REGISTRATION_ACTIVATION_URL}?registrationGUID=${registrationGUID}&secret=${secret}&userGUID=${userGUID}`;
 
       // Issue user JWT (account not yet active, but cookie is set)
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID,
+      const { accessToken, refreshToken } = await generateUserToken({
+        userGUID,
         aud: 'user',
       });
 
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
+      setAccessTokenCookie(context.res, accessToken);
+      setRefreshTokenCookie(context.res, refreshToken);
       setAudCookie(context.res, 'user');
       clearApiKeyCookie(context.res);
 

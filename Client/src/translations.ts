@@ -62,7 +62,7 @@ export async function loadTranslations(acceptLanguage: string, namespaces: strin
 
   const resources = new Map<string, Resources>();
 
-  for (const { field, namespace, value } of (data as Kicl_TranslationsQuery | null | undefined)?.Translations ?? []) {
+  for (const { field, namespace, value } of (data as Kicl_TranslationsQuery | null | undefined)?.translations ?? []) {
     const branch = resources.get(namespace) ?? {};
 
     place(branch, field, value);

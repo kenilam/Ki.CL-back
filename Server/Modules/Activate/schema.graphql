@@ -1,9 +1,9 @@
 type Mutation {
-  Activate(Activate: ActivateInput!): Boolean
+  activate(activate: ActivateInput!): Boolean
 }
 
 input ActivateInput {
-  RegistrationGUID: UUID!
-  Secret: String!
-  UserGUID: UUID!
+  registrationGUID: UUID!
+  secret: String!
+  userGUID: UUID!
 }

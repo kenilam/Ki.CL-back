@@ -8,26 +8,26 @@ import { PortfolioAccess } from './Model.js';
  */
 
 /** The pieces a user may open. */
-export async function portfoliosOf(UserGUID: string): Promise<IPortfolio[]> {
-  const rows = await PortfolioAccess.find({ UserGUID }, 'PortfolioGUID');
+export async function portfoliosOf(userGUID: string): Promise<IPortfolio[]> {
+  const rows = await PortfolioAccess.find({ userGUID }, 'portfolioGUID');
 
-  return Portfolios.find({ PortfolioGUID: { $in: rows.map((row) => row.PortfolioGUID) } });
+  return Portfolios.find({ portfolioGUID: { $in: rows.map((row) => row.portfolioGUID) } });
 }
 
 /** The users who may open a piece, without their passwords. */
-export async function usersOf(PortfolioGUID: string): Promise<IUser[]> {
-  const rows = await PortfolioAccess.find({ PortfolioGUID }, 'UserGUID');
+export async function usersOf(portfolioGUID: string): Promise<IUser[]> {
+  const rows = await PortfolioAccess.find({ portfolioGUID }, 'userGUID');
 
-  return Users.find({ UserGUID: { $in: rows.map((row) => row.UserGUID) } }, '-Password');
+  return Users.find({ userGUID: { $in: rows.map((row) => row.userGUID) } }, '-password');
 }
 
-/** Whether a user may open the piece at `Path`. */
-export async function hasPortfolioAccess(UserGUID: string, Path: string): Promise<boolean> {
-  const portfolio = await Portfolios.findOne({ Path: Path.toLowerCase() }, 'PortfolioGUID');
+/** Whether a user may open the piece at `path`. */
+export async function hasPortfolioAccess(userGUID: string, path: string): Promise<boolean> {
+  const portfolio = await Portfolios.findOne({ path: path.toLowerCase() }, 'portfolioGUID');
 
   if (!portfolio) {
     return false;
   }
 
-  return Boolean(await PortfolioAccess.exists({ PortfolioGUID: portfolio.PortfolioGUID, UserGUID }));
+  return Boolean(await PortfolioAccess.exists({ portfolioGUID: portfolio.portfolioGUID, userGUID }));
 }

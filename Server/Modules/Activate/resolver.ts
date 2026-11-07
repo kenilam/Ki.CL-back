@@ -11,46 +11,46 @@ import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Mutation: {
-    Activate: async (_: unknown, args: { Activate: unknown }, context: Context) => {
-      const input = validate(ActivateSchema, args.Activate);
+    activate: async (_: unknown, args: { activate: unknown }, context: Context) => {
+      const input = validate(ActivateSchema, args.activate);
 
       const registration = await Registrations.findOne({
-        RegistrationGUID: input.RegistrationGUID,
-        UserGUID: input.UserGUID,
+        registrationGUID: input.registrationGUID,
+        userGUID: input.userGUID,
       });
 
       if (!registration) {
         throw NotFound(translate('api', 'error_registration_not_found'));
       }
 
-      const isValidSecret = await bcrypt.compare(input.Secret, registration.Secret);
+      const isValidSecret = await bcrypt.compare(input.secret, registration.secret);
       if (!isValidSecret) {
         throw BadUserInput(translate('api', 'error_activation_secret'));
       }
 
-      const user = await Users.findOne({ UserGUID: input.UserGUID });
+      const user = await Users.findOne({ userGUID: input.userGUID });
       if (!user) {
         throw NotFound(translate('api', 'error_user_not_found'));
       }
 
-      if (user.Active) {
+      if (user.active) {
         throw BadUserInput(translate('api', 'error_account_active'));
       }
 
       await Users.updateOne(
-        { UserGUID: input.UserGUID },
-        { Active: true },
+        { userGUID: input.userGUID },
+        { active: true },
       );
 
-      await Registrations.deleteOne({ RegistrationGUID: input.RegistrationGUID });
+      await Registrations.deleteOne({ registrationGUID: input.registrationGUID });
 
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID: input.UserGUID,
+      const { accessToken, refreshToken } = await generateUserToken({
+        userGUID: input.userGUID,
         aud: 'user',
       });
 
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
+      setAccessTokenCookie(context.res, accessToken);
+      setRefreshTokenCookie(context.res, refreshToken);
       setAudCookie(context.res, 'user');
       clearApiKeyCookie(context.res);
 

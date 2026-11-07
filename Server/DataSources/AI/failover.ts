@@ -20,9 +20,13 @@ const TIMEOUT_MS = {
   translation: 300_000,
   vision: 45_000,
   image: 90_000,
+  chords: 120_000,
+  arrangement: 60_000,
 } as const;
 
 class ProviderTimeoutError extends Error {}
+
+export class UnusableReplyError extends Error {}
 
 /**
  * Stops waiting on `promise` after `ms`. The request itself is not cancelled,
@@ -126,7 +130,7 @@ async function withRetries<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      if (lastError instanceof ProviderTimeoutError) {
+      if (lastError instanceof ProviderTimeoutError || lastError instanceof UnusableReplyError) {
         throw lastError;
       }
 

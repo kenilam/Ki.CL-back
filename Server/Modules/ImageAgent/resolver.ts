@@ -34,7 +34,7 @@ import {
 } from './validation.js';
 
 function requireOwner(context: Context): string {
-  const owner = context.tokenPayload?.UserGUID;
+  const owner = context.tokenPayload?.userGUID;
   if (!owner) {
     throw Unauthenticated();
   }
@@ -61,7 +61,7 @@ async function loadThread(id: string, owner: string): Promise<LeanImageAgentThre
 
 export default {
   Query: {
-    ImageAgentThread: async (_: unknown, args: { id: string }, context: Context) => {
+    imageAgentThread: async (_: unknown, args: { id: string }, context: Context) => {
       const owner = requireOwner(context);
       const { id } = validate(ThreadSchema, args);
       await recoverStalled({ ownerGUID: owner, id });
@@ -69,7 +69,7 @@ export default {
       return doc ? toResult(doc) : null;
     },
 
-    ImageAgentThreads: async (
+    imageAgentThreads: async (
       _: unknown,
       args: { limit?: number | null },
       context: Context,
@@ -84,8 +84,18 @@ export default {
       return docs.map(toResult);
     },
 
-    ImageAgentSimilar: async (_: unknown, args: { text: string }, context: Context) => {
-      const owner = context.tokenPayload?.UserGUID;
+    imageAgentNotifications: async (_: unknown, __: unknown, context: Context) => {
+      const owner = requireOwner(context);
+      await recoverStalled({ ownerGUID: owner });
+      // `$type` rather than null, which also matches threads from before the field and would notify all of them.
+      const docs = await ImageAgentThreads.find({ ownerGUID: owner, dismissedAt: { $type: 'null' } })
+        .sort({ updatedAt: -1 })
+        .lean<LeanImageAgentThread[]>();
+      return docs.map(toResult);
+    },
+
+    imageAgentSimilar: async (_: unknown, args: { text: string }, context: Context) => {
+      const owner = context.tokenPayload?.userGUID;
       if (!owner) {
         return [];
       }
@@ -94,12 +104,12 @@ export default {
       return docs.map(toResult);
     },
 
-    ImageAgentGallery: async (_: unknown, args: { limit?: number | null }) => {
+    imageAgentGallery: async (_: unknown, args: { limit?: number | null }) => {
       const { limit } = validate(GallerySchema, args);
       return galleryAssets(limit ?? 12);
     },
 
-    ImageAgentAllowance: async (_: unknown, __: unknown, context: Context) => {
+    imageAgentAllowance: async (_: unknown, __: unknown, context: Context) => {
       const owner = requireOwner(context);
       // A dead turn would otherwise read as busy.
       await recoverStalled({ ownerGUID: owner });
@@ -114,7 +124,7 @@ export default {
   },
 
   Mutation: {
-    ImageAgentSend: async (
+    imageAgentSend: async (
       _: unknown,
       args: { threadId?: string | null; text: string },
       context: Context,
@@ -156,7 +166,10 @@ export default {
          */
         const updated = await ImageAgentThreads.updateOne(
           { _id: input.threadId, ownerGUID: owner, status: ImageAgentThreadStatus.Idle },
-          { $push: { messages: said }, $set: { status: ImageAgentThreadStatus.Thinking } },
+          {
+            $push: { messages: said },
+            $set: { status: ImageAgentThreadStatus.Thinking, dismissedAt: null },
+          },
         );
         if (updated.matchedCount === 0) {
           throw NotFound(translate('api', 'image_agent_error_thread_busy'));
@@ -180,7 +193,7 @@ export default {
       return toResult(doc);
     },
 
-    ImageAgentRetry: async (
+    imageAgentRetry: async (
       _: unknown,
       args: { threadId: string; messageId?: string | null },
       context: Context,
@@ -221,10 +234,27 @@ export default {
       }
       return toResult(doc);
     },
+
+    imageAgentDismiss: async (_: unknown, args: { id: string }, context: Context) => {
+      const owner = requireOwner(context);
+      const { id } = validate(ThreadSchema, args);
+
+      await ImageAgentThreads.updateOne(
+        {
+          _id: id,
+          ownerGUID: owner,
+          status: ImageAgentThreadStatus.Idle,
+          dismissedAt: { $type: 'null' },
+        },
+        { dismissedAt: new Date() },
+      );
+
+      return id;
+    },
   },
 
   Subscription: {
-    ImageAgentThreadUpdated: {
+    imageAgentThreadUpdated: {
       subscribe: withFilter(
         (_parent, _args, context?: Context) => {
           if (!context) {
@@ -234,15 +264,15 @@ export default {
           return imageAgentPubSub.asyncIterableIterator(IMAGE_AGENT_THREAD_UPDATED);
         },
         (
-          payload: { ImageAgentThreadUpdated?: ImageAgentThreadResult } | undefined,
+          payload: { imageAgentThreadUpdated?: ImageAgentThreadResult } | undefined,
           variables: { id?: string } | undefined,
           context?: Context,
         ) => {
-          const thread = payload?.ImageAgentThreadUpdated;
+          const thread = payload?.imageAgentThreadUpdated;
           return Boolean(
             thread
             && thread.id === variables?.id
-            && thread.ownerGUID === context?.tokenPayload?.UserGUID,
+            && thread.ownerGUID === context?.tokenPayload?.userGUID,
           );
         },
       ),

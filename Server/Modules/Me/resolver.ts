@@ -5,7 +5,7 @@ import { translate } from 'server/Helpers/translate.js';
 
 export default {
   Query: {
-    Me: async (_: unknown, __: unknown, context: Context) => {
+    me: async (_: unknown, __: unknown, context: Context) => {
       if (!context.tokenPayload) {
         throw Unauthenticated();
       }
@@ -13,12 +13,12 @@ export default {
       // Anonymous tokens get minimal info
       if (context.tokenPayload.aud === 'anon') {
         return {
-          UserGUID: context.tokenPayload.UserGUID,
-          Email: null,
-          FirstName: null,
-          LastName: null,
-          Avatar: null,
-          Active: false,
+          userGUID: context.tokenPayload.userGUID,
+          email: null,
+          firstName: null,
+          lastName: null,
+          avatar: null,
+          active: false,
           aud: 'anon',
         };
       }
@@ -34,8 +34,8 @@ export default {
 
       // Authenticated users get their own profile
       const user = await Users.findOne(
-        { UserGUID: context.tokenPayload.UserGUID, Active: true },
-        'UserGUID Email FirstName LastName Avatar Active',
+        { userGUID: context.tokenPayload.userGUID, active: true },
+        'userGUID email firstName lastName avatar active',
       );
 
       if (!user) {
@@ -43,12 +43,12 @@ export default {
       }
 
       return {
-        UserGUID: user.UserGUID,
-        Email: user.Email,
-        FirstName: user.FirstName,
-        LastName: user.LastName,
-        Avatar: user.Avatar,
-        Active: user.Active,
+        userGUID: user.userGUID,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        active: user.active,
         aud: 'user',
       };
     },

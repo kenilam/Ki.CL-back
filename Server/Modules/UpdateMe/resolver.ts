@@ -8,26 +8,26 @@ import { translate } from 'server/Helpers/translate.js';
 export default {
   Mutation: {
     // The password has its own module, `PasswordChange`, because it is confirmed by email.
-    UpdateMe: async (_: unknown, args: { UpdateMe: unknown }, context: Context) => {
+    updateMe: async (_: unknown, args: { updateMe: unknown }, context: Context) => {
       if (!context.user) {
         throw Unauthenticated();
       }
 
-      const input = validate(UpdateMeSchema, args.UpdateMe);
+      const input = validate(UpdateMeSchema, args.updateMe);
 
-      const user = await Users.findOne({ UserGUID: context.user.UserGUID, Active: true });
+      const user = await Users.findOne({ userGUID: context.user.userGUID, active: true });
 
       if (!user) {
         throw Unauthenticated(translate('api', 'error_user_not_found'));
       }
 
       // A field left out is kept. An empty one is cleared.
-      if (input.FirstName !== undefined) {
-        user.FirstName = input.FirstName || null;
+      if (input.firstName !== undefined) {
+        user.firstName = input.firstName || null;
       }
 
-      if (input.LastName !== undefined) {
-        user.LastName = input.LastName || null;
+      if (input.lastName !== undefined) {
+        user.lastName = input.lastName || null;
       }
 
       await user.save();

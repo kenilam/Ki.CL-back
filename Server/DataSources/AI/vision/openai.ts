@@ -24,6 +24,9 @@ export async function chatOpenAiVision(
   const model = resolveOpenAiVisionModel();
   const provider = `openai:${model}`;
   const dataUrl = `data:${options.mime};base64,${options.image.toString('base64')}`;
+  const attachment = options.mime === 'application/pdf'
+    ? { type: 'file', file: { filename: 'attachment.pdf', file_data: dataUrl } }
+    : { type: 'image_url', image_url: { url: dataUrl } };
 
   const response = await fetch(OPENAI_CHAT_URL, {
     method: 'POST',
@@ -41,7 +44,7 @@ export async function chatOpenAiVision(
           role: 'user',
           content: [
             { type: 'text', text: options.user },
-            { type: 'image_url', image_url: { url: dataUrl } },
+            attachment,
           ],
         },
       ],

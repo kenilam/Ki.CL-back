@@ -39,13 +39,13 @@ function confirmUrl(context: Context): string {
 
 /** The request an emailed link points to, while the link can still be confirmed. */
 async function findConfirmable(input: { id: string; secret: string }) {
-  const doc = await PasswordChanges.findOne({ PasswordChangeGUID: input.id });
+  const doc = await PasswordChanges.findOne({ passwordChangeGUID: input.id });
 
   const matches =
     !!doc &&
-    !doc.Confirmed &&
-    doc.ExpiresAt.getTime() > Date.now() &&
-    timingSafeEqual(sha256(input.secret), Buffer.from(doc.Secret, 'hex'));
+    !doc.confirmed &&
+    doc.expiresAt.getTime() > Date.now() &&
+    timingSafeEqual(sha256(input.secret), Buffer.from(doc.secret, 'hex'));
 
   return matches ? doc : null;
 }
@@ -60,51 +60,51 @@ function requireUser(context: Context) {
 
 export default {
   Query: {
-    PasswordChange: async (_: unknown, __: unknown, context: Context) => {
-      const { UserGUID } = requireUser(context);
+    passwordChange: async (_: unknown, __: unknown, context: Context) => {
+      const { userGUID } = requireUser(context);
 
-      const doc = await PasswordChanges.findOne({ UserGUID });
-      const result = doc && toResult(doc.PasswordChangeGUID, doc);
+      const doc = await PasswordChanges.findOne({ userGUID });
+      const result = doc && toResult(doc.passwordChangeGUID, doc);
 
       return result?.status === PasswordChangeStatus.Expired ? null : result;
     },
 
     // Lets the link's page say it is spent before offering to confirm it again.
-    PasswordChangeLink: async (_: unknown, args: { PasswordChangeLink: unknown }) => {
-      const input = validate(PasswordChangeConfirmSchema, args.PasswordChangeLink);
+    passwordChangeLink: async (_: unknown, args: { passwordChangeLink: unknown }) => {
+      const input = validate(PasswordChangeConfirmSchema, args.passwordChangeLink);
 
       return Boolean(await findConfirmable(input));
     },
   },
 
   Mutation: {
-    PasswordChangeRequest: async (
+    passwordChangeRequest: async (
       _: unknown,
-      args: { PasswordChangeRequest: unknown },
+      args: { passwordChangeRequest: unknown },
       context: Context,
     ) => {
-      const { Email, UserGUID } = requireUser(context);
-      const input = validate(PasswordChangeRequestSchema, args.PasswordChangeRequest);
+      const { email, userGUID } = requireUser(context);
+      const input = validate(PasswordChangeRequestSchema, args.passwordChangeRequest);
       const url = confirmUrl(context);
 
-      const user = await Users.findOne({ UserGUID, Active: true }, 'Password');
+      const user = await Users.findOne({ userGUID, active: true }, 'password');
 
       // Checked before anything is sent, so a wrong password costs no email.
-      if (!user || !(await bcrypt.compare(input.CurrentPassword, user.Password))) {
+      if (!user || !(await bcrypt.compare(input.currentPassword, user.password))) {
         throw BadUserInput(translate('api', 'error_password_current_incorrect'));
       }
 
-      if (input.Password === input.CurrentPassword) {
+      if (input.password === input.currentPassword) {
         throw BadUserInput(translate('api', 'error_password_unchanged'));
       }
 
-      const earlier = await PasswordChanges.findOne({ UserGUID });
+      const earlier = await PasswordChanges.findOne({ userGUID });
 
       if (earlier && earlier.createdAt.getTime() > Date.now() - COOLDOWN_MS) {
         throw TooManyRequests(translate('api', 'error_password_link_cooldown'));
       }
 
-      await PasswordChanges.deleteOne({ UserGUID });
+      await PasswordChanges.deleteOne({ userGUID });
 
       const id = randomUUID();
       const secret = randomBytes(32).toString('base64url');
@@ -114,27 +114,27 @@ export default {
        * there. The link still sets nothing by itself, because the password is
        * the one given here, by someone who knew the current one.
        */
-      const { hash } = await generatePassword({ password: input.Password });
+      const { hash } = await generatePassword({ password: input.password });
 
       const doc = await PasswordChanges.create({
-        PasswordChangeGUID: id,
-        UserGUID,
-        Secret: sha256(secret).toString('hex'),
-        Password: hash,
-        ExpiresAt: new Date(Date.now() + LINK_MS),
+        passwordChangeGUID: id,
+        userGUID,
+        secret: sha256(secret).toString('hex'),
+        password: hash,
+        expiresAt: new Date(Date.now() + LINK_MS),
       });
 
       // After `#`, so the secret is never sent to a server or kept in its logs.
       await Gmail.send({
-        to: Email,
+        to: email,
         ...Gmail.emails.passwordChangeConfirm({ link: `${url}#${id}.${secret}`, minutes: LINK_MS / 60_000 }),
       });
 
       return toResult(id, doc);
     },
 
-    PasswordChangeConfirm: async (_: unknown, args: { PasswordChangeConfirm: unknown }) => {
-      const input = validate(PasswordChangeConfirmSchema, args.PasswordChangeConfirm);
+    passwordChangeConfirm: async (_: unknown, args: { passwordChangeConfirm: unknown }) => {
+      const input = validate(PasswordChangeConfirmSchema, args.passwordChangeConfirm);
 
       const doc = await findConfirmable(input);
 
@@ -143,50 +143,50 @@ export default {
         throw BadUserInput(translate('api', 'error_password_link_expired'));
       }
 
-      doc.Confirmed = true;
-      doc.ExpiresAt = new Date(Date.now() + COMPLETE_MS);
+      doc.confirmed = true;
+      doc.expiresAt = new Date(Date.now() + COMPLETE_MS);
       await doc.save();
 
       return true;
     },
 
-    PasswordChangeComplete: async (
+    passwordChangeComplete: async (
       _: unknown,
-      args: { PasswordChangeComplete: unknown },
+      args: { passwordChangeComplete: unknown },
       context: Context,
     ) => {
-      const { Email, UserGUID } = requireUser(context);
-      const input = validate(PasswordChangeCompleteSchema, args.PasswordChangeComplete);
+      const { email, userGUID } = requireUser(context);
+      const input = validate(PasswordChangeCompleteSchema, args.passwordChangeComplete);
 
       // Deleted as it is read, so a confirmed request sets one password.
       const doc = await PasswordChanges.findOneAndDelete({
-        PasswordChangeGUID: input.id,
-        UserGUID,
-        Confirmed: true,
-        ExpiresAt: { $gt: new Date() },
+        passwordChangeGUID: input.id,
+        userGUID,
+        confirmed: true,
+        expiresAt: { $gt: new Date() },
       });
 
       // Already hashed, so it is written past the model's hook, which would hash it again.
-      const saved = doc && (await Users.updateOne({ UserGUID, Active: true }, { Password: doc.Password }));
+      const saved = doc && (await Users.updateOne({ userGUID, active: true }, { password: doc.password }));
 
       if (!saved?.matchedCount) {
         throw BadUserInput(translate('api', 'error_password_change_unconfirmed'));
       }
 
       // New tokens replace the stored refresh token, so a session on another device can't renew.
-      const { AccessToken, RefreshToken } = await generateUserToken({
-        UserGUID,
+      const { accessToken, refreshToken } = await generateUserToken({
+        userGUID,
         aud: 'user',
         human: context.tokenPayload?.human,
       });
 
-      setAccessTokenCookie(context.res, AccessToken);
-      setRefreshTokenCookie(context.res, RefreshToken);
+      setAccessTokenCookie(context.res, accessToken);
+      setRefreshTokenCookie(context.res, refreshToken);
       setAudCookie(context.res, 'user');
 
       // The password has changed either way, so a failed notice doesn't fail the request.
       await Gmail.send({
-        to: Email,
+        to: email,
         ...Gmail.emails.passwordChanged(),
       }).catch((error) => console.error('PasswordChange: notice not sent', error));
 
@@ -195,13 +195,13 @@ export default {
   },
 
   Subscription: {
-    PasswordChangeUpdated: {
+    passwordChangeUpdated: {
       subscribe: (_: unknown, args: { id: string }, context?: Context) => {
         if (!context?.user) {
           throw Unauthenticated();
         }
 
-        return watch(args.id, context.user.UserGUID);
+        return watch(args.id, context.user.userGUID);
       },
     },
   },

@@ -4,12 +4,12 @@ import type { TokenPayload } from 'server/Helpers/auth.js';
 import { getAccessTokenExpiry, getRefreshTokenExpiry, secondsUntil } from 'server/Helpers/tokenExpiry.js';
 
 /** `human` is carried into both tokens, so a refresh keeps it. */
-type GenerateUserTokenProps = Pick<TokenPayload, 'UserGUID' | 'human'> &
+type GenerateUserTokenProps = Pick<TokenPayload, 'userGUID' | 'human'> &
   Partial<Pick<TokenPayload, 'aud'>>;
 
-export type UserTokenPayload = Pick<TokenPayload, 'UserGUID' | 'aud'> & {
-  AccessToken: string;
-  RefreshToken: string;
+export type UserTokenPayload = Pick<TokenPayload, 'userGUID' | 'aud'> & {
+  accessToken: string;
+  refreshToken: string;
 };
 
 export async function generateUserToken(
@@ -25,18 +25,18 @@ export async function generateUserToken(
   const refreshExpiresIn = secondsUntil(refreshExpiry, now);
 
   const payload = {
-    UserGUID: props.UserGUID,
+    userGUID: props.userGUID,
     aud,
     ...(props.human ? { human: true } : {}),
   };
 
-  const AccessToken = jwt.sign(
+  const accessToken = jwt.sign(
     payload,
     process.env.JWT_ACCESS_TOKEN_PRIVATE_KEY!,
     { expiresIn: accessExpiresIn },
   );
 
-  const RefreshToken = jwt.sign(
+  const refreshToken = jwt.sign(
     payload,
     process.env.JWT_REFRESH_TOKEN_PRIVATE_KEY!,
     { expiresIn: refreshExpiresIn },
@@ -44,19 +44,19 @@ export async function generateUserToken(
 
   // Only store token records for authenticated users
   if (aud === 'user') {
-    await UserTokens.deleteOne({ UserGUID: props.UserGUID });
+    await UserTokens.deleteOne({ userGUID: props.userGUID });
     await UserTokens.create({
-      UserGUID: props.UserGUID,
-      Token: RefreshToken,
-      CreatedAt: now,
-      LastSignedInAt: now,
+      userGUID: props.userGUID,
+      token: refreshToken,
+      createdAt: now,
+      lastSignedInAt: now,
     });
   }
 
   return {
-    AccessToken,
-    RefreshToken,
-    UserGUID: props.UserGUID,
+    accessToken,
+    refreshToken,
+    userGUID: props.userGUID,
     aud,
   };
 }

@@ -36,9 +36,9 @@ export type AcceptLanguageStatus = {
 };
 
 export type ActivateInput = {
-  RegistrationGUID: Scalars['UUID']['input'];
-  Secret: Scalars['String']['input'];
-  UserGUID: Scalars['UUID']['input'];
+  registrationGUID: Scalars['UUID']['input'];
+  secret: Scalars['String']['input'];
+  userGUID: Scalars['UUID']['input'];
 };
 
 export type Asset = {
@@ -53,12 +53,12 @@ export type Asset = {
 };
 
 export type ContactInput = {
-  Email: Scalars['EmailAddress']['input'];
-  Message: Scalars['String']['input'];
+  email: Scalars['EmailAddress']['input'];
+  message: Scalars['String']['input'];
 };
 
 export type DeleteMeInput = {
-  CurrentPassword: Scalars['String']['input'];
+  currentPassword: Scalars['String']['input'];
 };
 
 /** What the caller may still draw today. */
@@ -179,65 +179,287 @@ export enum ImageAgentThreadStatus {
   Thinking = 'THINKING'
 }
 
+/** Sheets the caller may still read today. */
+export type KineticLightAllowance = {
+  __typename?: 'KineticLightAllowance';
+  /** One of the caller's sheets is being read. A new one is refused until it ends. */
+  busy: Scalars['Boolean']['output'];
+  limit: Scalars['Int']['output'];
+  /** Set while the caller has to wait before the next read. */
+  nextAllowedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Also 0 while the service is at its own limit. */
+  remaining: Scalars['Int']['output'];
+};
+
+/**
+ * How a song starts, chosen by a model from the song's outline: the piano, the
+ * drums, the scene's settings and a drum part in sections. `speed` runs from 3
+ * to 20, `hue` from 0 to 1 and `glow` from 0 to 3, as in the player's settings.
+ */
+export type KineticLightArrangement = {
+  __typename?: 'KineticLightArrangement';
+  beat: KineticLightBeat;
+  glow: Scalars['Float']['output'];
+  hue: Scalars['Float']['output'];
+  sections: Array<KineticLightSection>;
+  speed: Scalars['Float']['output'];
+  /** The outline's `steps`, which the patterns are written in. */
+  steps: Scalars['Int']['output'];
+  voice: KineticLightVoice;
+};
+
+/**
+ * The drums a song starts with: none, the acoustic kit, the same kit recorded
+ * lo-fi, hand percussion, or the LinnDrum and TR-808 drum machines.
+ */
+export enum KineticLightBeat {
+  Kit = 'KIT',
+  Linndrum = 'LINNDRUM',
+  Lofi = 'LOFI',
+  Machine = 'MACHINE',
+  None = 'NONE',
+  Percussion = 'PERCUSSION'
+}
+
+/** A chord symbol printed above the staff. `bar` and `beat` count from 1, in quarter notes. */
+export type KineticLightChord = {
+  __typename?: 'KineticLightChord';
+  bar: Scalars['Int']['output'];
+  beat: Scalars['Float']['output'];
+  symbol: Scalars['String']['output'];
+};
+
+/**
+ * The attached image or PDF. `data` is its bytes in base64. `name` is the file's
+ * name: the song's title until the reader finds one, and a hint for finding it.
+ * The name itself isn't kept.
+ */
+export type KineticLightFile = {
+  data: Scalars['String']['input'];
+  name: Scalars['NonEmptyString']['input'];
+};
+
+/**
+ * What a model is told about a song so it can arrange it. `steps` is how many
+ * steps a beat is split into: 2 for eighth notes, 3 for triplets, 4 for
+ * sixteenths. `bars` has one string for each bar, with one character for each
+ * step: `b` where a note below middle C starts, `x` where another note starts,
+ * and `.` where none does.
+ */
+export type KineticLightOutline = {
+  bars: Array<Scalars['String']['input']>;
+  beatsPerBar: Scalars['Int']['input'];
+  steps: Scalars['Int']['input'];
+  /** Quarter-note beats per minute. */
+  tempo: Scalars['Float']['input'];
+  title: Scalars['NonEmptyString']['input'];
+};
+
+/**
+ * One bar of drums, one string for each drum with one character for each step:
+ * `X` an accented hit, `x` a hit, `.` nothing. On the drum machine, `snare` is
+ * played as a clap. In hand percussion, `kick` is a low conga, `snare` a conga
+ * slap, `hat` and `openHat` a shaker, `ride` a high bongo, `highTom` a high
+ * conga, `lowTom` a low bongo, and `crash` a big low conga.
+ */
+export type KineticLightPattern = {
+  __typename?: 'KineticLightPattern';
+  hat: Scalars['String']['output'];
+  highTom: Scalars['String']['output'];
+  kick: Scalars['String']['output'];
+  lowTom: Scalars['String']['output'];
+  openHat: Scalars['String']['output'];
+  ride: Scalars['String']['output'];
+  snare: Scalars['String']['output'];
+};
+
+/**
+ * A song behind a link, kept for 30 days, or for good when it's an example: a
+ * sheet the API read, or a MIDI or MusicXML file. For a sheet, the notes come
+ * from the sheet reader and everything else from a vision model. While READING,
+ * the counts, title, tempo and chords fill in as each reader gets to them, and
+ * `musicxml` waits for the end. When READY, a field is null, or `chords` empty,
+ * when its reader failed or found nothing.
+ */
+export type KineticLightReading = {
+  __typename?: 'KineticLightReading';
+  /** Null until the owner has asked a model to arrange the song. */
+  arrangement?: Maybe<KineticLightArrangement>;
+  /** Bars the sheet reader found. */
+  bars?: Maybe<Scalars['Int']['output']>;
+  beatsPerBar?: Maybe<Scalars['Int']['output']>;
+  chords: Array<KineticLightChord>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Why the read failed, in the visitor's language. Null unless FAILED. */
+  failure?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The MIDI file, in base64. */
+  midi?: Maybe<Scalars['String']['output']>;
+  /** The caller made this song, so they can ask for an arrangement. */
+  mine: Scalars['Boolean']['output'];
+  /** The notes on the staff, as MusicXML. */
+  musicxml?: Maybe<Scalars['String']['output']>;
+  /** Pitched notes the sheet reader found. */
+  notes?: Maybe<Scalars['Int']['output']>;
+  source: KineticLightSource;
+  /** Null once the reading has finished. */
+  stage?: Maybe<KineticLightStage>;
+  status: KineticLightStatus;
+  /** Quarter-note beats per minute. */
+  tempo?: Maybe<Scalars['Float']['output']>;
+  /** The file's name without its extension, until a reader finds the title. */
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+/**
+ * Bars `from` to `to`, counted from 1, that share a drum pattern. With no
+ * `pattern` the drums rest. `fill` replaces the pattern on the section's last bar.
+ */
+export type KineticLightSection = {
+  __typename?: 'KineticLightSection';
+  /** A crash on the section's first beat. */
+  crash: Scalars['Boolean']['output'];
+  fill?: Maybe<KineticLightPattern>;
+  from: Scalars['Int']['output'];
+  pattern?: Maybe<KineticLightPattern>;
+  to: Scalars['Int']['output'];
+};
+
+/** A song in a list, without its notes. */
+export type KineticLightSong = {
+  __typename?: 'KineticLightSong';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  source: KineticLightSource;
+  title: Scalars['String']['output'];
+};
+
+/**
+ * A MIDI or MusicXML file the browser has read, to keep behind a link, with the
+ * title the browser read from it: `midi` is the MIDI file in base64, `musicxml`
+ * the MusicXML text. Give one of them.
+ */
+export type KineticLightSongInput = {
+  midi?: InputMaybe<Scalars['String']['input']>;
+  musicxml?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['NonEmptyString']['input'];
+};
+
+/** Where a song came from: a sheet the API read, or a MIDI or MusicXML file. */
+export enum KineticLightSource {
+  File = 'FILE',
+  Sheet = 'SHEET'
+}
+
+/** What a reading is busy with: the notes on the staff, then the chord symbols. */
+export enum KineticLightStage {
+  Chords = 'CHORDS',
+  Notes = 'NOTES'
+}
+
+export enum KineticLightStatus {
+  Failed = 'FAILED',
+  Reading = 'READING',
+  Ready = 'READY'
+}
+
+export enum KineticLightVoice {
+  Grand = 'GRAND',
+  Sixteen = 'SIXTEEN',
+  Synth = 'SYNTH',
+  Upright = 'UPRIGHT',
+  Wurlitzer = 'WURLITZER'
+}
+
 export type MePayload = {
   __typename?: 'MePayload';
-  Active?: Maybe<Scalars['Boolean']['output']>;
-  Avatar?: Maybe<Scalars['String']['output']>;
-  Email?: Maybe<Scalars['EmailAddress']['output']>;
-  FirstName?: Maybe<Scalars['String']['output']>;
-  LastName?: Maybe<Scalars['String']['output']>;
-  /** The portfolio pieces this user may open. Empty for an anonymous session. */
-  Portfolios: Array<Portfolio>;
-  UserGUID?: Maybe<Scalars['UUID']['output']>;
+  active?: Maybe<Scalars['Boolean']['output']>;
   aud?: Maybe<Scalars['String']['output']>;
+  avatar?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['EmailAddress']['output']>;
+  firstName?: Maybe<Scalars['String']['output']>;
+  lastName?: Maybe<Scalars['String']['output']>;
+  /** The portfolio pieces this user may open. Empty for an anonymous session. */
+  portfolios: Array<Portfolio>;
+  userGUID?: Maybe<Scalars['UUID']['output']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  Activate?: Maybe<Scalars['Boolean']['output']>;
+  activate?: Maybe<Scalars['Boolean']['output']>;
   /** Sends a message to the site's owner and acknowledges it at the sender's address. Needs a session that passed the Turnstile check. */
-  Contact?: Maybe<Scalars['Boolean']['output']>;
-  DeleteMe?: Maybe<Scalars['Boolean']['output']>;
-  ExchangeToken?: Maybe<Scalars['Boolean']['output']>;
+  contact?: Maybe<Scalars['Boolean']['output']>;
+  deleteMe?: Maybe<Scalars['Boolean']['output']>;
+  exchangeToken?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Marks a conversation's ended turn as seen, so it leaves
+   * ImageAgentNotifications until its next turn.
+   */
+  imageAgentDismiss: Scalars['ID']['output'];
   /**
    * Go back to one of the person's messages and ask it again. Everything from
    * that message on leaves the conversation, and the message is sent again.
    * Without `messageId`, the person's last message.
    */
-  ImageAgentRetry: ImageAgentThread;
+  imageAgentRetry: ImageAgentThread;
   /**
    * Say something to the agent. Starts a conversation when `threadId` is not
    * given. Returns as soon as the message is recorded; the reply arrives on
    * ImageAgentThreadUpdated.
    */
-  ImageAgentSend: ImageAgentThread;
+  imageAgentSend: ImageAgentThread;
+  /**
+   * Asks a model to choose how the caller's song starts and to write its drums,
+   * from an outline the browser made of it. A song is arranged once: one that
+   * already has an arrangement comes back as it is.
+   */
+  kineticLightArrange: KineticLightReading;
+  /**
+   * Marks a finished reading as seen, so it leaves KineticLightReadings. The
+   * song and its link stay until it expires.
+   */
+  kineticLightDismiss: Scalars['ID']['output'];
+  /**
+   * Starts reading the notes and chord symbols in an image or PDF of sheet music,
+   * and answers at once with the reading as READING. KineticLightReadingUpdated
+   * pushes it when it's done. A caller has one reading at a time.
+   */
+  kineticLightRead: KineticLightReading;
+  /** Keeps a MIDI or MusicXML file as a song, so it has a link. */
+  kineticLightSave: KineticLightReading;
   /** Sets the password kept with the request, once it has been confirmed. */
-  PasswordChangeComplete?: Maybe<Scalars['Boolean']['output']>;
+  passwordChangeComplete?: Maybe<Scalars['Boolean']['output']>;
   /** Called from the emailed link. Any session may call it: the secret is the proof. */
-  PasswordChangeConfirm?: Maybe<Scalars['Boolean']['output']>;
+  passwordChangeConfirm?: Maybe<Scalars['Boolean']['output']>;
   /** Checks the current password, keeps the new one hashed, and emails the signed-in user a link to confirm the change. */
-  PasswordChangeRequest: PasswordChange;
-  RefreshToken?: Maybe<Scalars['Boolean']['output']>;
-  Register?: Maybe<Scalars['Boolean']['output']>;
-  SignIn?: Maybe<Scalars['Boolean']['output']>;
-  SignOut?: Maybe<Scalars['Boolean']['output']>;
-  SocialSignIn?: Maybe<Scalars['Boolean']['output']>;
-  UpdateMe?: Maybe<Scalars['Boolean']['output']>;
+  passwordChangeRequest: PasswordChange;
+  refreshToken?: Maybe<Scalars['Boolean']['output']>;
+  register?: Maybe<Scalars['Boolean']['output']>;
+  signIn?: Maybe<Scalars['Boolean']['output']>;
+  signOut?: Maybe<Scalars['Boolean']['output']>;
+  socialSignIn?: Maybe<Scalars['Boolean']['output']>;
+  updateMe?: Maybe<Scalars['Boolean']['output']>;
 };
 
 
 export type MutationActivateArgs = {
-  Activate: ActivateInput;
+  activate: ActivateInput;
 };
 
 
 export type MutationContactArgs = {
-  Contact: ContactInput;
+  contact: ContactInput;
 };
 
 
 export type MutationDeleteMeArgs = {
-  DeleteMe: DeleteMeInput;
+  deleteMe: DeleteMeInput;
+};
+
+
+export type MutationImageAgentDismissArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -253,38 +475,59 @@ export type MutationImageAgentSendArgs = {
 };
 
 
+export type MutationKineticLightArrangeArgs = {
+  id: Scalars['ID']['input'];
+  outline: KineticLightOutline;
+};
+
+
+export type MutationKineticLightDismissArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationKineticLightReadArgs = {
+  file: KineticLightFile;
+};
+
+
+export type MutationKineticLightSaveArgs = {
+  song: KineticLightSongInput;
+};
+
+
 export type MutationPasswordChangeCompleteArgs = {
-  PasswordChangeComplete: PasswordChangeCompleteInput;
+  passwordChangeComplete: PasswordChangeCompleteInput;
 };
 
 
 export type MutationPasswordChangeConfirmArgs = {
-  PasswordChangeConfirm: PasswordChangeConfirmInput;
+  passwordChangeConfirm: PasswordChangeConfirmInput;
 };
 
 
 export type MutationPasswordChangeRequestArgs = {
-  PasswordChangeRequest: PasswordChangeRequestInput;
+  passwordChangeRequest: PasswordChangeRequestInput;
 };
 
 
 export type MutationRegisterArgs = {
-  Register: RegisterInput;
+  register: RegisterInput;
 };
 
 
 export type MutationSignInArgs = {
-  SignIn: SignInInput;
+  signIn: SignInInput;
 };
 
 
 export type MutationSocialSignInArgs = {
-  SocialSignIn: SocialSignInInput;
+  socialSignIn: SocialSignInInput;
 };
 
 
 export type MutationUpdateMeArgs = {
-  UpdateMe: UpdateMeInput;
+  updateMe: UpdateMeInput;
 };
 
 export type PasswordChange = {
@@ -304,8 +547,8 @@ export type PasswordChangeConfirmInput = {
 };
 
 export type PasswordChangeRequestInput = {
-  CurrentPassword: Scalars['String']['input'];
-  Password: Scalars['String']['input'];
+  currentPassword: Scalars['String']['input'];
+  password: Scalars['String']['input'];
 };
 
 export enum PasswordChangeStatus {
@@ -316,8 +559,8 @@ export enum PasswordChangeStatus {
 
 export type Portfolio = {
   __typename?: 'Portfolio';
-  Path?: Maybe<Scalars['String']['output']>;
-  PortfolioGUID?: Maybe<Scalars['UUID']['output']>;
+  path?: Maybe<Scalars['String']['output']>;
+  portfolioGUID?: Maybe<Scalars['UUID']['output']>;
 };
 
 export enum Provider {
@@ -327,28 +570,42 @@ export enum Provider {
 
 export type Query = {
   __typename?: 'Query';
-  Asset?: Maybe<Asset>;
-  ImageAgentAllowance: ImageAgentAllowance;
+  asset?: Maybe<Asset>;
+  imageAgentAllowance: ImageAgentAllowance;
   /**
    * The best-scored pictures from anyone's conversations, highest first.
    * Only the asset: no text, owner or conversation.
    * At most 24; 12 when `limit` is not given.
    */
-  ImageAgentGallery: Array<Asset>;
+  imageAgentGallery: Array<Asset>;
+  /**
+   * The caller's conversations with a turn running, or whose last turn ended and
+   * hasn't been dismissed, most recently active first.
+   */
+  imageAgentNotifications: Array<ImageAgentThread>;
   /**
    * The caller's conversations that already cover most of what `text` asks for,
    * closest first, at most three. For offering to continue one instead of
    * starting over.
    */
-  ImageAgentSimilar: Array<ImageAgentThread>;
-  ImageAgentThread?: Maybe<ImageAgentThread>;
+  imageAgentSimilar: Array<ImageAgentThread>;
+  imageAgentThread?: Maybe<ImageAgentThread>;
   /** The caller's conversations, most recently active first. */
-  ImageAgentThreads: Array<ImageAgentThread>;
-  Me?: Maybe<MePayload>;
+  imageAgentThreads: Array<ImageAgentThread>;
+  kineticLightAllowance: KineticLightAllowance;
+  /** The example songs every visitor can play, in the order they were added. */
+  kineticLightExamples: Array<KineticLightSong>;
+  /** A song by its id, for anyone with the link. Null once it has expired. */
+  kineticLightReading?: Maybe<KineticLightReading>;
+  /** The caller's sheet readings that haven't been dismissed, newest first. */
+  kineticLightReadings: Array<KineticLightReading>;
+  /** The caller's songs that are ready to play, newest first. */
+  kineticLightSongs: Array<KineticLightSong>;
+  me?: Maybe<MePayload>;
   /** The signed-in user's request that is still waiting or confirmed, so a reloaded page can pick it up. */
-  PasswordChange?: Maybe<PasswordChange>;
+  passwordChange?: Maybe<PasswordChange>;
   /** Whether the emailed link can still be confirmed. Any session may ask: the secret is the proof. */
-  PasswordChangeLink: Scalars['Boolean']['output'];
+  passwordChangeLink: Scalars['Boolean']['output'];
   /**
    * Find taxa by name.
    *
@@ -358,8 +615,8 @@ export type Query = {
    * still works, and the cost of the remote call is paid only when it buys
    * something.
    */
-  TaxonSearch: Array<TaxonSearchResult>;
-  TaxonVisual: TaxonVisual;
+  taxonSearch: Array<TaxonSearchResult>;
+  taxonVisual: TaxonVisual;
   /**
    * Every string of the namespaces asked for. Each comes from the first language
    * that has it: the request's Accept-Language header in its q order, then
@@ -368,20 +625,20 @@ export type Query = {
    * Runs without a session: the site needs its words before it can start one,
    * and they are public.
    */
-  Translations: Array<Translation>;
+  translations: Array<Translation>;
   /**
    * Subtree from Open Tree of Life (cached in Mongo).
    * `ottId` defaults to 93302 (cellular organisms). `heightLimit` max 3.
    * Warm Mongo rows skip OTOL (known leaf or existing child edges).
    */
-  TreeOfLifeSubtree?: Maybe<TreeOfLifeNode>;
+  treeOfLifeSubtree?: Maybe<TreeOfLifeNode>;
   /**
    * Batch subtree roots in one request. Prefer this over parallel
    * `TreeOfLifeSubtree` calls (auto expand). Results are
    * `[...ottId roots, ...nodeId roots]` (nullable slots on hard miss).
    * Max 16 ids combined. Uses Mongo DataLoader batching + warm-path.
    */
-  TreeOfLifeSubtrees: Array<Maybe<TreeOfLifeNode>>;
+  treeOfLifeSubtrees: Array<Maybe<TreeOfLifeNode>>;
 };
 
 
@@ -410,8 +667,13 @@ export type QueryImageAgentThreadsArgs = {
 };
 
 
+export type QueryKineticLightReadingArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryPasswordChangeLinkArgs = {
-  PasswordChangeLink: PasswordChangeConfirmInput;
+  passwordChangeLink: PasswordChangeConfirmInput;
 };
 
 
@@ -447,32 +709,34 @@ export type QueryTreeOfLifeSubtreesArgs = {
 };
 
 export type RegisterInput = {
-  Email: Scalars['EmailAddress']['input'];
-  FirstName?: InputMaybe<Scalars['String']['input']>;
-  LastName?: InputMaybe<Scalars['String']['input']>;
-  Password: Scalars['String']['input'];
+  email: Scalars['EmailAddress']['input'];
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  password: Scalars['String']['input'];
 };
 
 export type SignInInput = {
-  Email: Scalars['EmailAddress']['input'];
-  Password: Scalars['String']['input'];
+  email: Scalars['EmailAddress']['input'];
+  password: Scalars['String']['input'];
 };
 
 export type SocialSignInInput = {
-  Provider: Provider;
-  Token: Scalars['String']['input'];
+  provider: Provider;
+  token: Scalars['String']['input'];
 };
 
 export type Subscription = {
   __typename?: 'Subscription';
   /** Every language's status now, and again whenever one changes. */
-  AcceptLanguagesUpdated: Array<AcceptLanguageStatus>;
+  acceptLanguagesUpdated: Array<AcceptLanguageStatus>;
   /** Pushes the whole conversation on every change. */
-  ImageAgentThreadUpdated: ImageAgentThread;
+  imageAgentThreadUpdated: ImageAgentThread;
+  /** Pushes each of the caller's readings as it fills in and when it finishes. */
+  kineticLightReadingUpdated: KineticLightReading;
   /** The request's status now and on every change, until it is confirmed or expires. */
-  PasswordChangeUpdated: PasswordChange;
+  passwordChangeUpdated: PasswordChange;
   /** Pushes when async studio generation settles (READY, ERROR, or EXHAUSTED). */
-  TaxonVisualUpdated: TaxonVisual;
+  taxonVisualUpdated: TaxonVisual;
 };
 
 
@@ -598,8 +862,8 @@ export type TreeOfLifeNode = {
 };
 
 export type UpdateMeInput = {
-  FirstName?: InputMaybe<Scalars['String']['input']>;
-  LastName?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -699,6 +963,21 @@ export type ResolversTypes = ResolversObject<{
   ImageAgentThreadStatus: ImageAgentThreadStatus;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   JWT: ResolverTypeWrapper<Scalars['JWT']['output']>;
+  KineticLightAllowance: ResolverTypeWrapper<KineticLightAllowance>;
+  KineticLightArrangement: ResolverTypeWrapper<KineticLightArrangement>;
+  KineticLightBeat: KineticLightBeat;
+  KineticLightChord: ResolverTypeWrapper<KineticLightChord>;
+  KineticLightFile: KineticLightFile;
+  KineticLightOutline: KineticLightOutline;
+  KineticLightPattern: ResolverTypeWrapper<KineticLightPattern>;
+  KineticLightReading: ResolverTypeWrapper<KineticLightReading>;
+  KineticLightSection: ResolverTypeWrapper<KineticLightSection>;
+  KineticLightSong: ResolverTypeWrapper<KineticLightSong>;
+  KineticLightSongInput: KineticLightSongInput;
+  KineticLightSource: KineticLightSource;
+  KineticLightStage: KineticLightStage;
+  KineticLightStatus: KineticLightStatus;
+  KineticLightVoice: KineticLightVoice;
   MePayload: ResolverTypeWrapper<MePayload>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   NonEmptyString: ResolverTypeWrapper<Scalars['NonEmptyString']['output']>;
@@ -747,6 +1026,16 @@ export type ResolversParentTypes = ResolversObject<{
   ImageAgentThread: ImageAgentThread;
   Int: Scalars['Int']['output'];
   JWT: Scalars['JWT']['output'];
+  KineticLightAllowance: KineticLightAllowance;
+  KineticLightArrangement: KineticLightArrangement;
+  KineticLightChord: KineticLightChord;
+  KineticLightFile: KineticLightFile;
+  KineticLightOutline: KineticLightOutline;
+  KineticLightPattern: KineticLightPattern;
+  KineticLightReading: KineticLightReading;
+  KineticLightSection: KineticLightSection;
+  KineticLightSong: KineticLightSong;
+  KineticLightSongInput: KineticLightSongInput;
   MePayload: MePayload;
   Mutation: Record<PropertyKey, never>;
   NonEmptyString: Scalars['NonEmptyString']['output'];
@@ -842,33 +1131,106 @@ export interface JwtScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes[
   name: 'JWT';
 }
 
+export type KineticLightAllowanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightAllowance'] = ResolversParentTypes['KineticLightAllowance']> = ResolversObject<{
+  busy?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  limit?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  nextAllowedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  remaining?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+}>;
+
+export type KineticLightArrangementResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightArrangement'] = ResolversParentTypes['KineticLightArrangement']> = ResolversObject<{
+  beat?: Resolver<ResolversTypes['KineticLightBeat'], ParentType, ContextType>;
+  glow?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  hue?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  sections?: Resolver<Array<ResolversTypes['KineticLightSection']>, ParentType, ContextType>;
+  speed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  steps?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  voice?: Resolver<ResolversTypes['KineticLightVoice'], ParentType, ContextType>;
+}>;
+
+export type KineticLightChordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightChord'] = ResolversParentTypes['KineticLightChord']> = ResolversObject<{
+  bar?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  beat?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  symbol?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type KineticLightPatternResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightPattern'] = ResolversParentTypes['KineticLightPattern']> = ResolversObject<{
+  hat?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  highTom?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  kick?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  lowTom?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  openHat?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  ride?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  snare?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
+export type KineticLightReadingResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightReading'] = ResolversParentTypes['KineticLightReading']> = ResolversObject<{
+  arrangement?: Resolver<Maybe<ResolversTypes['KineticLightArrangement']>, ParentType, ContextType>;
+  bars?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  beatsPerBar?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  chords?: Resolver<Array<ResolversTypes['KineticLightChord']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  failure?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  midi?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  mine?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  musicxml?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  notes?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  source?: Resolver<ResolversTypes['KineticLightSource'], ParentType, ContextType>;
+  stage?: Resolver<Maybe<ResolversTypes['KineticLightStage']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['KineticLightStatus'], ParentType, ContextType>;
+  tempo?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+}>;
+
+export type KineticLightSectionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightSection'] = ResolversParentTypes['KineticLightSection']> = ResolversObject<{
+  crash?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  fill?: Resolver<Maybe<ResolversTypes['KineticLightPattern']>, ParentType, ContextType>;
+  from?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  pattern?: Resolver<Maybe<ResolversTypes['KineticLightPattern']>, ParentType, ContextType>;
+  to?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+}>;
+
+export type KineticLightSongResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightSong'] = ResolversParentTypes['KineticLightSong']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  source?: Resolver<ResolversTypes['KineticLightSource'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+}>;
+
 export type MePayloadResolvers<ContextType = Context, ParentType extends ResolversParentTypes['MePayload'] = ResolversParentTypes['MePayload']> = ResolversObject<{
-  Active?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  Avatar?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  Email?: Resolver<Maybe<ResolversTypes['EmailAddress']>, ParentType, ContextType>;
-  FirstName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  LastName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  Portfolios?: Resolver<Array<ResolversTypes['Portfolio']>, ParentType, ContextType>;
-  UserGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
+  active?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   aud?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  avatar?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['EmailAddress']>, ParentType, ContextType>;
+  firstName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  lastName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  portfolios?: Resolver<Array<ResolversTypes['Portfolio']>, ParentType, ContextType>;
+  userGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  Activate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationActivateArgs, 'Activate'>>;
-  Contact?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationContactArgs, 'Contact'>>;
-  DeleteMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMeArgs, 'DeleteMe'>>;
-  ExchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  ImageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
-  ImageAgentSend?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentSendArgs, 'text'>>;
-  PasswordChangeComplete?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeCompleteArgs, 'PasswordChangeComplete'>>;
-  PasswordChangeConfirm?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeConfirmArgs, 'PasswordChangeConfirm'>>;
-  PasswordChangeRequest?: Resolver<ResolversTypes['PasswordChange'], ParentType, ContextType, RequireFields<MutationPasswordChangeRequestArgs, 'PasswordChangeRequest'>>;
-  RefreshToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  Register?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'Register'>>;
-  SignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSignInArgs, 'SignIn'>>;
-  SignOut?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  SocialSignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSocialSignInArgs, 'SocialSignIn'>>;
-  UpdateMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationUpdateMeArgs, 'UpdateMe'>>;
+  activate?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationActivateArgs, 'activate'>>;
+  contact?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationContactArgs, 'contact'>>;
+  deleteMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteMeArgs, 'deleteMe'>>;
+  exchangeToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  imageAgentDismiss?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationImageAgentDismissArgs, 'id'>>;
+  imageAgentRetry?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentRetryArgs, 'threadId'>>;
+  imageAgentSend?: Resolver<ResolversTypes['ImageAgentThread'], ParentType, ContextType, RequireFields<MutationImageAgentSendArgs, 'text'>>;
+  kineticLightArrange?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightArrangeArgs, 'id' | 'outline'>>;
+  kineticLightDismiss?: Resolver<ResolversTypes['ID'], ParentType, ContextType, RequireFields<MutationKineticLightDismissArgs, 'id'>>;
+  kineticLightRead?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightReadArgs, 'file'>>;
+  kineticLightSave?: Resolver<ResolversTypes['KineticLightReading'], ParentType, ContextType, RequireFields<MutationKineticLightSaveArgs, 'song'>>;
+  passwordChangeComplete?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeCompleteArgs, 'passwordChangeComplete'>>;
+  passwordChangeConfirm?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationPasswordChangeConfirmArgs, 'passwordChangeConfirm'>>;
+  passwordChangeRequest?: Resolver<ResolversTypes['PasswordChange'], ParentType, ContextType, RequireFields<MutationPasswordChangeRequestArgs, 'passwordChangeRequest'>>;
+  refreshToken?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  register?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationRegisterArgs, 'register'>>;
+  signIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSignInArgs, 'signIn'>>;
+  signOut?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  socialSignIn?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationSocialSignInArgs, 'socialSignIn'>>;
+  updateMe?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationUpdateMeArgs, 'updateMe'>>;
 }>;
 
 export interface NonEmptyStringScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['NonEmptyString'], any> {
@@ -882,32 +1244,39 @@ export type PasswordChangeResolvers<ContextType = Context, ParentType extends Re
 }>;
 
 export type PortfolioResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Portfolio'] = ResolversParentTypes['Portfolio']> = ResolversObject<{
-  Path?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  PortfolioGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
+  path?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  portfolioGUID?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  Asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
-  ImageAgentAllowance?: Resolver<ResolversTypes['ImageAgentAllowance'], ParentType, ContextType>;
-  ImageAgentGallery?: Resolver<Array<ResolversTypes['Asset']>, ParentType, ContextType, Partial<QueryImageAgentGalleryArgs>>;
-  ImageAgentSimilar?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentSimilarArgs, 'text'>>;
-  ImageAgentThread?: Resolver<Maybe<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentThreadArgs, 'id'>>;
-  ImageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
-  Me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
-  PasswordChange?: Resolver<Maybe<ResolversTypes['PasswordChange']>, ParentType, ContextType>;
-  PasswordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'PasswordChangeLink'>>;
-  TaxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
-  TaxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
-  Translations?: Resolver<Array<ResolversTypes['Translation']>, ParentType, ContextType, RequireFields<QueryTranslationsArgs, 'namespaces'>>;
-  TreeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
-  TreeOfLifeSubtrees?: Resolver<Array<Maybe<ResolversTypes['TreeOfLifeNode']>>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreesArgs, 'heightLimit'>>;
+  asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
+  imageAgentAllowance?: Resolver<ResolversTypes['ImageAgentAllowance'], ParentType, ContextType>;
+  imageAgentGallery?: Resolver<Array<ResolversTypes['Asset']>, ParentType, ContextType, Partial<QueryImageAgentGalleryArgs>>;
+  imageAgentNotifications?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType>;
+  imageAgentSimilar?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentSimilarArgs, 'text'>>;
+  imageAgentThread?: Resolver<Maybe<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, RequireFields<QueryImageAgentThreadArgs, 'id'>>;
+  imageAgentThreads?: Resolver<Array<ResolversTypes['ImageAgentThread']>, ParentType, ContextType, Partial<QueryImageAgentThreadsArgs>>;
+  kineticLightAllowance?: Resolver<ResolversTypes['KineticLightAllowance'], ParentType, ContextType>;
+  kineticLightExamples?: Resolver<Array<ResolversTypes['KineticLightSong']>, ParentType, ContextType>;
+  kineticLightReading?: Resolver<Maybe<ResolversTypes['KineticLightReading']>, ParentType, ContextType, RequireFields<QueryKineticLightReadingArgs, 'id'>>;
+  kineticLightReadings?: Resolver<Array<ResolversTypes['KineticLightReading']>, ParentType, ContextType>;
+  kineticLightSongs?: Resolver<Array<ResolversTypes['KineticLightSong']>, ParentType, ContextType>;
+  me?: Resolver<Maybe<ResolversTypes['MePayload']>, ParentType, ContextType>;
+  passwordChange?: Resolver<Maybe<ResolversTypes['PasswordChange']>, ParentType, ContextType>;
+  passwordChangeLink?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<QueryPasswordChangeLinkArgs, 'passwordChangeLink'>>;
+  taxonSearch?: Resolver<Array<ResolversTypes['TaxonSearchResult']>, ParentType, ContextType, RequireFields<QueryTaxonSearchArgs, 'limit' | 'query'>>;
+  taxonVisual?: Resolver<ResolversTypes['TaxonVisual'], ParentType, ContextType, RequireFields<QueryTaxonVisualArgs, 'name' | 'ottId'>>;
+  translations?: Resolver<Array<ResolversTypes['Translation']>, ParentType, ContextType, RequireFields<QueryTranslationsArgs, 'namespaces'>>;
+  treeOfLifeSubtree?: Resolver<Maybe<ResolversTypes['TreeOfLifeNode']>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreeArgs, 'heightLimit'>>;
+  treeOfLifeSubtrees?: Resolver<Array<Maybe<ResolversTypes['TreeOfLifeNode']>>, ParentType, ContextType, RequireFields<QueryTreeOfLifeSubtreesArgs, 'heightLimit'>>;
 }>;
 
 export type SubscriptionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
-  AcceptLanguagesUpdated?: SubscriptionResolver<Array<ResolversTypes['AcceptLanguageStatus']>, "AcceptLanguagesUpdated", ParentType, ContextType>;
-  ImageAgentThreadUpdated?: SubscriptionResolver<ResolversTypes['ImageAgentThread'], "ImageAgentThreadUpdated", ParentType, ContextType, RequireFields<SubscriptionImageAgentThreadUpdatedArgs, 'id'>>;
-  PasswordChangeUpdated?: SubscriptionResolver<ResolversTypes['PasswordChange'], "PasswordChangeUpdated", ParentType, ContextType, RequireFields<SubscriptionPasswordChangeUpdatedArgs, 'id'>>;
-  TaxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "TaxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
+  acceptLanguagesUpdated?: SubscriptionResolver<Array<ResolversTypes['AcceptLanguageStatus']>, "acceptLanguagesUpdated", ParentType, ContextType>;
+  imageAgentThreadUpdated?: SubscriptionResolver<ResolversTypes['ImageAgentThread'], "imageAgentThreadUpdated", ParentType, ContextType, RequireFields<SubscriptionImageAgentThreadUpdatedArgs, 'id'>>;
+  kineticLightReadingUpdated?: SubscriptionResolver<ResolversTypes['KineticLightReading'], "kineticLightReadingUpdated", ParentType, ContextType>;
+  passwordChangeUpdated?: SubscriptionResolver<ResolversTypes['PasswordChange'], "passwordChangeUpdated", ParentType, ContextType, RequireFields<SubscriptionPasswordChangeUpdatedArgs, 'id'>>;
+  taxonVisualUpdated?: SubscriptionResolver<ResolversTypes['TaxonVisual'], "taxonVisualUpdated", ParentType, ContextType, RequireFields<SubscriptionTaxonVisualUpdatedArgs, 'ottId'>>;
 }>;
 
 export type TaxonSearchResultResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TaxonSearchResult'] = ResolversParentTypes['TaxonSearchResult']> = ResolversObject<{
@@ -974,6 +1343,13 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ImageAgentScore?: ImageAgentScoreResolvers<ContextType>;
   ImageAgentThread?: ImageAgentThreadResolvers<ContextType>;
   JWT?: GraphQLScalarType;
+  KineticLightAllowance?: KineticLightAllowanceResolvers<ContextType>;
+  KineticLightArrangement?: KineticLightArrangementResolvers<ContextType>;
+  KineticLightChord?: KineticLightChordResolvers<ContextType>;
+  KineticLightPattern?: KineticLightPatternResolvers<ContextType>;
+  KineticLightReading?: KineticLightReadingResolvers<ContextType>;
+  KineticLightSection?: KineticLightSectionResolvers<ContextType>;
+  KineticLightSong?: KineticLightSongResolvers<ContextType>;
   MePayload?: MePayloadResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   NonEmptyString?: GraphQLScalarType;

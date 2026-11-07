@@ -25,6 +25,7 @@ import {
  */
 export function buildVisionProviders(
   options: VisionChatOptions,
+  geminiModels = resolveGeminiVisionModels(),
 ): ProviderAttempt<string>[] {
   return [
     {
@@ -32,7 +33,7 @@ export function buildVisionProviders(
       isConfigured: isOpenAiVisionConfigured,
       run: () => chatOpenAiVision(options),
     },
-    ...resolveGeminiVisionModels().map((model) => ({
+    ...geminiModels.map((model) => ({
       name: `gemini:${model}`,
       isConfigured: isGeminiVisionConfigured,
       run: () => chatGeminiVision({ ...options, model }),

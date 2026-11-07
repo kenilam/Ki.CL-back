@@ -8,14 +8,14 @@ export default {
      * Only the caller's own pieces: Me has already refused a revoked session,
      * and `context.user` is the signed-in user it resolved.
      */
-    Portfolios: async ({ aud }: Pick<MePayload, 'aud'>, _: unknown, context: Context) => {
+    portfolios: async ({ aud }: Pick<MePayload, 'aud'>, _: unknown, context: Context) => {
       if (aud !== 'user' || !context.user) {
         return [];
       }
 
-      const portfolios = await portfoliosOf(context.user.UserGUID);
+      const portfolios = await portfoliosOf(context.user.userGUID);
 
-      return portfolios.map(({ PortfolioGUID, Path }) => ({ PortfolioGUID, Path }));
+      return portfolios.map(({ portfolioGUID, path }) => ({ portfolioGUID, path }));
     },
   },
 };

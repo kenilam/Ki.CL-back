@@ -2,12 +2,12 @@ import * as v from 'valibot';
 import { message } from 'server/Helpers/Validation/message.js';
 
 export const RegisterSchema = v.object({
-  Email: v.pipe(v.string(), v.email(message('validation_email'))),
-  Password: v.pipe(
+  email: v.pipe(v.string(), v.email(message('validation_email'))),
+  password: v.pipe(
     v.string(),
     v.minLength(8, message('validation_password_min')),
     v.maxLength(128, message('validation_password_max')),
   ),
-  FirstName: v.optional(v.pipe(v.string(), v.maxLength(100))),
-  LastName: v.optional(v.pipe(v.string(), v.maxLength(100))),
+  firstName: v.optional(v.pipe(v.string(), v.maxLength(100))),
+  lastName: v.optional(v.pipe(v.string(), v.maxLength(100))),
 });
