@@ -88,13 +88,13 @@ type KineticLightSection {
 
 """
 How a song starts, chosen by a model from the song's outline: the piano, the
-drums, the scene's settings and a drum part in sections. `speed` runs from 3
+drums, the scene's settings and a drum part in sections. `zoom` runs from 3
 to 20, `hue` from 0 to 1 and `glow` from 0 to 3, as in the player's settings.
 """
 type KineticLightArrangement {
   voice: KineticLightVoice!
   beat: KineticLightBeat!
-  speed: Float!
+  zoom: Float!
   hue: Float!
   glow: Float!
   """The outline's `steps`, which the patterns are written in."""

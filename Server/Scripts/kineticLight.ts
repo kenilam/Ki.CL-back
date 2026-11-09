@@ -7,8 +7,9 @@
  *   npx tsx Server/Scripts/kineticLight.ts examples <id> [<id> ...]
  *
  * `migrate` titles a song from its file name when it has no title, drops the
- * file name, removes it 30 days after it was made, and syncs the indexes,
- * which drops the old TTL index on `createdAt`. `examples` takes songs off
+ * file name, removes it 30 days after it was made, renames an arrangement's
+ * `speed` to `zoom`, and syncs the indexes, which drops the old TTL index on
+ * `createdAt`. `examples` takes songs off
  * their owner and keeps them for 99 years.
  */
 import 'dotenv/config';
@@ -44,9 +45,15 @@ async function migrate(database: string): Promise<void> {
     count += 1;
   }
 
+  const { modifiedCount: zoomed } = await readings.updateMany(
+    { 'arrangement.speed': { $exists: true } },
+    { $rename: { 'arrangement.speed': 'arrangement.zoom' } },
+  );
   const dropped = await KineticLightReadings.syncIndexes();
 
-  console.log(`Moved ${count} song(s) in ${database}. Dropped indexes: ${dropped.join(', ') || 'none'}.`);
+  console.log(
+    `Moved ${count} song(s) and renamed ${zoomed} arrangement speed(s) to zoom in ${database}. Dropped indexes: ${dropped.join(', ') || 'none'}.`,
+  );
 }
 
 async function examples(database: string, ids: string[]): Promise<void> {

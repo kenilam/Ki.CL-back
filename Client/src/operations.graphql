@@ -162,7 +162,7 @@ query kicl_kineticLightReadings {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps
@@ -227,7 +227,7 @@ query kicl_kineticLightReading($id: ID!) {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps
@@ -1136,7 +1136,7 @@ mutation kicl_kineticLightRead($file: KineticLightFile!) {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps
@@ -1174,7 +1174,7 @@ mutation kicl_kineticLightSave($song: KineticLightSongInput!) {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps
@@ -1212,7 +1212,7 @@ mutation kicl_kineticLightArrange($id: ID!, $outline: KineticLightOutline!) {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps
@@ -1349,7 +1349,7 @@ subscription kicl_kineticLightReadingUpdated {
     arrangement {
       voice
       beat
-      speed
+      zoom
       hue
       glow
       steps

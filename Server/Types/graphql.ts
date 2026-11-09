@@ -194,7 +194,7 @@ export type KineticLightAllowance = {
 
 /**
  * How a song starts, chosen by a model from the song's outline: the piano, the
- * drums, the scene's settings and a drum part in sections. `speed` runs from 3
+ * drums, the scene's settings and a drum part in sections. `zoom` runs from 3
  * to 20, `hue` from 0 to 1 and `glow` from 0 to 3, as in the player's settings.
  */
 export type KineticLightArrangement = {
@@ -203,10 +203,10 @@ export type KineticLightArrangement = {
   glow: Scalars['Float']['output'];
   hue: Scalars['Float']['output'];
   sections: Array<KineticLightSection>;
-  speed: Scalars['Float']['output'];
   /** The outline's `steps`, which the patterns are written in. */
   steps: Scalars['Int']['output'];
   voice: KineticLightVoice;
+  zoom: Scalars['Float']['output'];
 };
 
 /**
@@ -1168,9 +1168,9 @@ export type KineticLightArrangementResolvers<ContextType = Context, ParentType e
   glow?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   hue?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   sections?: Resolver<Array<ResolversTypes['KineticLightSection']>, ParentType, ContextType>;
-  speed?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   steps?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   voice?: Resolver<ResolversTypes['KineticLightVoice'], ParentType, ContextType>;
+  zoom?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
 }>;
 
 export type KineticLightChordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['KineticLightChord'] = ResolversParentTypes['KineticLightChord']> = ResolversObject<{
