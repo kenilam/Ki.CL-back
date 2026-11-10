@@ -28,7 +28,7 @@ export type LeanTreeOfLifeNode = Pick<
   };
 
 /**
- * Browsing reads go to the nearest Atlas node, so London reads its own replica.
+ * Browsing reads go to the nearest Atlas node.
  * After a write in the same request they go to the primary, which already has it.
  */
 type ReadPreference = 'nearest' | 'primary';
