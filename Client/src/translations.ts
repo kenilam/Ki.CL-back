@@ -3,7 +3,7 @@ import { firstValueFrom, map } from 'rxjs';
 
 import { Kicl_TranslationsDocument, type Kicl_TranslationsQuery } from 'api/generated/graphql';
 import { acceptLanguage as header } from 'api/acceptLanguage';
-import { getKiclClient } from 'api/provider';
+import { getKiclClient } from 'api/client';
 
 type Resources = { [key: string]: string | Resources | Resources[] | string[] };
 
