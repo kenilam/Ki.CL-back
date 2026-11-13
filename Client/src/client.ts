@@ -53,6 +53,7 @@ function createKiclClient(
       : acceptLanguageLink.concat(httpLink);
 
   return new ApolloClient({
+    enhancedClientAwareness: { transport: false },
     link,
     cache: new InMemoryCache({
       typePolicies: {
