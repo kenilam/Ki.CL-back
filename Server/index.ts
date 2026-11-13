@@ -78,6 +78,7 @@ httpServer.on('upgrade', (request, socket, head) => {
 const server = new ApolloServer<Partial<Context>>({
   schema,
   introspection: process.env.GRAPHQL_INTROSPECTION === 'true',
+  includeStacktraceInErrorResponses: process.env.NODE_ENV === 'development',
   plugins: [
     ApolloServerPluginDrainHttpServer({ httpServer }),
     {
